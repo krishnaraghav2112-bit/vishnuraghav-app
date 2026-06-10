@@ -1,0 +1,39 @@
+{
+  "summary": "Iter 7 — Razorpay webhook handler (POST /api/razorpay/webhook) fully tested. 13/13 webhook tests PASS, plus live 503 fail-closed verification when RAZORPAY_WEBHOOK_SECRET is unset. Regression suites (iter5 razorpay, iter6 coupons) still pass — the 3 failures observed during the combined run were transient Razorpay sandbox 401 ('api key expired' / 'Authentication failed') rate-limit blips unrelated to webhook code, and they passed on isolated re-run. .env has been restored (RAZORPAY_WEBHOOK_SECRET removed; backend restarted; 503 reconfirmed).",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "/api/enrollments/checkout", "issue": "Intermittent Razorpay 401 'Authentication failed' / 'api key expired' under bursty test load (rate-limit on rzp_test sandbox). Causes flaky failures in iter5 test_order_id_recognized_by_razorpay and iter6 test_checkout_uncouponed_full_price / test_already_enrolled_short_circuits when entire suite is hammered. Mitigation: add small sleep between checkout calls in tests, or cap parallelism. Not a webhook regression."}
+    ]
+  },
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_webhook_iter7.py",
+    "/app/test_reports/pytest/iter7_results.xml"
+  ],
+  "action_items": [
+    "(Optional) Add inter-call throttling to checkout-heavy tests (iter5/iter6) so Razorpay sandbox rate limits don't cause flaky failures.",
+    "(Optional) Consider also accepting 'payment.authorized' alongside payment.captured (already in handler) — confirmed via code review."
+  ],
+  "critical_code_review_comments": [
+    "Webhook handler correctly uses await request.body() for raw bytes BEFORE json parsing — signature is verified over EXACT bytes as sent.",
+    "hmac.compare_digest used (constant-time compare) for signature check — confirmed in /app/backend/server.py line 711.",
+    "Fail-closed: 503 'Webhook not configured' returned when RAZORPAY_WEBHOOK_SECRET is empty/unset — verified live.",
+    "_mark_paid_from_webhook uses {status:{'$ne':'paid'}} guard on update — ensures idempotency and no double coupon increment.",
+    "paid_via='webhook' is set on webhook-driven paid state (distinct from client /verify path, which does not set paid_via). Useful for audit.",
+    "Unknown event types and unknown order_ids correctly ack 200 so Razorpay stops retrying.",
+    "payment.failed only flips status when current status is 'pending' — won't overwrite a 'paid' enrollment.",
+    "/app/backend/server.py is 1203 lines — exceeds the 700-line recommendation. Suggest splitting into modules (auth, courses, coupons, enrollments, payments/webhook, admin) for maintainability."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_webhook_iter7.py (new)",
+    "/app/backend/.env (temporarily added then removed RAZORPAY_WEBHOOK_SECRET; restored to original)"
+  ],
+  "success_rate": {"backend": "100% (13/13 new webhook tests; 503 verified live)", "frontend": "N/A (backend-only)"},
+  "test_credentials": "Admin: admin@vishnuraghav.in / Admin@12345. Webhook secret used during test: test_webhook_secret_xyz_iter7 (now removed from .env).",
+  "seed_data_creation": "Created several TEST_wh_*/TEST_p1_*/TEST_p2_*/TEST_vfw_*/TEST_op_*/TEST_pf_*/TEST_rg_* student users + their pending/paid/failed enrollments. LAUNCH20 coupon used_count was incremented twice (once via webhook test, once via verify-first test) — left as-is.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "POST /api/razorpay/webhook is live and battle-tested. To test again, set RAZORPAY_WEBHOOK_SECRET in /app/backend/.env, restart backend (sleep 4), run pytest /app/backend/tests/test_webhook_iter7.py, then REMOVE the env var and restart again — otherwise iter5/iter6 are unaffected. Iter5/iter6 may flake on Razorpay sandbox 401s; re-run isolated to confirm. /app/backend/server.py is large (1203 lines) — flag for refactor.",
+  "rca of the issue": "N/A — feature works end-to-end. Only minor flakiness on iter5/iter6 unrelated to this iteration; root cause is Razorpay sandbox rate-limit under burst load."
+}

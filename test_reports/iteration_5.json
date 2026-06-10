@@ -1,0 +1,48 @@
+{
+  "summary": "Iteration 5 — Backend-only testing of Razorpay Standard Web Checkout (test mode) integration. All 7 Razorpay-specific tests PASS (100%) against live Razorpay test API + local backend. Frontend was explicitly out of scope per review_request (PayModal/checkout.js cannot be E2E-tested through 3rd-party hosted iframe).",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_razorpay_iter5.py",
+    "/app/test_reports/pytest/iter5_results.xml"
+  ],
+  "test_coverage_iter5": {
+    "POST /api/enrollments/checkout (no auth) → 401": "PASS",
+    "POST /api/enrollments/checkout (auth) → real Razorpay order_id (starts 'order_'), amount_paise=1999*100=199900, currency='INR', razorpay_key=rzp_test_Sz5OWC87AMxkyO, 24-hex enrollment_id, prefill{name,email,contact}": "PASS",
+    "Razorpay Orders API (GET /v1/orders/<id>) recognises the order_id (amount=199900, currency=INR)": "PASS",
+    "POST /api/enrollments/verify with forged signature → 400 'Invalid payment signature' AND enrollment stays NOT paid": "PASS",
+    "POST /api/enrollments/verify with correct HMAC-SHA256(order_id|payment_id, KEY_SECRET) → 200, status='paid', persisted in Mongo": "PASS",
+    "POST /api/enrollments/checkout second time on paid course → already_enrolled=True with 24-hex enrollment_id": "PASS",
+    "GET /api/enrollments/access/time-management-mastery (Bearer) → access:True, course returned": "PASS"
+  },
+  "action_items": [],
+  "critical_code_review_comments": [
+    "server.py line 467 uses max(100, course[\"price\"] * 100) — fine for ₹1+ courses, but masks bugs where a course is mis-priced to 0/None (would silently become ₹1). Consider explicit validation that course price > 0 before going to Razorpay.",
+    "server.py /enrollments/verify (lines 535–540) — signature check only runs when RAZORPAY_KEY_SECRET is set. In a misconfigured prod (secret missing), verify would mark ANY request paid. Consider failing-closed: require rzp_secret when enrollment.payment_mode == 'razorpay_live'.",
+    "server.py /enrollments/verify does not assert body.razorpay_order_id matches enrollment.razorpay_order_id stored at checkout — a verified-but-mismatched order could mark the wrong enrollment paid. Low risk because enrollment_id is keyed to user, but a defensive equality check is recommended.",
+    "server.py is 937 lines (>700 threshold) — recommend splitting routers (auth/enrollments/admin/uploads) into modules.",
+    "Frontend .env exposes only REACT_APP_RAZORPAY_KEY_ID (good — secret stays server-side). Confirmed via /app/frontend/.env."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_razorpay_iter5.py (new)"
+  ],
+  "success_rate": {"backend": "100% (7/7 razorpay tests)", "frontend": "N/A (out of scope)"},
+  "test_credentials": "Admin: admin@vishnuraghav.in / Admin@12345. Student: registered ad-hoc per run as TEST_stu_<hex>@example.com / Student@12345 (avoids already_enrolled pollution).",
+  "seed_data_creation": "Each pytest module-run registers a fresh student via /api/auth/register (TEST_ prefix). No global seed changes. Creates 1 paid enrollment for course slug 'time-management-mastery' per run (residual data; no public cleanup endpoint).",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Use /app/backend/tests/test_razorpay_iter5.py as regression for the Razorpay flow. Pre-existing iter3 tests test_assets_contains_youtube_videos and test_assets_still_returns_author_photo_and_hero are failing because the seeded site asset has been overwritten by subsequent PATCH /api/admin/site calls — they assert against an outdated 'palette' shape. Those are NOT Razorpay-related; if you need them green, reset site assets via admin endpoint before running. The frontend PayModal e2e flow can be partially tested (modal open + window.Razorpay loaded after Pay click) but Razorpay's hosted modal iframe cannot be card-filled programmatically.",
+  "razorpay_test_artifacts": {
+    "sample_order_created": "Verified live against https://api.razorpay.com/v1/orders/{id}",
+    "key_id_used": "rzp_test_Sz5OWC87AMxkyO",
+    "amount_paise_verified": 199900,
+    "currency": "INR"
+  }
+}
