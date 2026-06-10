@@ -1,0 +1,78 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700;9..144,800;9..144,900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 240 30% 4%;
+    --foreground: 240 10% 96%;
+    --card: 240 25% 7%;
+    --card-foreground: 240 10% 96%;
+    --popover: 240 25% 7%;
+    --popover-foreground: 240 10% 96%;
+    --primary: 43 53% 54%;
+    --primary-foreground: 240 30% 4%;
+    --secondary: 240 20% 12%;
+    --secondary-foreground: 240 10% 96%;
+    --muted: 240 20% 12%;
+    --muted-foreground: 240 8% 60%;
+    --accent: 252 95% 67%;
+    --accent-foreground: 240 30% 4%;
+    --destructive: 0 70% 55%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 15% 16%;
+    --input: 240 15% 16%;
+    --ring: 43 53% 54%;
+    --radius: 0.875rem;
+  }
+}
+
+@layer base {
+  * { @apply border-border; }
+  html { scroll-behavior: smooth; }
+  body {
+    @apply bg-ink-950 text-foreground;
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+  }
+  h1, h2, h3, h4, .font-serif { font-family: 'Fraunces', Georgia, serif; }
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: #0c0b18; }
+  ::-webkit-scrollbar-thumb { background: #c9a84c; border-radius: 3px; }
+  ::selection { background: rgba(201, 168, 76, 0.3); color: #fff; }
+}
+
+@layer utilities {
+  .text-gold-gradient {
+    background: linear-gradient(90deg, #c9a84c, #f0d080);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .text-purple-gradient {
+    background: linear-gradient(90deg, #7c5cfc, #a685ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .bg-gold-gradient { background: linear-gradient(90deg, #c9a84c, #f0d080); }
+  .bg-purple-gradient { background: linear-gradient(90deg, #7c5cfc, #a685ff); }
+  .glass {
+    background: rgba(255, 255, 255, 0.04);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+  }
+  .grain-bg {
+    background-image:
+      linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px);
+    background-size: 60px 60px;
+    mask-image: radial-gradient(ellipse at center, black 0%, transparent 75%);
+  }
+}
+
+[data-debug-wrapper="true"] { display: contents !important; }

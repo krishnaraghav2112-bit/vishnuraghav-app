@@ -1,0 +1,98 @@
+# Render Blueprint — Vishnu Raghav Platform
+# FREE TIER deployment. Both backend (web service) and frontend (static site)
+# run on Render's free plan at $0/month.
+# NOTE: Free web services SLEEP after 15 min of inactivity (cold start ~30-50s).
+# Use UptimeRobot.com (free) to ping /api/ every 5 min if you want always-on.
+#
+# Docs: https://render.com/docs/blueprint-spec
+
+services:
+  # ── Backend (FastAPI on uvicorn) — FREE plan ──
+  - type: web
+    name: vishnuraghav-backend
+    runtime: python
+    plan: free               # $0/month, sleeps after 15 min idle
+    region: singapore        # nearest to India
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn server:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/
+    autoDeploy: true
+    envVars:
+      # ── Mongo (paste your Atlas SRV URL via Render dashboard, do NOT commit) ──
+      - key: MONGO_URL
+        sync: false
+      - key: DB_NAME
+        value: vishnuraghav
+
+      # ── Auth ──
+      - key: JWT_SECRET
+        generateValue: true     # Render auto-generates a strong random value
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+
+      # ── CORS (set to your frontend URL after first deploy) ──
+      - key: CORS_ORIGINS
+        sync: false             # e.g. https://vishnuraghav-frontend.onrender.com
+
+      # ── Razorpay (TEST mode by default) ──
+      - key: RAZORPAY_MODE
+        value: test
+      - key: RAZORPAY_KEY_ID
+        sync: false             # rzp_test_...
+      - key: RAZORPAY_KEY_SECRET
+        sync: false
+      - key: RAZORPAY_WEBHOOK_SECRET
+        sync: false
+
+      # ── Cloudinary (REQUIRED on free tier — disk is ephemeral!) ──
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: CLOUDINARY_FOLDER
+        value: vishnu_raghav
+
+      # ── Resend ──
+      - key: RESEND_API_KEY
+        sync: false
+      - key: SENDER_EMAIL
+        value: Vishnu Raghav <noreply@authorvishnuraghav.in>
+      - key: ADMIN_NOTIFY_EMAIL
+        value: vishnuraghav955@gmail.com
+
+      # ── Frontend URL (set after frontend deploys) ──
+      - key: FRONTEND_URL
+        sync: false
+
+  # ── Frontend (React static site) — FREE plan (always free on Render) ──
+  - type: web
+    name: vishnuraghav-frontend
+    runtime: static
+    region: singapore
+    rootDir: frontend
+    buildCommand: yarn install && yarn build
+    staticPublishPath: ./build
+    autoDeploy: true
+    headers:
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+    routes:
+      # Single-page-app fallback — every route serves index.html
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      # NOTE: Render doesn't auto-inject full https URL via fromService.
+      # After first deploy, set this manually in Render dashboard:
+      #   REACT_APP_BACKEND_URL = https://vishnuraghav-backend.onrender.com
+      - key: REACT_APP_BACKEND_URL
+        sync: false

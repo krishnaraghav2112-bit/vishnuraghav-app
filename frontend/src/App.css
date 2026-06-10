@@ -1,0 +1,70 @@
+/* App-specific styles. Tailwind handles most things. */
+.App { min-height: 100vh; }
+
+/* ── Scroll-in reveal animation (existing) ── */
+.reveal { opacity: 0; transform: translateY(28px); transition: opacity .75s cubic-bezier(.16,1,.3,1), transform .75s cubic-bezier(.16,1,.3,1); }
+.reveal.in { opacity: 1; transform: none; }
+.reveal.delay1 { transition-delay: .08s; }
+.reveal.delay2 { transition-delay: .16s; }
+.reveal.delay3 { transition-delay: .24s; }
+.reveal.delay4 { transition-delay: .32s; }
+
+/* ── Premium fade-in for route changes ── */
+.page-enter { animation: pageFadeIn .55s cubic-bezier(.16,1,.3,1) both; }
+@keyframes pageFadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* ── Premium hover lift + gold glow for cards (course, blog, book) ── */
+.premium-card { transition: transform .35s cubic-bezier(.16,1,.3,1), box-shadow .35s cubic-bezier(.16,1,.3,1), border-color .35s ease; }
+.premium-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 18px 40px -12px rgba(0,0,0,.55), 0 0 0 1px rgba(201,168,76,.18), 0 0 32px -8px rgba(201,168,76,.18);
+  border-color: rgba(201,168,76,.35) !important;
+}
+
+/* ── Shimmer sweep on primary CTA buttons (gold gradient) ── */
+.btn-shimmer { position: relative; overflow: hidden; isolation: isolate; }
+.btn-shimmer::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(110deg, transparent 30%, rgba(255,255,255,.22) 50%, transparent 70%);
+  transform: translateX(-120%); transition: transform .9s cubic-bezier(.16,1,.3,1); pointer-events: none;
+}
+.btn-shimmer:hover::after { transform: translateX(120%); }
+
+/* ── Hero orbiting gold sparks (premium, no JS, no extra deps) ── */
+.hero-orbit { position: absolute; inset: 0; pointer-events: none; }
+.hero-spark {
+  position: absolute; width: 8px; height: 8px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(232,200,116,.95) 0%, rgba(201,168,76,.4) 60%, transparent 75%);
+  filter: drop-shadow(0 0 6px rgba(232,200,116,.55));
+  top: 50%; left: 50%; margin: -4px 0 0 -4px;
+}
+.hero-spark.s1 { animation: orbit 7s linear infinite; }
+.hero-spark.s2 { animation: orbit 9s linear infinite reverse; animation-delay: -2.1s; opacity: .8; }
+.hero-spark.s3 { animation: orbit 11s linear infinite; animation-delay: -4.3s; opacity: .6; width: 6px; height: 6px; }
+@keyframes orbit {
+  from { transform: rotate(0deg) translateX(180px) rotate(0deg); }
+  to   { transform: rotate(360deg) translateX(180px) rotate(-360deg); }
+}
+@media (max-width: 640px) {
+  @keyframes orbit { from { transform: rotate(0deg) translateX(130px) rotate(0deg); } to { transform: rotate(360deg) translateX(130px) rotate(-360deg); } }
+}
+
+/* ── Subtle scale-in for toast success states ── */
+.toast-pop { animation: toastPop .45s cubic-bezier(.16,1,.3,1); }
+@keyframes toastPop {
+  0%   { transform: scale(.85); opacity: 0; }
+  60%  { transform: scale(1.04); opacity: 1; }
+  100% { transform: scale(1); }
+}
+
+/* ── Respect users who prefer reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+  .reveal, .reveal.in, .page-enter, .premium-card, .btn-shimmer::after, .hero-spark, .toast-pop {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+}
