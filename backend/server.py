@@ -1384,7 +1384,7 @@ async def admin_delete_upload(body: CloudinaryDeleteIn, _: dict = Depends(requir
         raise HTTPException(status_code=400, detail="Cloudinary is not configured")
     return {"ok": ok, "target": target}
 
-@api.get("/")
+@api.api_route("/", methods=["GET", "HEAD"])
 async def root():
     return {
         "app": "Vishnu Raghav Platform",
