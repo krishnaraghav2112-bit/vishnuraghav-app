@@ -20,9 +20,13 @@ export default function BlogPostPage() {
         <ArrowLeft className="w-4 h-4" /> Back
       </button>
 
-      <div className="rounded-2xl h-56 mb-7 flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${post.palette[0]}, ${post.palette[1]})` }}>
+      <div className="rounded-2xl h-56 mb-7 flex items-center justify-center" style={{ background: `linear-gradient(135...`}}>
+    {post.image ? (
+        <img src={post.image} alt={post.title} className="w-full h-full object-cover rounded-2xl" />
+    ) : (
         <div className="text-7xl">📖</div>
-      </div>
+    )}
+</div>
 
       <div className="inline-block bg-brand-goldSoft border border-brand-gold/30 text-brand-gold text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider mb-3">{post.category}</div>
       <h1 className="font-serif text-3xl lg:text-4xl font-black tracking-tight mb-3">{post.title}</h1>
