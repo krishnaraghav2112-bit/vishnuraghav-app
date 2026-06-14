@@ -466,7 +466,7 @@ function BlogPanel() {
               className="p-2 rounded-md hover:bg-white/[0.04] text-brand-gold"><Edit2 className="w-4 h-4" /></button>
             <button onClick={async () => {
               if (!window.confirm(`Delete "${p.title}"?`)) return;
-              try { await api.delete(`/admin/blog/${p.slug}`); toast.success("Deleted"); refresh(); }
+              try { await api.delete(`/admin/blog/${encodeURIComponent(p.slug)}`); toast.success("Deleted"); refresh(); }
               catch (e) { toast.error(formatApiError(e)); }
             }} data-testid={`admin-blog-delete-${p.slug}`}
               className="p-2 rounded-md hover:bg-red-500/10 text-red-400"><Trash2 className="w-4 h-4" /></button>
@@ -490,7 +490,7 @@ function BlogForm({ post, onCancel, onSaved }) {
     setSaving(true);
     try {
       if (isNew) { await api.post("/admin/blog", form); toast.success("Post created"); }
-      else { const { slug, ...rest } = form; await api.patch(`/admin/blog/${slug}`, rest); toast.success("Post updated"); }
+      else { const { slug, ...rest } = form; await api.patch(`/admin/blog/${encodeURIComponent(slug)}`, rest); toast.success("Post updated"); }
       onSaved();
     } catch (e) { toast.error(formatApiError(e)); }
     setSaving(false);
@@ -518,7 +518,7 @@ function BlogForm({ post, onCancel, onSaved }) {
           onChange={async (url) => {
             setForm((f) => ({ ...f, image: url }));
             if (!isNew && post?.slug) {
-              try { await api.patch(`/admin/blog/${post.slug}`, { image: url }); } catch (e) { /* ignored */ }
+              await api.patch(`/admin/blog/${encodeURIComponent(post.slug)}`, { image: url }); } catch (e) { /* ignored */ }
             }
           }}
           testIdPrefix="bf-blog-image"
