@@ -1179,7 +1179,7 @@ async def admin_update_blog(slug: str, body: BlogUpdate, _: dict = Depends(requi
         if old_url and old_url != updates["image"]:
             await _destroy_cloudinary_asset(old_url)
     if updates:
-        await db.blog_posts.update_one({"slug": slug}, {"$set": updates}, upsert=True)
+        await db.blog_posts.update_one({"slug": slug}, {"$set": updates})
     return {"ok": True}
 
 @api.delete("/admin/blog/{slug}")
