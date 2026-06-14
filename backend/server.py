@@ -8,6 +8,7 @@ import json
 import logging
 import secrets
 import bcrypt
+import re
 import jwt
 import razorpay
 import cloudinary
@@ -1151,6 +1152,12 @@ class BlogIn(BaseModel):
 
 @api.post("/admin/blog")
 async def admin_create_blog(body: BlogIn, _: dict = Depends(require_admin)):
+    # Clean the slug - remove spaces and special characters
+    body.slug = re.sub(r'[^a-z0-9\-_]', '', body.slug.lower().replace(' ', '-'))
+    
+    if not body.slug:
+        raise HTTPException(status_code=400, detail="Slug is empty!")
+    
     existing = await db.blog_posts.find_one({"slug": body.slug})
     if existing:
         raise HTTPException(status_code=400, detail="Slug already exists")
@@ -1186,8 +1193,11 @@ async def admin_update_blog(slug: str, body: BlogUpdate, _: dict = Depends(requi
 async def admin_delete_blog(slug: str, _: dict = Depends(require_admin)):
     existing = await db.blog_posts.find_one({"slug": slug}, {"image": 1, "_id": 0})
     await db.blog_posts.delete_one({"slug": slug})
-    if existing and existing.get("image"):
-       await _destroy_cloudinary_asset(existing["image"])
+   if existing and existing.get("image"):
+    try:
+        await _destroy_cloudinary_asset(existing["image"])
+    except Exception as e:
+        print(f"Cloudinary cleanup failed (non-fatal): {e}")
     return {"ok": True}
 
 # ── Admin: Course basic update (title, price, tagline, youtube playlist) ──
