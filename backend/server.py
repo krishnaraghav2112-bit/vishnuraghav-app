@@ -1221,7 +1221,11 @@ class CourseUpdate(BaseModel):
 async def admin_update_course(slug: str, body: CourseUpdate, _: dict = Depends(require_admin)):
     updates = {k: v for k, v in body.model_dump(exclude_unset=True).items() if v is not None}
     if updates:
-        await db.courses.update_one({"slug": slug}, {"$set": updates}, upsert=True)
+       await db.courses.update_one({"slug": slug}, {"$set": updates})
+    return {"ok": True}
+    @api.delete("/admin/courses/{slug}")
+async def admin_delete_course(slug: str, _: dict = Depends(require_admin)):
+    await db.courses.delete_one({"slug": slug})
     return {"ok": True}
 
 # ── Admin: File upload ──
