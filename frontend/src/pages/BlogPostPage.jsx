@@ -9,7 +9,7 @@ export default function BlogPostPage() {
   const [post, setPost] = useState(null);
 
   useEffect(() => {
-    api.get(`/blog/${slug}`).then((r) => setPost(r.data)).catch(() => {});
+    api.get(`/blog/${encodeURIComponent(slug)}`).then((r) => setPost(r.data)).catch(() => {});
   }, [slug]);
 
   if (!post) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Loading...</div>;
