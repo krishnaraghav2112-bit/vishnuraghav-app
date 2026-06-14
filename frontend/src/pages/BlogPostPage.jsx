@@ -20,9 +20,9 @@ export default function BlogPostPage() {
         <ArrowLeft className="w-4 h-4" /> Back
       </button>
 
-      <div className="rounded-2xl h-56 mb-7 flex items-center justify-center" style={{ background: `linear-gradient(135...`}}>
+      <div className="rounded-2xl h-80 mb-7 flex items-center justify-center" style={{ background: `linear-gradient(135...`}}>
     {post.image ? (
-        <img src={post.image} alt={post.title} className="w-full h-full object-cover rounded-2xl" />
+        <img src={post.image} alt={post.title} className="w-full h-full object-contain rounded-2xl" />
     ) : (
         <div className="text-7xl">📖</div>
     )}
