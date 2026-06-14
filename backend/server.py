@@ -1186,8 +1186,8 @@ async def admin_update_blog(slug: str, body: BlogUpdate, _: dict = Depends(requi
 async def admin_delete_blog(slug: str, _: dict = Depends(require_admin)):
     existing = await db.blog_posts.find_one({"slug": slug}, {"image": 1, "_id": 0})
     await db.blog_posts.delete_one({"slug": slug})
-    if existing and existing.get("image"):
-        await _destroy_cloudinary_asset(existing["image"])
+    #if existing and existing.get("image"):
+    #   await _destroy_cloudinary_asset(existing["image"])
     return {"ok": True}
 
 # ── Admin: Course basic update (title, price, tagline, youtube playlist) ──
