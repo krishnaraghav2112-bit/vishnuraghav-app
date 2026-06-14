@@ -518,7 +518,7 @@ function BlogForm({ post, onCancel, onSaved }) {
           onChange={async (url) => {
             setForm((f) => ({ ...f, image: url }));
             if (!isNew && post?.slug) {
-              await api.patch(`/admin/blog/${encodeURIComponent(post.slug)}`, { image: url }); } catch (e) { /* ignored */ }
+             try  { await api.patch(`/admin/blog/${encodeURIComponent(post.slug)}`, { image: url }); } catch (e) { /* ignored */ }
             }
           }}
           testIdPrefix="bf-blog-image"
