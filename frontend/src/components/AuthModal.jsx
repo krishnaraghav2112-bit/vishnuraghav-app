@@ -20,6 +20,7 @@ export default function AuthModal({ open, mode = "login", onClose, onSwitch }) {
 
   const [busy, setBusy] = useState(false);
   const [form, setForm] = useState({ email: "", password: "", name: "", phone: "" });
+  const [showPassword, setShowPassword] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
   const [forgotSent, setForgotSent] = useState(false);
 
@@ -242,15 +243,21 @@ export default function AuthModal({ open, mode = "login", onClose, onSwitch }) {
                       </button>
                     )}
                   </div>
-                  <input
-                    data-testid="auth-password"
-                    type="password"
-                    value={form.password}
-                    onChange={(e) => setForm({ ...form, password: e.target.value })}
-                    placeholder={tab === "register" ? "Min 8 characters" : "••••••••"}
-                    onKeyDown={(e) => e.key === "Enter" && submit()}
-                    className="w-full bg-ink-800 border border-white/[0.07] rounded-lg px-3.5 py-2.5 text-sm focus:border-brand-gold outline-none transition-colors"
-                  />
+                  <div className="relative">
+    <input
+        type={showPassword ? "text" : "password"}
+        data-testid="auth-password"
+        value={form.password}
+        onChange={(e) => setForm({ ...form, password: e.target.value })}
+        placeholder={tab === "register" ? "Min 8 characters" : "••••••••"}
+        onKeyDown={(e) => e.key === "Enter" && submit()}
+        className="w-full bg-ink-800 border border-white/[0.07] rounded-lg px-3.5 py-2.5 text-sm focus:borc"
+    />
+    <button type="button" onClick={() => setShowPassword(!showPassword)}
+        className="absolute right-3 top-2.5 text-muted-foreground">
+        {showPassword ? "🙈" : "👁️"}
+    </button>
+</div>
                 </div>
 
                 {tab === "register" && (
