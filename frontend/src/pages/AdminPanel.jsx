@@ -347,6 +347,7 @@ function CoursesPanel() {
             </div>
             <button onClick={() => setEditing(c)} data-testid={`admin-course-edit-${c.slug}`}
               className="p-2 rounded-md hover:bg-white/[0.04] text-brand-gold"><Edit2 className="w-4 h-4" /></button>
+            <button onClick={async () => { if (!window.confirm(`Delete "${c.title}"?`)) return; try { await api.delete(`/admin/courses/${encodeURIComponent(c.slug)}`); toast.success("Deleted"); refresh(); } catch (e) { toast.error(formatApiError(e)); } }} className="p-2 rounded-md hover:bg-red-500/10 text-red-400"><Trash2 className="w-4 h-4" /></button>
           </div>
         ))}
       </div>
