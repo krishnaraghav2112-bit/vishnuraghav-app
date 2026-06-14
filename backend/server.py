@@ -1223,7 +1223,7 @@ async def admin_update_course(slug: str, body: CourseUpdate, _: dict = Depends(r
     if updates:
        await db.courses.update_one({"slug": slug}, {"$set": updates})
     return {"ok": True}
-    @api.delete("/admin/courses/{slug}")
+@api.delete("/admin/courses/{slug}")
 async def admin_delete_course(slug: str, _: dict = Depends(require_admin)):
     await db.courses.delete_one({"slug": slug})
     return {"ok": True}
