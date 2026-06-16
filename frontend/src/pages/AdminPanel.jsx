@@ -380,16 +380,14 @@ function CourseForm({ course, onCancel, onSaved }) {
     try {
       const isNew = !course;
 if (isNew) { await api.post("/admin/courses", form); toast.success("Course created"); }
-else { await api.patch(`/admin/courses/${encodeURIComponent(course.slug)}`, form); toast.success("Course updated"); }
-      toast.success("Course updated");
-      onSaved();
+else { await api.patch(`/admin/courses/${encodeURIComponent(course.slug)}`, form); toast.success("Course updated"); onSaved(); }
     } catch (e) { toast.error(formatApiError(e)); }
     setSaving(false);
   };
   return (
     <div className="bg-ink-800 border border-brand-gold/30 rounded-xl p-4 space-y-3" data-testid="admin-course-form">
       <div className="flex justify-between items-center">
-        <h3 className="font-serif font-bold text-sm">Editing: {course.title}</h3>
+        <h3 className="font-serif font-bold text-sm">{course ? `Editing: ${course.title}` : "New Course"}</h3>
         <button onClick={onCancel} className="text-muted-foreground"><X className="w-4 h-4" /></button>
       </div>
       <div className="grid grid-cols-2 gap-2">
