@@ -359,20 +359,20 @@ function CoursesPanel() {
 
 function CourseForm({ course, onCancel, onSaved }) {
   const [form, setForm] = useState({
-    title: course.title || "",
-    tagline: course.tagline || "",
-    price: course.price || 0,
-    original_price: course.original_price || 0,
-    duration: course.duration || "",
-    lessons: course.lessons || 0,
-    modules: course.modules || 0,
-    level: course.level || "All Levels",
-    rating: course.rating || 4.5,
-    students: course.students || 0,
-    featured: course.featured || false,
-    new: course.new || false,
-    youtube_playlist: course.youtube_playlist || "",
-    thumbnail: course.thumbnail || "",
+    title: course?.title || "",
+    tagline: course?.tagline || "",
+    price: course?.price || 0,
+    original_price: course?.original_price || 0,
+    duration: course?.duration || "",
+    lessons: course?.lessons || 0,
+    modules: course?.modules || 0,
+    level: course?.level || "All Levels",
+    rating: course?.rating || 4.5,
+    students: course?.students || 0,
+    featured: course?.featured || false,
+    new: course?.new || false,
+    youtube_playlist: course?.youtube_playlist || "",
+    thumbnail: course?.thumbnail || "",
   });
   const [saving, setSaving] = useState(false);
   const save = async () => {
