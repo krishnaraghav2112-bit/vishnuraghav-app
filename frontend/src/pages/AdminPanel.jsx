@@ -323,15 +323,17 @@ function BookForm({ book, onCancel, onSaved }) {
 function CoursesPanel() {
   const [courses, setCourses] = useState([]);
   const [editing, setEditing] = useState(null);
+  const [creating, setCreating] = useState(false);
   const refresh = () => api.get("/courses").then((r) => setCourses(r.data)).catch(() => {});
   useEffect(() => { refresh(); }, []);
 
   return (
     <>
+      <button onClick={() => setCreating(true)} className="flex items-center gap-1.5 bg-gold-gradient text-ink-950 px-3 py-1.5 rounded-lg text-xs font-extrabold"><Plus className="w-3.5 h-3.5" /> New Course</button>
       <h2 className="font-serif text-xl font-extrabold mb-2">Courses ({courses.length})</h2>
       <p className="text-xs text-muted-foreground mb-5">Edit course basics. Lessons/modules structure is fixed in v1.</p>
 
-      {editing && <CourseForm course={editing} onCancel={() => setEditing(null)} onSaved={() => { setEditing(null); refresh(); }} />}
+     {(editing || creating) && <CourseForm course={editing} onCancel={() => { setEditing(null); setCreating(false); }} onSaved={() => { setEditing(null); setCreating(false); refresh(); }} />}
 
       <div className="space-y-2 mt-4">
         {courses.map((c) => (
@@ -376,7 +378,9 @@ function CourseForm({ course, onCancel, onSaved }) {
   const save = async () => {
     setSaving(true);
     try {
-      await api.patch(`/admin/courses/${course.slug}`, form);
+      const isNew = !course;
+if (isNew) { await api.post("/admin/courses", form); toast.success("Course created"); }
+else { await api.patch(`/admin/courses/${encodeURIComponent(course.slug)}`, form); toast.success("Course updated"); }
       toast.success("Course updated");
       onSaved();
     } catch (e) { toast.error(formatApiError(e)); }
