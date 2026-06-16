@@ -1217,7 +1217,15 @@ class CourseUpdate(BaseModel):
     thumbnail: Optional[str] = None
     order: Optional[int] = None
 
-@api.patch("/admin/courses/{slug}")
+@api.post("/admin/courses")
+async def admin_create_course(body: dict, _: dict = Depends(require_admin)):
+    existing = await db.courses.find_one({"slug": body.get("slug")})
+    if existing:
+        raise HTTPException(status_code=400, detail="Slug already exists")
+    await db.courses.insert_one(body)
+    return {"ok": True, "slug": body.get("slug")}
+    
+    @api.patch("/admin/courses/{slug}")
 async def admin_update_course(slug: str, body: CourseUpdate, _: dict = Depends(require_admin)):
     updates = {k: v for k, v in body.model_dump(exclude_unset=True).items() if v is not None}
     if updates:
