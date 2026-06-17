@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Clock, Calendar } from "lucide-react";
 import api from "../lib/api";
+import { Helmet } from "react-helmet-async";
 
 export default function BlogPostPage() {
   const { slug } = useParams();
@@ -15,6 +16,13 @@ export default function BlogPostPage() {
   if (!post) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Loading...</div>;
 
   return (
+<>
+  <Helmet>
+<title>{post.title} | Vishnu Raghav</title>
+<meta name="description" content={post.excerpt} />
+<meta property="og:title" content={post.title} />
+<meta property="og:image" content={post.image} />
+</Helmet>
     <article className="max-w-3xl mx-auto px-5 lg:px-10 py-12" data-testid="blog-post-page">
       <button onClick={() => nav(-1)} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6">
         <ArrowLeft className="w-4 h-4" /> Back
@@ -48,5 +56,6 @@ export default function BlogPostPage() {
         </button>
       </div>
     </article>
+  </>
   );
 }
