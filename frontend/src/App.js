@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { HelmetProvider } from 'react-helmet-async';
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { Toaster } from "sonner";
 import "@/App.css";
@@ -83,11 +84,13 @@ function AppShell() {
 
 function App() {
   return (
+    <HelmetProvider>
     <AuthProvider>
       <BrowserRouter>
         <AppShell />
       </BrowserRouter>
     </AuthProvider>
+  </HelmetProvider>
   );
 }
 
