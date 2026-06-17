@@ -391,7 +391,8 @@ else { await api.patch(`/admin/courses/${encodeURIComponent(course.slug)}`, form
         <button onClick={onCancel} className="text-muted-foreground"><X className="w-4 h-4" /></button>
       </div>
       <div className="grid grid-cols-2 gap-2">
-        <FormField label="Title"><input data-testid="cf-title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} className={fieldCls} /></FormField>
+        <FormField label="Title"><input data-testid="cf-title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value, slug: e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, '-') })} className={fieldCls} /></FormField>
+        <FormField label="Slug"><input value={form.slug || ""} onChange={(e) => setForm({ ...form, slug: e.target.value })} placeholder="auto-from-title" className="w-full bg-ink-800 border border-white/[0.07] rounded-lg px-3.5 py-2.5 text-sm" /></FormField>
         <FormField label="Tagline"><input value={form.tagline} onChange={(e) => setForm({ ...form, tagline: e.target.value })} className={fieldCls} /></FormField>
         <FormField label="Price ₹"><input data-testid="cf-price" type="number" value={form.price} onChange={(e) => setForm({ ...form, price: parseInt(e.target.value) || 0 })} className={fieldCls} /></FormField>
         <FormField label="Original Price ₹"><input type="number" value={form.original_price} onChange={(e) => setForm({ ...form, original_price: parseInt(e.target.value) || 0 })} className={fieldCls} /></FormField>
