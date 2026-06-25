@@ -19,6 +19,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import Terms from "./pages/Terms";
 import RefundPolicy from "./pages/RefundPolicy";
 import ResetPassword from "./pages/ResetPassword";
+import BookCheckout from "./pages/BookCheckout";
 
 function useReveal() {
   useEffect(() => {
@@ -58,6 +59,7 @@ function AppShell() {
           <Routes location={location}>
             <Route path="/" element={<Home onOpenAuth={openAuth} onOpenPay={openPay} />} />
             <Route path="/dashboard" element={<Dashboard onOpenAuth={openAuth} onOpenPay={openPay} />} />
+            <Route path="/book-checkout" element={<BookCheckout onOpenAuth={openAuth} />} />
             <Route path="/learn/:slug" element={<CoursePlayer onOpenAuth={openAuth} onOpenPay={openPay} />} />
             <Route path="/blog/:slug" element={<BlogPostPage />} />
             <Route path="/admin" element={<AdminPanel onOpenAuth={openAuth} />} />
