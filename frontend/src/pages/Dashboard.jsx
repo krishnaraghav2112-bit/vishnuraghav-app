@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { BookOpen, TrendingUp, Award, CreditCard, User, LogOut, Clock, Brain, Sparkles, Heart, Flame } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { BookOpen, TrendingUp, Award, CreditCard, User, LogOut, Clock, Brain, Sparkles, Heart, Flame, Package, MapPin, Truck } from "lucide-react";
 import { toast } from "sonner";
 import api, { formatApiError } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
@@ -10,8 +10,10 @@ const iconMap = { Clock, Brain, Sparkles, Heart, BookOpen };
 export default function Dashboard({ onOpenAuth }) {
   const { user, loading, logout, updateProfile } = useAuth();
   const nav = useNavigate();
-  const [tab, setTab] = useState("courses");
+  const location = useLocation();
+  const [tab, setTab] = useState(location.state?.tab || "courses");
   const [enrollments, setEnrollments] = useState([]);
+  const [bookOrders, setBookOrders] = useState([]);
   const [profile, setProfile] = useState({ name: "", phone: "", city: "", occupation: "" });
 
   useEffect(() => {
@@ -21,6 +23,7 @@ export default function Dashboard({ onOpenAuth }) {
   useEffect(() => {
     if (user) {
       api.get("/enrollments/me").then((r) => setEnrollments(r.data)).catch(() => {});
+      api.get("/book-orders/me").then((r) => setBookOrders(r.data)).catch(() => {});
       setProfile({ name: user.name || "", phone: user.phone || "", city: user.city || "", occupation: user.occupation || "" });
     }
   }, [user]);
@@ -37,6 +40,7 @@ export default function Dashboard({ onOpenAuth }) {
 
   const tabs = [
     { id: "courses", label: "My Courses", icon: BookOpen },
+    { id: "bookorders", label: "Book Orders", icon: Package },
     { id: "progress", label: "Progress", icon: TrendingUp },
     { id: "certs", label: "Certificates", icon: Award },
     { id: "payments", label: "Payments", icon: CreditCard },
@@ -129,6 +133,27 @@ export default function Dashboard({ onOpenAuth }) {
             </>
           )}
 
+          {tab === "bookorders" && (
+            <>
+              <SectionHead>My Book Orders</SectionHead>
+              {bookOrders.length === 0 ? (
+                <div className="text-center py-12">
+                  <Package className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
+                  <p className="text-muted-foreground text-sm">No book orders yet.</p>
+                  <button onClick={() => nav("/")}
+                    className="mt-4 px-5 py-2 rounded-xl text-xs font-bold bg-gold-gradient text-ink-950">
+                    Browse Books
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {bookOrders.map((o) => (
+                    <BookOrderCard key={o.id} order={o} />
+                  ))}
+                </div>
+              )}
+            </>
+          )}
           {tab === "progress" && (
             <>
               <div className="grid grid-cols-3 gap-3 mb-6">
@@ -259,6 +284,110 @@ function EmptyState({ text, onClick }) {
     <div className="bg-ink-800 border border-dashed border-white/[0.1] rounded-xl p-8 text-center">
       <p className="text-sm text-muted-foreground mb-3">{text}</p>
       <button onClick={onClick} className="bg-gold-gradient text-ink-950 px-5 py-2 rounded-lg text-sm font-extrabold">Browse Courses</button>
+    </div>
+  );
+}
+const STATUS_COLORS = {
+  pending:   "bg-yellow-500/10 text-yellow-400 border-yellow-500/20",
+  confirmed: "bg-blue-500/10 text-blue-400 border-blue-500/20",
+  paid:      "bg-green-500/10 text-green-400 border-green-500/20",
+  shipped:   "bg-purple-500/10 text-purple-400 border-purple-500/20",
+  delivered: "bg-green-500/10 text-green-400 border-green-500/20",
+};
+
+function BookOrderCard({ order }) {
+  const [tracking, setTracking] = useState(null);
+  const [loadingTrack, setLoadingTrack] = useState(false);
+  const [showTrack, setShowTrack] = useState(false);
+
+  const fetchTracking = async () => {
+    if (tracking) { setShowTrack(t => !t); return; }
+    setLoadingTrack(true);
+    try {
+      const { data } = await api.get(`/book-orders/track/${order.id}`);
+      setTracking(data.tracking);
+      setShowTrack(true);
+    } catch {
+      toast.error("Could not fetch tracking info");
+    } finally {
+      setLoadingTrack(false);
+    }
+  };
+
+  const addr = order.address || {};
+  const statusColor = STATUS_COLORS[order.status] || STATUS_COLORS.pending;
+  const date = order.created_at ? new Date(order.created_at).toLocaleDateString("en-IN", { day:"numeric", month:"short", year:"numeric" }) : "";
+
+  return (
+    <div className="bg-ink-800 border border-white/[0.07] rounded-xl p-4">
+      <div className="flex items-start justify-between gap-3 mb-3">
+        <div>
+          <div className="font-serif font-bold text-sm">{order.book_title}</div>
+          <div className="text-xs text-muted-foreground mt-0.5">✍️ Signed Copy · {date}</div>
+        </div>
+        <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border capitalize ${statusColor}`}>
+          {order.status}
+        </span>
+      </div>
+
+      <div className="grid grid-cols-2 gap-2 text-xs mb-3">
+        <div className="bg-ink-900 rounded-lg p-2">
+          <div className="text-muted-foreground text-[10px] uppercase tracking-wider mb-0.5">Amount</div>
+          <div className="font-bold text-brand-gold">₹{order.amount}</div>
+        </div>
+        <div className="bg-ink-900 rounded-lg p-2">
+          <div className="text-muted-foreground text-[10px] uppercase tracking-wider mb-0.5">Payment</div>
+          <div className="font-bold capitalize">{order.payment_mode === "cod" ? "Cash on Delivery" : "Paid Online"}</div>
+        </div>
+      </div>
+
+      <div className="bg-ink-900 rounded-lg p-2 mb-3 flex items-start gap-2">
+        <MapPin className="w-3 h-3 text-muted-foreground mt-0.5 flex-none" />
+        <div className="text-xs text-muted-foreground leading-relaxed">
+          {order.name} · {addr.line1}{addr.line2 ? ", " + addr.line2 : ""}, {addr.city}, {addr.state} - {addr.pincode}
+        </div>
+      </div>
+
+      {order.awb && (
+        <div>
+          <button onClick={fetchTracking} disabled={loadingTrack}
+            className="w-full py-2 rounded-lg text-xs font-bold border border-brand-gold/30 text-brand-gold hover:bg-brand-gold/5 transition-colors flex items-center justify-center gap-1.5">
+            <Truck className="w-3 h-3" />
+            {loadingTrack ? "Fetching..." : showTrack ? "Hide Tracking" : "Track Order"}
+          </button>
+          {showTrack && tracking && (
+            <div className="mt-3 bg-ink-900 rounded-xl p-3">
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-xs font-bold text-brand-gold">{tracking.current_status}</div>
+                {order.tracking_url && (
+                  <a href={order.tracking_url} target="_blank" rel="noopener noreferrer"
+                    className="text-[10px] text-blue-400 underline">Open on Shiprocket ↗</a>
+                )}
+              </div>
+              <div className="text-[10px] text-muted-foreground mb-2">AWB: {order.awb}</div>
+              {tracking.activities?.length > 0 && (
+                <div className="space-y-2 mt-2">
+                  {tracking.activities.map((a, i) => (
+                    <div key={i} className="flex gap-2 text-[10px]">
+                      <div className="w-1.5 h-1.5 rounded-full bg-brand-gold mt-1 flex-none" />
+                      <div>
+                        <div className="text-foreground/80">{a.activity}</div>
+                        <div className="text-muted-foreground">{a.location} · {a.date}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+          {showTrack && !tracking && (
+            <div className="mt-2 text-xs text-muted-foreground text-center">Tracking info not available yet. Check back soon.</div>
+          )}
+        </div>
+      )}
+      {!order.awb && order.status === "confirmed" && (
+        <div className="text-xs text-muted-foreground text-center py-1">📦 Shipment being prepared...</div>
+      )}
     </div>
   );
 }
