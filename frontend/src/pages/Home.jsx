@@ -315,7 +315,7 @@ export default function Home({ onOpenAuth, onOpenPay }) {
                         </li>
                       ))}
                     </ul>
-                    <div className="flex gap-2">
+                   <div className="flex gap-2 flex-wrap">
                       {b.amazon ? (
                 <a href={b.amazon} target="_blank" rel="noopener noreferrer" data-testid={`book-amazon-${b.slug}`}
                           className="flex-1 py-2 rounded-md text-xs font-bold bg-orange-500/10 text-orange-400 border border-orange-500/25 hover:bg-orange-500/20 transition-colors text-center flex items-center justify-center gap-1">
@@ -328,7 +328,15 @@ export default function Home({ onOpenAuth, onOpenPay }) {
                           🛍️ Flipkart
                         </a>
                       ) : null}
-                      {b.status === "upcoming" && (
+                      {b.status !== "upcoming" && (
+                        <button
+                          onClick={() => { if (!user) { onOpenAuth("login"); } else { nav("/book-checkout", { state: { book: b } }); } }}
+                          data-testid={`book-signed-${b.slug}`}
+                          className="w-full mt-1 py-2 rounded-md text-xs font-bold bg-gold-gradient text-ink-950 hover:opacity-90 transition-opacity text-center flex items-center justify-center gap-1">
+                          ✍️ Buy Signed Copy
+                        </button>
+                      )}
+                     {b.status === "upcoming" && (
                         <button onClick={() => toast.success("🔔 You'll be notified at launch!")}
                           data-testid={`book-notify-${b.slug}`}
                           className="flex-1 py-2 rounded-md text-xs font-bold bg-red-500/10 text-red-400 border border-red-500/25 hover:bg-red-500/20 transition-colors">
