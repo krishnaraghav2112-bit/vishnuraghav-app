@@ -24,7 +24,107 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel, Field, EmailStr, BeforeValidator, ConfigDict
 
 import email_service
+import httpx
+import hmac
+import hashlib
 
+# ── Shiprocket config ──
+SHIPROCKET_EMAIL = os.environ.get("SHIPROCKET_EMAIL", "").strip()
+SHIPROCKET_PASSWORD = os.environ.get("SHIPROCKET_PASSWORD", "").strip()
+SHIPROCKET_PICKUP_LOCATION = os.environ.get("SHIPROCKET_PICKUP_LOCATION", "Primary").strip()
+SHIPROCKET_ENABLED = bool(SHIPROCKET_EMAIL and SHIPROCKET_PASSWORD)
+_shiprocket_token: dict = {"token": None, "expires_at": None}
+
+async def get_shiprocket_token() -> Optional[str]:
+    """Get a fresh Shiprocket token (cached for 9 days)."""
+    if not SHIPROCKET_ENABLED:
+        return None
+    now = datetime.now(timezone.utc)
+    if _shiprocket_token["token"] and _shiprocket_token["expires_at"] and now < _shiprocket_token["expires_at"]:
+        return _shiprocket_token["token"]
+    async with httpx.AsyncClient(timeout=15) as client:
+        r = await client.post("https://apiv2.shiprocket.in/v1/external/auth/login", json={
+            "email": SHIPROCKET_EMAIL, "password": SHIPROCKET_PASSWORD
+        })
+        if r.status_code != 200:
+            logger.error(f"Shiprocket auth failed: {r.text}")
+            return None
+        data = r.json()
+        _shiprocket_token["token"] = data.get("token")
+        _shiprocket_token["expires_at"] = now + timedelta(days=9)
+        return _shiprocket_token["token"]
+
+async def create_shiprocket_order(book_order: dict) -> Optional[dict]:
+    """Create a shipment on Shiprocket."""
+    token = await get_shiprocket_token()
+    if not token:
+        return None
+    addr = book_order.get("address", {})
+    payload = {
+        "order_id": str(book_order["_id"]),
+        "order_date": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M"),
+        "pickup_location": SHIPROCKET_PICKUP_LOCATION,
+        "channel_id": "",
+        "billing_customer_name": book_order["name"],
+        "billing_last_name": "",
+        "billing_address": addr.get("line1", ""),
+        "billing_address_2": addr.get("line2", ""),
+        "billing_city": addr.get("city", ""),
+        "billing_pincode": addr.get("pincode", ""),
+        "billing_state": addr.get("state", ""),
+        "billing_country": "India",
+        "billing_email": book_order.get("email", ""),
+        "billing_phone": book_order.get("phone", ""),
+        "shipping_is_billing": True,
+        "order_items": [{
+            "name": book_order.get("book_title", "Signed Book"),
+            "sku": book_order.get("book_slug", "book"),
+            "units": book_order.get("quantity", 1),
+            "selling_price": book_order.get("amount", 0),
+        }],
+        "payment_method": "Prepaid" if book_order.get("payment_mode") != "cod" else "COD",
+        "sub_total": book_order.get("amount", 0),
+        "length": 22, "breadth": 15, "height": 3, "weight": 0.5,
+    }
+    async with httpx.AsyncClient(timeout=20) as client:
+        r = await client.post(
+            "https://apiv2.shiprocket.in/v1/external/orders/create/adhoc",
+            json=payload, headers={"Authorization": f"Bearer {token}"}
+        )
+        if r.status_code not in (200, 201):
+            logger.error(f"Shiprocket order create failed: {r.text}")
+            return None
+        data = r.json()
+        return {
+            "shiprocket_order_id": data.get("order_id"),
+            "shipment_id": data.get("shipment_id"),
+            "awb": data.get("awb_code", ""),
+            "tracking_url": f"https://shiprocket.co/tracking/{data.get('awb_code', '')}",
+        }
+
+async def fetch_shiprocket_tracking(awb: str) -> Optional[dict]:
+    """Fetch live tracking info for an AWB."""
+    token = await get_shiprocket_token()
+    if not token or not awb:
+        return None
+    async with httpx.AsyncClient(timeout=15) as client:
+        r = await client.get(
+            f"https://apiv2.shiprocket.in/v1/external/courier/track/awb/{awb}",
+            headers={"Authorization": f"Bearer {token}"}
+        )
+        if r.status_code != 200:
+            return None
+        data = r.json()
+        td = data.get("tracking_data", {})
+        shipment_track = td.get("shipment_track", [{}])
+        latest = shipment_track[0] if shipment_track else {}
+        activities = td.get("shipment_track_activities", [])
+        return {
+            "current_status": latest.get("current_status", "Processing"),
+            "delivered": latest.get("delivered", False),
+            "awb": awb,
+            "activities": [{"date": a.get("date"), "activity": a.get("activity"), "location": a.get("location")} for a in activities[:5]],
+        }
 UPLOAD_DIR = ROOT_DIR / "uploads"
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 ALLOWED_IMAGE_EXT = {".jpg", ".jpeg", ".png", ".webp", ".gif"}
@@ -1405,6 +1505,174 @@ async def admin_delete_upload(body: CloudinaryDeleteIn, _: dict = Depends(requir
         raise HTTPException(status_code=400, detail="Cloudinary is not configured")
     return {"ok": ok, "target": target}
 
+# ───── BOOK ORDERS ─────
+
+class BookOrderAddress(BaseModel):
+    line1: str
+    line2: Optional[str] = ""
+    city: str
+    state: str
+    pincode: str
+
+class BookOrderIn(BaseModel):
+    book_slug: str
+    book_title: str
+    quantity: Optional[int] = 1
+    amount: int
+    payment_mode: str
+    name: str
+    phone: str
+    address: BookOrderAddress
+
+class BookOrderVerifyIn(BaseModel):
+    order_id: str
+    razorpay_payment_id: str
+    razorpay_order_id: str
+    razorpay_signature: str
+
+def _serialize_book_order(o: dict) -> dict:
+    o["id"] = str(o.pop("_id"))
+    if isinstance(o.get("created_at"), datetime):
+        o["created_at"] = o["created_at"].isoformat()
+    if isinstance(o.get("paid_at"), datetime):
+        o["paid_at"] = o["paid_at"].isoformat()
+    return o
+
+@api.post("/book-orders/checkout")
+async def book_order_checkout(body: BookOrderIn, user: dict = Depends(get_current_user)):
+    order_doc = {
+        "user_id": str(user["_id"]),
+        "email": user.get("email", ""),
+        "book_slug": body.book_slug,
+        "book_title": body.book_title,
+        "quantity": body.quantity,
+        "amount": body.amount,
+        "payment_mode": body.payment_mode,
+        "name": body.name,
+        "phone": body.phone,
+        "address": body.address.model_dump(),
+        "status": "pending",
+        "razorpay_order_id": None,
+        "razorpay_payment_id": None,
+        "shiprocket_order_id": None,
+        "shipment_id": None,
+        "awb": None,
+        "tracking_url": None,
+        "created_at": datetime.now(timezone.utc),
+        "paid_at": None,
+    }
+
+    if body.payment_mode == "cod":
+        result = await db.book_orders.insert_one(order_doc)
+        order_doc["_id"] = result.inserted_id
+        sr = await create_shiprocket_order(order_doc)
+        if sr:
+            await db.book_orders.update_one(
+                {"_id": result.inserted_id},
+                {"$set": {
+                    "status": "confirmed",
+                    "shiprocket_order_id": sr.get("shiprocket_order_id"),
+                    "shipment_id": sr.get("shipment_id"),
+                    "awb": sr.get("awb"),
+                    "tracking_url": sr.get("tracking_url"),
+                }}
+            )
+        else:
+            await db.book_orders.update_one({"_id": result.inserted_id}, {"$set": {"status": "confirmed"}})
+        return {"mode": "cod", "order_id": str(result.inserted_id), "status": "confirmed"}
+
+    rzp_key = RAZORPAY_KEY_ID
+    rzp_secret = RAZORPAY_KEY_SECRET
+    if not (rzp_key and rzp_secret):
+        raise HTTPException(status_code=500, detail="Payment not configured")
+    try:
+        client_rzp = razorpay.Client(auth=(rzp_key, rzp_secret))
+        user_id_short = str(user["_id"])[-8:]
+        receipt = f"book_{body.book_slug[:15]}_{user_id_short}"[:40]
+        rzp_order = client_rzp.order.create({
+            "amount": body.amount * 100,
+            "currency": "INR",
+            "receipt": receipt,
+            "payment_capture": 1,
+            "notes": {"book_slug": body.book_slug, "user_id": str(user["_id"])},
+        })
+    except Exception:
+        logger.exception("Razorpay book order create failed")
+        raise HTTPException(status_code=500, detail="Could not initiate payment. Please try again.")
+
+    order_doc["razorpay_order_id"] = rzp_order["id"]
+    result = await db.book_orders.insert_one(order_doc)
+    return {
+        "mode": "razorpay",
+        "order_id": str(result.inserted_id),
+        "razorpay_key": rzp_key,
+        "razorpay_order_id": rzp_order["id"],
+        "amount_paise": rzp_order["amount"],
+        "prefill": {"name": body.name, "email": user.get("email", ""), "contact": body.phone},
+    }
+
+@api.post("/book-orders/verify")
+async def book_order_verify(body: BookOrderVerifyIn, user: dict = Depends(get_current_user)):
+    order = await db.book_orders.find_one({"_id": ObjectId(body.order_id), "user_id": str(user["_id"])})
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    if order.get("status") == "confirmed":
+        return {"ok": True, "already_confirmed": True}
+    rzp_secret = RAZORPAY_KEY_SECRET
+    if rzp_secret:
+        msg = f"{body.razorpay_order_id}|{body.razorpay_payment_id}"
+        expected = hmac.new(rzp_secret.encode(), msg.encode(), hashlib.sha256).hexdigest()
+        if expected != body.razorpay_signature:
+            raise HTTPException(status_code=400, detail="Invalid payment signature")
+    await db.book_orders.update_one(
+        {"_id": ObjectId(body.order_id)},
+        {"$set": {
+            "status": "paid",
+            "razorpay_payment_id": body.razorpay_payment_id,
+            "paid_at": datetime.now(timezone.utc),
+        }}
+    )
+    order["_id"] = ObjectId(body.order_id)
+    order["razorpay_payment_id"] = body.razorpay_payment_id
+    sr = await create_shiprocket_order(order)
+    if sr:
+        await db.book_orders.update_one(
+            {"_id": ObjectId(body.order_id)},
+            {"$set": {
+                "status": "confirmed",
+                "shiprocket_order_id": sr.get("shiprocket_order_id"),
+                "shipment_id": sr.get("shipment_id"),
+                "awb": sr.get("awb"),
+                "tracking_url": sr.get("tracking_url"),
+            }}
+        )
+    return {"ok": True, "status": "confirmed"}
+
+@api.get("/book-orders/me")
+async def my_book_orders(user: dict = Depends(get_current_user)):
+    cursor = db.book_orders.find({"user_id": str(user["_id"])}).sort("created_at", -1)
+    orders = []
+    async for o in cursor:
+        orders.append(_serialize_book_order(o))
+    return orders
+
+@api.get("/book-orders/track/{order_id}")
+async def track_book_order(order_id: str, user: dict = Depends(get_current_user)):
+    order = await db.book_orders.find_one({"_id": ObjectId(order_id), "user_id": str(user["_id"])})
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    tracking = None
+    if order.get("awb"):
+        tracking = await fetch_shiprocket_tracking(order["awb"])
+    return {"order": _serialize_book_order(order), "tracking": tracking}
+
+@api.get("/admin/book-orders")
+async def admin_book_orders(_: dict = Depends(require_admin)):
+    cursor = db.book_orders.find({}).sort("created_at", -1)
+    orders = []
+    async for o in cursor:
+        orders.append(_serialize_book_order(o))
+    return orders
 @api.api_route("/", methods=["GET", "HEAD"])
 async def root():
     return {
@@ -1457,6 +1725,7 @@ async def startup():
     await db.courses.create_index("slug", unique=True)
     await db.blog_posts.create_index("slug", unique=True)
     await db.coupons.create_index("code", unique=True)
+    await db.book_orders.create_index([("user_id", 1), ("created_at", -1)])
 
     await seed_content()
 
