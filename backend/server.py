@@ -1514,11 +1514,18 @@ class BookOrderAddress(BaseModel):
     state: str
     pincode: str
 
-class BookOrderIn(BaseModel):
+class BookOrderItem(BaseModel):
     book_slug: str
     book_title: str
-    quantity: Optional[int] = 1
+    quantity: int
+    unit_price: int
+
+class BookOrderIn(BaseModel):
+    items: List[BookOrderItem]
+    subtotal: int
+    shipping: int
     amount: int
+    cod_fee: Optional[int] = 0
     payment_mode: str
     name: str
     phone: str
