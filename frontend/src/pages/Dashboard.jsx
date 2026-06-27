@@ -428,29 +428,6 @@ function BookOrderCard({ order }) {
     }
   };
 
-  return (
-    <div className="bg-ink-800 border border-white/[0.07] rounded-xl p-4">
-      <div className="flex items-start justify-between gap-3 mb-3">
-        <div>
-          <div className="font-serif font-bold text-sm">{order.book_title}</div>
-          <div className="text-xs text-muted-foreground mt-0.5">✍️ Signed Copy · {date}</div>
-        </div>
-        <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border capitalize ${statusColor}`}>
-          {order.status}
-        </span>
-      </div>
-
-      <div className="grid grid-cols-2 gap-2 text-xs mb-3">
-        <div className="bg-ink-900 rounded-lg p-2">
-          <div className="text-muted-foreground text-[10px] uppercase tracking-wider mb-0.5">Amount</div>
-          <div className="font-bold text-brand-gold">₹{order.amount}</div>
-        </div>
-        <div className="bg-ink-900 rounded-lg p-2">
-          <div className="text-muted-foreground text-[10px] uppercase tracking-wider mb-0.5">Payment</div>
-          <div className="font-bold capitalize">{order.payment_mode === "cod" ? "Cash on Delivery" : "Paid Online"}</div>
-        </div>
-      </div>
-
       <div className="bg-ink-900 rounded-lg p-2 mb-3 flex items-start gap-2">
         <MapPin className="w-3 h-3 text-muted-foreground mt-0.5 flex-none" />
         <div className="text-xs text-muted-foreground leading-relaxed">
