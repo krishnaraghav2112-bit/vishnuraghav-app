@@ -1572,6 +1572,8 @@ class BookOrderIn(BaseModel):
     shipping: int
     amount: int
     cod_fee: Optional[int] = 0
+    coupon_code: Optional[str] = None
+    discount: Optional[int] = 0
     payment_mode: str
     name: str
     phone: str
@@ -1605,6 +1607,8 @@ async def book_order_checkout(body: BookOrderIn, user: dict = Depends(get_curren
         "phone": body.phone,
         "address": body.address.model_dump(),
         "status": "pending",
+        "coupon_code": body.coupon_code or None,
+        "discount": body.discount or 0,
         "razorpay_order_id": None,
         "razorpay_payment_id": None,
         "shiprocket_order_id": None,
@@ -1632,6 +1636,8 @@ async def book_order_checkout(body: BookOrderIn, user: dict = Depends(get_curren
             )
         else:
             await db.book_orders.update_one({"_id": result.inserted_id}, {"$set": {"status": "confirmed"}})
+        if body.coupon_code:
+            await db.coupons.update_one({"code": body.coupon_code.upper()}, {"$inc": {"used_count": 1}})
         return {"mode": "cod", "order_id": str(result.inserted_id), "status": "confirmed"}
 
     rzp_key = RAZORPAY_KEY_ID
@@ -1653,6 +1659,8 @@ async def book_order_checkout(body: BookOrderIn, user: dict = Depends(get_curren
         logger.exception("Razorpay book order create failed")
         raise HTTPException(status_code=500, detail="Could not initiate payment. Please try again.")
 
+    if body.coupon_code:
+        await db.coupons.update_one({"code": body.coupon_code.upper()}, {"$inc": {"used_count": 1}})
     order_doc["razorpay_order_id"] = rzp_order["id"]
     result = await db.book_orders.insert_one(order_doc)
     return {
