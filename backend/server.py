@@ -270,11 +270,13 @@ class CouponValidateIn(BaseModel):
 
 class CouponIn(BaseModel):
     code: str
-    kind: str  # "percent" or "fixed"
-    value: int  # percent (1-100) or fixed amount in rupees
-    expires_at: Optional[str] = None  # ISO date string (YYYY-MM-DD) or full ISO
-    max_uses: Optional[int] = None  # null = unlimited
-    course_slugs: Optional[List[str]] = []  # empty = all courses
+    kind: str
+    value: int
+    expires_at: Optional[str] = None
+    max_uses: Optional[int] = None
+    course_slugs: Optional[List[str]] = []
+    book_slugs: Optional[List[str]] = []
+    applies_to: Optional[str] = "all"  # "all", "courses", "books"
     active: Optional[bool] = True
 
 class CouponUpdate(BaseModel):
@@ -283,8 +285,9 @@ class CouponUpdate(BaseModel):
     expires_at: Optional[str] = None
     max_uses: Optional[int] = None
     course_slugs: Optional[List[str]] = None
+    book_slugs: Optional[List[str]] = None
+    applies_to: Optional[str] = None
     active: Optional[bool] = None
-
 # ───── AUTH ─────
 @api.post("/auth/register")
 async def register(body: RegisterIn, response: Response):
@@ -654,6 +657,45 @@ async def _evaluate_coupon(code: str, course_slug: str) -> dict:
 @api.post("/coupons/validate")
 async def coupons_validate(body: CouponValidateIn, _: dict = Depends(get_current_user)):
     return await _evaluate_coupon(body.code, body.course_slug)
+    class BookCouponValidateIn(BaseModel):
+    code: str
+    amount: int  # total cart amount before discount
+
+@api.post("/coupons/validate-book")
+async def coupons_validate_book(body: BookCouponValidateIn, _: dict = Depends(get_current_user)):
+    code = (body.code or "").strip().upper()
+    if not code:
+        return {"valid": False, "message": "Enter a coupon code"}
+    coupon = await db.coupons.find_one({"code": code})
+    if not coupon or not coupon.get("active", True):
+        return {"valid": False, "message": "Invalid coupon code"}
+    exp = _parse_iso(coupon.get("expires_at"))
+    if exp and datetime.now(timezone.utc) > exp:
+        return {"valid": False, "message": "This coupon has expired"}
+    max_uses = coupon.get("max_uses")
+    if max_uses is not None and coupon.get("used_count", 0) >= max_uses:
+        return {"valid": False, "message": "This coupon has reached its usage limit"}
+    applies_to = coupon.get("applies_to", "all")
+    if applies_to == "courses":
+        return {"valid": False, "message": "This coupon is only valid for courses"}
+    kind = coupon.get("kind", "percent")
+    value = int(coupon.get("value", 0))
+    original = body.amount
+    if kind == "percent":
+        discount = original * max(0, min(100, value)) // 100
+    else:
+        discount = min(original, max(0, value))
+    final_amount = max(0, original - discount)
+    return {
+        "valid": True,
+        "message": f"Coupon applied — ₹{discount} off!",
+        "code": code,
+        "kind": kind,
+        "value": value,
+        "discount": discount,
+        "original_amount": original,
+        "final_amount": final_amount,
+    }
 
 # ───── ENROLLMENT & PAYMENT (mock-ready Razorpay) ─────
 @api.post("/enrollments/checkout")
