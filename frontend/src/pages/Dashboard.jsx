@@ -428,10 +428,6 @@ function BookOrderCard({ order }) {
     }
   };
 
-  const addr = order.address || {};
-  const statusColor = STATUS_COLORS[order.status] || STATUS_COLORS.pending;
-  const date = order.created_at ? new Date(order.created_at).toLocaleDateString("en-IN", { day:"numeric", month:"short", year:"numeric" }) : "";
-
   return (
     <div className="bg-ink-800 border border-white/[0.07] rounded-xl p-4">
       <div className="flex items-start justify-between gap-3 mb-3">
