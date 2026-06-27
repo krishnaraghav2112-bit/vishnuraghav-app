@@ -413,18 +413,3 @@ function BookOrderCard({ order }) {
     </div>
   );
 }
-
-  const fetchTracking = async () => {
-    if (tracking) { setShowTrack(t => !t); return; }
-    setLoadingTrack(true);
-    try {
-      const { data } = await api.get(`/book-orders/track/${order.id}`);
-      setTracking(data.tracking);
-      setShowTrack(true);
-    } catch {
-      toast.error("Could not fetch tracking info");
-    } finally {
-      setLoadingTrack(false);
-    }
-  };
-}
