@@ -286,7 +286,8 @@ function BookForm({ book, onCancel, onSaved }) {
         <FormField label="Title (Hindi)"><input value={form.hindi} onChange={(e) => setForm({ ...form, hindi: e.target.value })} className={fieldCls} /></FormField>
         <FormField label="Tagline"><input value={form.tagline} onChange={(e) => setForm({ ...form, tagline: e.target.value })} className={fieldCls} /></FormField>
         <FormField label="Publisher"><input value={form.publisher} onChange={(e) => setForm({ ...form, publisher: e.target.value })} className={fieldCls} /></FormField>
-        <FormField label="Price (display)"><input value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} className={fieldCls} /></FormField>
+        <FormField label="Price (display) <FormField label="Signed Copy Price (₹)"><input type="number" value={form.signed_price || 249} onChange={(e) => setForm({ ...form, signed_price: parseInt(e.target.value) })} className={fieldCls} placeholder="249" /></FormField>
+        <FormField label="COD Fee (₹)"><input type="number" value={form.cod_fee ?? 40} onChange={(e) => setForm({ ...form, cod_fee: parseInt(e.target.value) })} className={fieldCls} placeholder="40" /></FormField>"><input value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} className={fieldCls} /></FormField>
         <FormField label="Amazon URL"><input value={form.amazon} onChange={(e) => setForm({ ...form, amazon: e.target.value })} className={fieldCls} /></FormField>
         <FormField label="Flipkart URL"><input value={form.flipkart} onChange={(e) => setForm({ ...form, flipkart: e.target.value })} className={fieldCls} /></FormField>
         <FormField label="Badge (Bestseller / Coming Soon)"><input value={form.badge} onChange={(e) => setForm({ ...form, badge: e.target.value })} className={fieldCls} /></FormField>
@@ -723,7 +724,7 @@ function CouponForm({ coupon, onCancel, onSaved }) {
     course_slugs_text: (coupon.course_slugs || []).join(","),
     active: coupon.active !== false,
   } : {
-    code: "", kind: "percent", value: 10, expires_at: "", max_uses: "", course_slugs_text: "", active: true,
+   code: "", kind: "percent", value: 10, expires_at: "", max_uses: "", course_slugs_text: "", applies_to: "all", active: true,
   });
   const [saving, setSaving] = useState(false);
 
@@ -742,6 +743,7 @@ function CouponForm({ coupon, onCancel, onSaved }) {
         ? form.course_slugs_text.split(",").map((s) => s.trim()).filter(Boolean)
         : [],
       active: !!form.active,
+      applies_to: form.applies_to || "all",
     };
     try {
       if (isNew) {
@@ -790,6 +792,13 @@ function CouponForm({ coupon, onCancel, onSaved }) {
           <input data-testid="cpf-slugs" value={form.course_slugs_text}
             onChange={(e) => setForm({ ...form, course_slugs_text: e.target.value })}
             placeholder="time-management-mastery, overcoming-overthinking" className={fieldCls} />
+        </FormField>
+        <FormField label="Applies to">
+          <select value={form.applies_to || "all"} onChange={(e) => setForm({ ...form, applies_to: e.target.value })} className={fieldCls}>
+            <option value="all">All (Courses + Books)</option>
+            <option value="courses">Courses only</option>
+            <option value="books">Books only</option>
+          </select>
         </FormField>
       </div>
       <label className="flex items-center gap-2 text-xs">
