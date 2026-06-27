@@ -428,13 +428,6 @@ function BookOrderCard({ order }) {
     }
   };
 
-      <div className="bg-ink-900 rounded-lg p-2 mb-3 flex items-start gap-2">
-        <MapPin className="w-3 h-3 text-muted-foreground mt-0.5 flex-none" />
-        <div className="text-xs text-muted-foreground leading-relaxed">
-          {order.name} · {addr.line1}{addr.line2 ? ", " + addr.line2 : ""}, {addr.city}, {addr.state} - {addr.pincode}
-        </div>
-      </div>
-
       {order.awb && (
         <div>
           <button onClick={fetchTracking} disabled={loadingTrack}
