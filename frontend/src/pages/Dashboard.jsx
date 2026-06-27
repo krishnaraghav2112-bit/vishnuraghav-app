@@ -309,11 +309,6 @@ function EmptyState({ text, onClick }) {
   );
 }
 
-function BookOrderCard({ order }) {
-  const [tracking, setTracking] = useState(null);
-  const [loadingTrack, setLoadingTrack] = useState(false);
-  const [showTrack, setShowTrack] = useState(false);
-
   const fetchTracking = async () => {
     if (tracking) { setShowTrack(t => !t); return; }
     setLoadingTrack(true);
