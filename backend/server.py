@@ -1219,6 +1219,8 @@ class BookIn(BaseModel):
     tagline: Optional[str] = ""
     publisher: Optional[str] = ""
     price: Optional[str] = ""
+    signed_price: Optional[int] = 249
+    cod_fee: Optional[int] = 40
     description: Optional[str] = ""
     excerpt: Optional[str] = ""
     takeaways: Optional[List[str]] = []
@@ -1245,6 +1247,8 @@ class BookUpdate(BaseModel):
     tagline: Optional[str] = None
     publisher: Optional[str] = None
     price: Optional[str] = None
+    signed_price: Optional[int] = None
+    cod_fee: Optional[int] = None
     description: Optional[str] = None
     excerpt: Optional[str] = None
     takeaways: Optional[List[str]] = None
