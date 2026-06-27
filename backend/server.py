@@ -657,10 +657,10 @@ async def _evaluate_coupon(code: str, course_slug: str) -> dict:
 @api.post("/coupons/validate")
 async def coupons_validate(body: CouponValidateIn, _: dict = Depends(get_current_user)):
     return await _evaluate_coupon(body.code, body.course_slug)
-    class BookCouponValidateIn(BaseModel):
+
+class BookCouponValidateIn(BaseModel):
     code: str
     amount: int  # total cart amount before discount
-
 @api.post("/coupons/validate-book")
 async def coupons_validate_book(body: BookCouponValidateIn, _: dict = Depends(get_current_user)):
     code = (body.code or "").strip().upper()
