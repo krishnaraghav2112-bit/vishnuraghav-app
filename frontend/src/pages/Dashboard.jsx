@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { BookOpen, TrendingUp, Award, CreditCard, User, LogOut, Clock, Brain, Sparkles, Heart, Flame, Package, MapPin, Truck } from "lucide-react";
-import { toast } from "sonner";
 import api, { formatApiError } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 
@@ -11,8 +10,10 @@ export default function Dashboard({ onOpenAuth }) {
   const { user, loading, logout, updateProfile } = useAuth();
   const nav = useNavigate();
   const location = useLocation();
+  const location = useLocation();
   const [tab, setTab] = useState(location.state?.tab || "courses");
   const [enrollments, setEnrollments] = useState([]);
+  const [bookOrders, setBookOrders] = useState([]);
   const [bookOrders, setBookOrders] = useState([]);
   const [profile, setProfile] = useState({ name: "", phone: "", city: "", occupation: "" });
 
@@ -23,6 +24,7 @@ export default function Dashboard({ onOpenAuth }) {
   useEffect(() => {
     if (user) {
       api.get("/enrollments/me").then((r) => setEnrollments(r.data)).catch(() => {});
+      api.get("/book-orders/me").then((r) => setBookOrders(r.data)).catch(() => {});
       api.get("/book-orders/me").then((r) => setBookOrders(r.data)).catch(() => {});
       setProfile({ name: user.name || "", phone: user.phone || "", city: user.city || "", occupation: user.occupation || "" });
     }
@@ -133,6 +135,27 @@ export default function Dashboard({ onOpenAuth }) {
             </>
           )}
 
+          {tab === "bookorders" && (
+            <>
+              <SectionHead>My Book Orders</SectionHead>
+              {bookOrders.length === 0 ? (
+                <div className="text-center py-12">
+                  <Package className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
+                  <p className="text-muted-foreground text-sm">No book orders yet.</p>
+                  <button onClick={() => nav("/")}
+                    className="mt-4 px-5 py-2 rounded-xl text-xs font-bold bg-gold-gradient text-ink-950">
+                    Browse Books
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {bookOrders.map((o) => (
+                    <BookOrderCard key={o.id} order={o} />
+                  ))}
+                </div>
+              )}
+            </>
+          )}
           {tab === "bookorders" && (
             <>
               <SectionHead>My Book Orders</SectionHead>
