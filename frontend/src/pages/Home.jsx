@@ -4,6 +4,7 @@ import { Clock, Brain, Sparkles, Heart, Youtube, Instagram, Facebook, Linkedin, 
 import { toast } from "sonner";
 import api, { formatApiError } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
+import { useCart } from "../context/CartContext";
 import { makeBookCover, makeAuthorPortrait } from "../lib/bookCover";
 import SuccessLottie from "../components/SuccessLottie";
 
@@ -35,6 +36,7 @@ function extractYoutubeId(url = "") {
 
 export default function Home({ onOpenAuth, onOpenPay }) {
   const { user } = useAuth();
+  const { addToCart, totalItems } = useCart();
   const nav = useNavigate();
   const [books, setBooks] = useState([]);
   const [courses, setCourses] = useState([]);
@@ -95,6 +97,14 @@ export default function Home({ onOpenAuth, onOpenPay }) {
   // ── HERO ─────────────────────────────────────────────────────
   return (
     <main data-testid="home-page">
+      {totalItems > 0 && (
+        <button
+          onClick={() => nav("/book-checkout")}
+          className="fixed bottom-6 right-6 z-50 flex items-center gap-2 bg-gold-gradient text-ink-950 font-bold px-4 py-3 rounded-full shadow-2xl hover:opacity-90 transition-opacity">
+          <ShoppingCart className="w-4 h-4" />
+          View Cart ({totalItems})
+        </button>
+      )}
       <section id="home" className="relative min-h-[94vh] flex items-center px-5 lg:px-10 py-16 overflow-hidden">
         <div className="absolute inset-0 pointer-events-none"
              style={{ background: "radial-gradient(ellipse 70% 60% at 65% 42%,rgba(124,92,252,.12),transparent 60%),radial-gradient(ellipse 45% 38% at 10% 78%,rgba(201,168,76,.07),transparent 55%)" }} />
@@ -330,10 +340,10 @@ export default function Home({ onOpenAuth, onOpenPay }) {
                       ) : null}
                       {b.status !== "upcoming" && (
                         <button
-                          onClick={() => { if (!user) { onOpenAuth("login"); } else { nav("/book-checkout", { state: { book: b } }); } }}
+                          onClick={() => { if (!user) { onOpenAuth("login"); } else { addToCart(b); } }}
                           data-testid={`book-signed-${b.slug}`}
                           className="w-full mt-1 py-2 rounded-md text-xs font-bold bg-gold-gradient text-ink-950 hover:opacity-90 transition-opacity text-center flex items-center justify-center gap-1">
-                          ✍️ Buy Signed Copy
+                          ✍️ Buy Author Signed Copy
                         </button>
                       )}
                      {b.status === "upcoming" && (
