@@ -427,47 +427,4 @@ function BookOrderCard({ order }) {
       setLoadingTrack(false);
     }
   };
-
-      {order.awb && (
-        <div>
-          <button onClick={fetchTracking} disabled={loadingTrack}
-            className="w-full py-2 rounded-lg text-xs font-bold border border-brand-gold/30 text-brand-gold hover:bg-brand-gold/5 transition-colors flex items-center justify-center gap-1.5">
-            <Truck className="w-3 h-3" />
-            {loadingTrack ? "Fetching..." : showTrack ? "Hide Tracking" : "Track Order"}
-          </button>
-          {showTrack && tracking && (
-            <div className="mt-3 bg-ink-900 rounded-xl p-3">
-              <div className="flex items-center justify-between mb-2">
-                <div className="text-xs font-bold text-brand-gold">{tracking.current_status}</div>
-                {order.tracking_url && (
-                  <a href={order.tracking_url} target="_blank" rel="noopener noreferrer"
-                    className="text-[10px] text-blue-400 underline">Open on Shiprocket ↗</a>
-                )}
-              </div>
-              <div className="text-[10px] text-muted-foreground mb-2">AWB: {order.awb}</div>
-              {tracking.activities?.length > 0 && (
-                <div className="space-y-2 mt-2">
-                  {tracking.activities.map((a, i) => (
-                    <div key={i} className="flex gap-2 text-[10px]">
-                      <div className="w-1.5 h-1.5 rounded-full bg-brand-gold mt-1 flex-none" />
-                      <div>
-                        <div className="text-foreground/80">{a.activity}</div>
-                        <div className="text-muted-foreground">{a.location} · {a.date}</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-          {showTrack && !tracking && (
-            <div className="mt-2 text-xs text-muted-foreground text-center">Tracking info not available yet. Check back soon.</div>
-          )}
-        </div>
-      )}
-      {!order.awb && order.status === "confirmed" && (
-        <div className="text-xs text-muted-foreground text-center py-1">📦 Shipment being prepared...</div>
-      )}
-    </div>
-  );
 }
