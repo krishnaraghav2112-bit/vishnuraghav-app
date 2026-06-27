@@ -308,13 +308,6 @@ function EmptyState({ text, onClick }) {
     </div>
   );
 }
-const STATUS_COLORS = {
-  pending:   "bg-yellow-500/10 text-yellow-400 border-yellow-500/20",
-  confirmed: "bg-blue-500/10 text-blue-400 border-blue-500/20",
-  paid:      "bg-green-500/10 text-green-400 border-green-500/20",
-  shipped:   "bg-purple-500/10 text-purple-400 border-purple-500/20",
-  delivered: "bg-green-500/10 text-green-400 border-green-500/20",
-};
 
 function BookOrderCard({ order }) {
   const [tracking, setTracking] = useState(null);
