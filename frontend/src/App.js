@@ -5,6 +5,7 @@ import { Toaster } from "sonner";
 import "@/App.css";
 
 import { AuthProvider } from "./context/AuthContext";
+import { CartProvider } from "./context/CartContext";
 import Navbar from "./components/Navbar";
 import AuthModal from "./components/AuthModal";
 import PayModal from "./components/PayModal";
@@ -88,9 +89,11 @@ function App() {
   return (
     <HelmetProvider>
     <AuthProvider>
+      <CartProvider>
       <BrowserRouter>
         <AppShell />
       </BrowserRouter>
+      </CartProvider>
     </AuthProvider>
   </HelmetProvider>
   );
