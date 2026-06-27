@@ -10,10 +10,8 @@ export default function Dashboard({ onOpenAuth }) {
   const { user, loading, logout, updateProfile } = useAuth();
   const nav = useNavigate();
   const location = useLocation();
-  const location = useLocation();
   const [tab, setTab] = useState(location.state?.tab || "courses");
   const [enrollments, setEnrollments] = useState([]);
-  const [bookOrders, setBookOrders] = useState([]);
   const [bookOrders, setBookOrders] = useState([]);
   const [profile, setProfile] = useState({ name: "", phone: "", city: "", occupation: "" });
 
