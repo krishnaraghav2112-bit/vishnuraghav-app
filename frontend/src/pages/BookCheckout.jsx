@@ -36,6 +36,9 @@ export default function BookCheckout({ onOpenAuth }) {
   const [payMode, setPayMode] = useState("prepaid");
   const [busy, setBusy] = useState(false);
   const [orderId, setOrderId] = useState(null);
+  const [couponCode, setCouponCode] = useState("");
+  const [couponResult, setCouponResult] = useState(null);
+  const [couponBusy, setCouponBusy] = useState(false);
 
   const SHIPPING = 60;
   const COD_EXTRA = 40;
@@ -43,6 +46,8 @@ export default function BookCheckout({ onOpenAuth }) {
   const totalPrepaid = bookPrice + SHIPPING;
   const totalCOD = bookPrice + SHIPPING + COD_EXTRA;
   const total = payMode === "cod" ? totalCOD : totalPrepaid;
+  const discount = couponResult?.valid ? couponResult.discount : 0;
+  const finalTotal = payMode === "cod" ? (totalPrepaid - discount) + COD_EXTRA : totalPrepaid - discount;
 
   const [form, setForm] = useState({
     name: "", phone: "",
@@ -62,6 +67,16 @@ export default function BookCheckout({ onOpenAuth }) {
   if (loading) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Loading...</div>;
 
   const handleChange = (e) => setForm(f => ({ ...f, [e.target.name]: e.target.value }));
+  const applyCoupon = async () => {
+    if (!couponCode.trim()) { toast.error("Enter a coupon code"); return; }
+    setCouponBusy(true);
+    try {
+      const { data } = await api.post("/coupons/validate-book", { code: couponCode.trim(), amount: totalPrepaid });
+      setCouponResult(data);
+      if (data.valid) { toast.success(data.message); } else { toast.error(data.message); }
+    } catch { toast.error("Could not validate coupon"); }
+    finally { setCouponBusy(false); }
+  };
 
   const validateAddress = () => {
     if (!form.name.trim()) return "Please enter your full name";
@@ -85,6 +100,8 @@ export default function BookCheckout({ onOpenAuth }) {
         quantity: 1,
         amount: total,
         payment_mode: payMode,
+        coupon_code: couponResult?.valid ? couponCode.trim().toUpperCase() : null,
+        discount: discount,
         name: form.name,
         phone: form.phone,
         address: { line1: form.line1, line2: form.line2, city: form.city, state: form.state, pincode: form.pincode },
@@ -325,12 +342,33 @@ export default function BookCheckout({ onOpenAuth }) {
                 <span>₹{COD_EXTRA}</span>
               </div>
             )}
+            {discount > 0 && (
+              <div className="flex justify-between text-xs text-green-400 font-semibold">
+                <span>Coupon Discount</span>
+                <span>−₹{discount}</span>
+              </div>
+            )}
             <div className="border-t border-white/10 pt-2 flex justify-between font-bold">
               <span>Total</span>
-              <span className="text-brand-gold">₹{total}</span>
+              <span className="text-brand-gold">₹{finalTotal}</span>
             </div>
           </div>
 
+          <div className="mb-4">
+            <div className="text-xs font-semibold text-muted-foreground mb-1">Have a coupon?</div>
+            <div className="flex gap-2">
+              <input value={couponCode} onChange={(e) => { setCouponCode(e.target.value.toUpperCase()); setCouponResult(null); }}
+                placeholder="ENTER CODE"
+                className="flex-1 bg-ink-800 border border-white/10 rounded-lg px-3 py-2 text-xs font-mono uppercase tracking-wider focus:outline-none focus:border-brand-gold/50" />
+              <button onClick={applyCoupon} disabled={couponBusy}
+                className="px-3 py-2 rounded-lg text-xs font-bold bg-brand-gold/10 text-brand-gold border border-brand-gold/20 hover:bg-brand-gold/20 disabled:opacity-50">
+                {couponBusy ? "..." : "Apply"}
+              </button>
+            </div>
+            {couponResult?.valid && (
+              <div className="mt-1.5 text-xs text-green-400 font-semibold">✅ {couponResult.message}</div>
+            )}
+          </div>
           <div className="bg-green-500/5 border border-green-500/20 rounded-xl p-3 mb-4">
             <div className="text-xs text-green-400 font-semibold mb-1">✍️ What you get</div>
             <div className="text-xs text-muted-foreground">Personally signed copy by Vishnu Raghav. Ships within 3-5 working days via Shiprocket.</div>
