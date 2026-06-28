@@ -89,11 +89,11 @@ function App() {
   return (
     <HelmetProvider>
     <AuthProvider>
-      <CartProvider>
       <BrowserRouter>
-        <AppShell />
+        <CartProvider>
+          <AppShell />
+        </CartProvider>
       </BrowserRouter>
-      </CartProvider>
     </AuthProvider>
   </HelmetProvider>
   );
