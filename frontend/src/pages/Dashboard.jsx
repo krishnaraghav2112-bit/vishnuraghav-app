@@ -23,7 +23,6 @@ export default function Dashboard({ onOpenAuth }) {
     if (user) {
       api.get("/enrollments/me").then((r) => setEnrollments(r.data)).catch(() => {});
       api.get("/book-orders/me").then((r) => setBookOrders(r.data)).catch(() => {});
-      api.get("/book-orders/me").then((r) => setBookOrders(r.data)).catch(() => {});
       setProfile({ name: user.name || "", phone: user.phone || "", city: user.city || "", occupation: user.occupation || "" });
     }
   }, [user]);
