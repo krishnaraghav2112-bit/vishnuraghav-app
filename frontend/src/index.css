@@ -76,7 +76,8 @@
 }
 
 [data-debug-wrapper="true"] { display: contents !important; }
-/* Custom language switcher — replaces Google's ugly widget */
+
+* Custom language switcher — replaces Google's ugly widget */
 .lang-switcher {
   background: rgba(201, 168, 76, 0.1);
   color: #c9a84c;
@@ -104,6 +105,50 @@
   color: #f4ecd8;
   font-weight: 600;
   padding: 6px;
+}
+
+/* NUKE Google Translate's default UI — every possible variant */
+iframe.goog-te-banner-frame,
+iframe.skiptranslate,
+.goog-te-banner-frame,
+.goog-te-banner-frame.skiptranslate,
+.skiptranslate iframe,
+body > .skiptranslate,
+.goog-te-gadget,
+#goog-gt-tt,
+.goog-te-balloon-frame,
+.goog-tooltip,
+.goog-tooltip:hover {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  max-height: 0 !important;
+  border: 0 !important;
+  opacity: 0 !important;
+  z-index: -9999 !important;
+  position: absolute !important;
+  top: -9999px !important;
+  left: -9999px !important;
+  pointer-events: none !important;
+}
+html {
+  top: 0 !important;
+  margin-top: 0 !important;
+  position: static !important;
+}
+body {
+  top: 0 !important;
+  margin-top: 0 !important;
+  position: static !important;
+  min-height: 100vh !important;
+}
+.goog-text-highlight {
+  background-color: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+font[style*="background-color"] {
+  background-color: transparent !important;
 }
 
 /* Kill Google Translate's default UI completely */
