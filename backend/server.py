@@ -1602,12 +1602,23 @@ def _serialize_book_order(o: dict) -> dict:
 
 @api.post("/book-orders/checkout")
 async def book_order_checkout(body: BookOrderIn, user: dict = Depends(get_current_user)):
+    if not body.items:
+        raise HTTPException(status_code=400, detail="Cart is empty")
+
+    primary = body.items[0]
+    total_qty = sum(i.quantity for i in body.items)
+    combined_title = ", ".join(f"{i.book_title} (x{i.quantity})" for i in body.items)
+
     order_doc = {
         "user_id": str(user["_id"]),
         "email": user.get("email", ""),
-        "book_slug": body.book_slug,
-        "book_title": body.book_title,
-        "quantity": body.quantity,
+        "items": [i.model_dump() for i in body.items],
+        "book_slug": primary.book_slug,
+        "book_title": combined_title,
+        "quantity": total_qty,
+        "subtotal": body.subtotal,
+        "shipping": body.shipping,
+        "cod_fee": body.cod_fee or 0,
         "amount": body.amount,
         "payment_mode": body.payment_mode,
         "name": body.name,
@@ -1654,13 +1665,13 @@ async def book_order_checkout(body: BookOrderIn, user: dict = Depends(get_curren
     try:
         client_rzp = razorpay.Client(auth=(rzp_key, rzp_secret))
         user_id_short = str(user["_id"])[-8:]
-        receipt = f"book_{body.book_slug[:15]}_{user_id_short}"[:40]
+        receipt = f"book_{primary.book_slug[:15]}_{user_id_short}"[:40]
         rzp_order = client_rzp.order.create({
             "amount": body.amount * 100,
             "currency": "INR",
             "receipt": receipt,
             "payment_capture": 1,
-            "notes": {"book_slug": body.book_slug, "user_id": str(user["_id"])},
+            "notes": {"book_slug": primary.book_slug, "user_id": str(user["_id"]), "items_count": total_qty},
         })
     except Exception:
         logger.exception("Razorpay book order create failed")
