@@ -78,6 +78,7 @@ export default function Navbar({ onOpenAuth }) {
               </span>
             </button>
           )}
+          <div id="google_translate_element" className="notranslate"></div>
           <a
             href="https://youtube.com/@vishnuraghav"
             target="_blank"
