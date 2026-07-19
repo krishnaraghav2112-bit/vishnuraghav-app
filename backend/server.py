@@ -1656,7 +1656,35 @@ async def book_order_checkout(body: BookOrderIn, user: dict = Depends(get_curren
             await db.book_orders.update_one({"_id": result.inserted_id}, {"$set": {"status": "confirmed"}})
         if body.coupon_code:
             await db.coupons.update_one({"code": body.coupon_code.upper()}, {"$inc": {"used_count": 1}})
-        return {"mode": "cod", "order_id": str(result.inserted_id), "status": "confirmed"}
+        # ── Send confirmation emails ──
+        try:
+            items_dicts = [i.model_dump() for i in body.items]
+            await email_service.send_book_order_confirmation(
+                name=body.name,
+                email=user.get("email", ""),
+                order_id=str(result.inserted_id),
+                items=items_dicts,
+                subtotal=body.subtotal,
+                shipping=body.shipping,
+                cod_fee=body.cod_fee or 0,
+                discount=body.discount or 0,
+                total=body.amount,
+                payment_mode=body.payment_mode,
+                address=body.address.model_dump(),
+            )
+            await email_service.send_book_order_admin_notify(
+                order_id=str(result.inserted_id),
+                customer_name=body.name,
+                customer_email=user.get("email", ""),
+                customer_phone=body.phone,
+                items=items_dicts,
+                total=body.amount,
+                payment_mode=body.payment_mode,
+                address=body.address.model_dump(),
+            )
+        except Exception:
+            logger.exception("Book order confirmation email failed (order still confirmed)")
+                return {"mode": "cod", "order_id": str(result.inserted_id), "status": "confirmed"}
 
     rzp_key = RAZORPAY_KEY_ID
     rzp_secret = RAZORPAY_KEY_SECRET
