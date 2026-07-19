@@ -139,6 +139,12 @@ export default function Home({ onOpenAuth, onOpenPay }) {
               >
                 📚 Read Books
               </button>
+              <button
+                data-testid="hero-cta-assessment"
+                onClick={() => nav("/self-assessment")}
+                className="bg-brand-gold/10 border border-brand-gold/30 text-brand-gold px-6 py-3.5 rounded-xl font-semibold text-sm hover:bg-brand-gold/20 transition-colors">
+                🧠 Free Mind Test
+              </button>
             </div>
 
             <div className="flex gap-8 flex-wrap">
