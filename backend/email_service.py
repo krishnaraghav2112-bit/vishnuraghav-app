@@ -187,3 +187,157 @@ async def send_contact_notification(name: str, email: str, phone: str, purpose: 
 async def send_contact_autoresponder(name: str, email: str) -> Optional[str]:
     subject, html = contact_autoresponder_template(name)
     return await send_email(email, subject, html)
+    # ───────────────────────── Book Order Emails ─────────────────────────
+def book_order_confirmation_template(
+    name: str,
+    order_id: str,
+    items: list,
+    subtotal: int,
+    shipping: int,
+    cod_fee: int,
+    discount: int,
+    total: int,
+    payment_mode: str,
+    address: dict,
+) -> tuple[str, str]:
+    name_clean = escape((name or "friend").strip())
+    is_cod = payment_mode == "cod"
+    payment_label = "Cash on Delivery" if is_cod else "Paid Online"
+    payment_color = "#3b82f6" if is_cod else "#22c55e"
+
+    items_html = ""
+    for it in items:
+        title = escape(str(it.get("book_title", "Signed Book")))
+        qty = int(it.get("quantity", 1))
+        unit_price = int(it.get("unit_price", 0))
+        line_total = unit_price * qty
+        items_html += (
+            f'<tr>'
+            f'<td style="padding:8px 0;border-bottom:1px solid #2a1f3a;color:{BRAND_TEXT};font-size:14px;">'
+            f'{title} <span style="color:{BRAND_MUTED};font-size:12px;">× {qty}</span>'
+            f'</td>'
+            f'<td style="padding:8px 0;border-bottom:1px solid #2a1f3a;color:{BRAND_TEXT};font-size:14px;text-align:right;">₹{line_total}</td>'
+            f'</tr>'
+        )
+
+    addr = address or {}
+    address_html = escape(", ".join(filter(None, [
+        addr.get("line1"), addr.get("line2"),
+        addr.get("city"), addr.get("state"), addr.get("pincode")
+    ])))
+
+    cod_row = (
+        f'<tr><td style="padding:4px 0;color:{BRAND_MUTED};font-size:13px;">COD Fee</td>'
+        f'<td style="padding:4px 0;text-align:right;color:{BRAND_TEXT};font-size:13px;">₹{cod_fee}</td></tr>'
+    ) if cod_fee else ""
+
+    disc_row = (
+        f'<tr><td style="padding:4px 0;color:#22c55e;font-size:13px;">Coupon Discount</td>'
+        f'<td style="padding:4px 0;text-align:right;color:#22c55e;font-size:13px;">−₹{discount}</td></tr>'
+    ) if discount else ""
+
+    inner = f"""
+        <h1 style="font-family:Georgia,serif;font-size:24px;color:{BRAND_TEXT};margin:0 0 8px;">Order Confirmed ✍️</h1>
+        <p style="margin:0 0 18px;color:{BRAND_MUTED};font-size:14px;">Order ID: <strong style="color:{BRAND_TEXT};">#{escape(order_id[-10:].upper())}</strong></p>
+        <p style="margin:0 0 18px;color:{BRAND_TEXT};">Hi {name_clean}, thank you for your order! Your <strong>personally signed copies</strong> are being prepared and will be dispatched within 3–5 working days.</p>
+
+        <div style="background:{BRAND_BG};border:1px solid #2a1f3a;border-radius:10px;padding:18px;margin:18px 0;">
+          <div style="color:{BRAND_MUTED};font-size:12px;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">Your Books</div>
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+            {items_html}
+            <tr><td style="padding:10px 0 4px;color:{BRAND_MUTED};font-size:13px;">Subtotal</td><td style="padding:10px 0 4px;text-align:right;color:{BRAND_TEXT};font-size:13px;">₹{subtotal}</td></tr>
+            <tr><td style="padding:4px 0;color:{BRAND_MUTED};font-size:13px;">Shipping</td><td style="padding:4px 0;text-align:right;color:{BRAND_TEXT};font-size:13px;">₹{shipping}</td></tr>
+            {cod_row}
+            {disc_row}
+            <tr><td style="padding:10px 0 0;border-top:1px solid #2a1f3a;color:{BRAND_TEXT};font-size:15px;font-weight:700;">Total</td><td style="padding:10px 0 0;border-top:1px solid #2a1f3a;text-align:right;color:{BRAND_GOLD};font-size:16px;font-weight:700;">₹{total}</td></tr>
+          </table>
+        </div>
+
+        <p style="margin:0 0 6px;color:{BRAND_MUTED};font-size:12px;text-transform:uppercase;letter-spacing:1px;">Payment</p>
+        <p style="margin:0 0 16px;color:{payment_color};font-size:14px;font-weight:600;">{payment_label}</p>
+
+        <p style="margin:0 0 6px;color:{BRAND_MUTED};font-size:12px;text-transform:uppercase;letter-spacing:1px;">Delivery Address</p>
+        <p style="margin:0 0 18px;color:{BRAND_TEXT};font-size:14px;">{address_html}</p>
+
+        {_btn("Track Your Order", FRONTEND_URL + "/dashboard")}
+
+        <p style="margin:18px 0 6px;color:{BRAND_TEXT};font-size:14px;">Each book carries a personal signature from Vishnu — a small mark of connection between you and the words.</p>
+        <p style="margin:0;color:{BRAND_MUTED};font-size:13px;">Questions? Just reply to this email or WhatsApp us at +91 84391 11502.</p>
+    """
+    return "Order Confirmed — Vishnu Raghav ✍️", _shell(inner, preheader=f"Your signed copies are on the way. Order #{order_id[-8:].upper()}.")
+
+
+def book_order_admin_template(
+    order_id: str,
+    customer_name: str,
+    customer_email: str,
+    customer_phone: str,
+    items: list,
+    total: int,
+    payment_mode: str,
+    address: dict,
+) -> tuple[str, str]:
+    items_summary = ", ".join(
+        f"{escape(str(i.get('book_title','')))} × {int(i.get('quantity',1))}"
+        for i in items
+    )
+    addr = address or {}
+    address_html = escape(", ".join(filter(None, [
+        addr.get("line1"), addr.get("line2"),
+        addr.get("city"), addr.get("state"), addr.get("pincode")
+    ])))
+    payment_label = "Cash on Delivery" if payment_mode == "cod" else "Paid Online"
+    inner = f"""
+        <h1 style="font-family:Georgia,serif;font-size:22px;color:{BRAND_TEXT};margin:0 0 14px;">�� New Book Order</h1>
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="font-size:14px;color:{BRAND_TEXT};">
+          <tr><td style="padding:6px 0;color:{BRAND_MUTED};width:110px;">Order ID</td><td style="padding:6px 0;">#{escape(order_id[-10:].upper())}</td></tr>
+          <tr><td style="padding:6px 0;color:{BRAND_MUTED};">Customer</td><td style="padding:6px 0;">{escape(customer_name)}</td></tr>
+          <tr><td style="padding:6px 0;color:{BRAND_MUTED};">Email</td><td style="padding:6px 0;"><a href="mailto:{escape(customer_email)}" style="color:{BRAND_GOLD};">{escape(customer_email)}</a></td></tr>
+          <tr><td style="padding:6px 0;color:{BRAND_MUTED};">Phone</td><td style="padding:6px 0;">{escape(customer_phone or "—")}</td></tr>
+          <tr><td style="padding:6px 0;color:{BRAND_MUTED};">Items</td><td style="padding:6px 0;">{items_summary}</td></tr>
+          <tr><td style="padding:6px 0;color:{BRAND_MUTED};">Total</td><td style="padding:6px 0;color:{BRAND_GOLD};font-weight:700;">₹{total} ({payment_label})</td></tr>
+          <tr><td style="padding:6px 0;color:{BRAND_MUTED};vertical-align:top;">Address</td><td style="padding:6px 0;">{address_html}</td></tr>
+        </table>
+    """
+    subject = f"�� New Book Order — {customer_name} (₹{total})"
+    return subject, _shell(inner, preheader=f"New order from {customer_name}")
+
+
+async def send_book_order_confirmation(
+    name: str,
+    email: str,
+    order_id: str,
+    items: list,
+    subtotal: int,
+    shipping: int,
+    cod_fee: int,
+    discount: int,
+    total: int,
+    payment_mode: str,
+    address: dict,
+) -> Optional[str]:
+    if not email:
+        return None
+    subject, html = book_order_confirmation_template(
+        name, order_id, items, subtotal, shipping, cod_fee, discount, total, payment_mode, address
+    )
+    return await send_email(email, subject, html)
+
+
+async def send_book_order_admin_notify(
+    order_id: str,
+    customer_name: str,
+    customer_email: str,
+    customer_phone: str,
+    items: list,
+    total: int,
+    payment_mode: str,
+    address: dict,
+) -> Optional[str]:
+    if not ADMIN_NOTIFY_EMAIL:
+        logger.warning("ADMIN_NOTIFY_EMAIL not set — skipping admin book order notification.")
+        return None
+    subject, html = book_order_admin_template(
+        order_id, customer_name, customer_email, customer_phone, items, total, payment_mode, address
+    )
+    return await send_email(ADMIN_NOTIFY_EMAIL, subject, html, reply_to=customer_email)
