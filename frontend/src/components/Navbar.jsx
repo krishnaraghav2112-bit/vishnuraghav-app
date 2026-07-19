@@ -78,76 +78,7 @@ export default function Navbar({ onOpenAuth }) {
               </span>
             </button>
           )}
-          Loading...
-Analyzing source: https://raw.githubusercontent.co...
-Jul 20 at 12:14 AM
-
-Analyzing source: https://raw.githubusercontent.co...
-Jul 20 at 12:14 AM
-
-Agent asked a question
-Answered
-Up
-Jul 20 at 12:15 AM
-
-
-
-
-Screenshot 2026-07-20 at 12.18.01 AM.webp
-...
-Jul 20 at 12:20 AM
-
-Agent asked a question
-Answered
-Up
-Jul 20 at 12:20 AM
-
-
-
-
-Screenshot 2026-07-20 at 12.19.58 AM.webp
-on chrome it is there. but it is very odd and why this is showing google there why there is a white line
-Jul 20 at 12:22 AM
-
-Agent asked a question
-Answered
-Up
-Jul 20 at 12:22 AM
-
-
-
-
-Screenshot 2026-07-20 at 12.23.46 AM.webp
-...
-Jul 20 at 12:25 AM
-
-Agent asked a question
-Answered
-Up
-Jul 20 at 12:25 AM
-
-
-
-
-remove and custom
-Jul 20 at 12:30 AM
-
-Agent is asking a question, Please answer it to further continue :
-Custom language dropdown (clean & premium)
-We'll KEEP Google's translation engine running silently in the background (it does the actual translation work) but HIDE its ugly widget completely, and put OUR OWN pretty gold dropdown in the navbar.
-Only 2 files need editing. The index.html stays as-is (Google script still runs).
-Edit 1: Navbar.jsx
-Step 1.1: Open the file
-Go to https://github.com/krishnaraghav2112-bit/vishnuraghav-app
-Click frontend → src → components → Navbar.jsx
-Click pencil ✏️.
-Step 1.2: Find the widget div
-Press Cmd + F.
-Type: google_translate_element
-Press Enter — you'll land on this line:
-          <div id="google_translate_element" className="notranslate"></div>
-Step 1.3: Replace it with our custom dropdown
-Delete that ONE line and paste these lines in its place:
+          
           <select
             onChange={(e) => {
               const lang = e.target.value;
