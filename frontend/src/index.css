@@ -76,3 +76,33 @@
 }
 
 [data-debug-wrapper="true"] { display: contents !important; }
+/* Google Translate widget — clean styling */
+.goog-te-banner-frame.skiptranslate { display: none !important; }
+body { top: 0 !important; }
+#google_translate_element .goog-logo-link,
+#google_translate_element span:not(.goog-te-menu-value) {
+  display: none !important;
+}
+#google_translate_element .goog-te-gadget {
+  color: transparent;
+  font-size: 0;
+  height: 32px;
+}
+#google_translate_element select {
+  background: rgba(201, 168, 76, 0.1);
+  color: #c9a84c;
+  border: 1px solid rgba(201, 168, 76, 0.3);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  outline: none;
+}
+#google_translate_element select:hover {
+  background: rgba(201, 168, 76, 0.2);
+}
+#google_translate_element select option {
+  background: #0f0a1f;
+  color: #f4ecd8;
+}
