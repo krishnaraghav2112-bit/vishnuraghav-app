@@ -150,27 +150,3 @@ body {
 font[style*="background-color"] {
   background-color: transparent !important;
 }
-
-/* Kill Google Translate's default UI completely */
-.goog-te-banner-frame,
-.goog-te-banner-frame.skiptranslate,
-iframe.goog-te-banner-frame,
-.goog-te-gadget,
-#goog-gt-tt,
-.goog-tooltip,
-.goog-tooltip:hover {
-  display: none !important;
-  visibility: hidden !important;
-}
-body {
-  top: 0 !important;
-  position: static !important;
-}
-.goog-text-highlight {
-  background-color: transparent !important;
-  box-shadow: none !important;
-  border: none !important;
-}
-font[style*="background-color"] {
-  background-color: transparent !important;
-}
