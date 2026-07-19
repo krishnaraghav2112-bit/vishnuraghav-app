@@ -1684,7 +1684,8 @@ async def book_order_checkout(body: BookOrderIn, user: dict = Depends(get_curren
             )
         except Exception:
             logger.exception("Book order confirmation email failed (order still confirmed)")
-                return {"mode": "cod", "order_id": str(result.inserted_id), "status": "confirmed"}
+                
+        return {"mode": "cod", "order_id": str(result.inserted_id), "status": "confirmed"}
 
     rzp_key = RAZORPAY_KEY_ID
     rzp_secret = RAZORPAY_KEY_SECRET
