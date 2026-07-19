@@ -76,33 +76,56 @@
 }
 
 [data-debug-wrapper="true"] { display: contents !important; }
-/* Google Translate widget — clean styling */
-.goog-te-banner-frame.skiptranslate { display: none !important; }
-body { top: 0 !important; }
-#google_translate_element .goog-logo-link,
-#google_translate_element span:not(.goog-te-menu-value) {
-  display: none !important;
-}
-#google_translate_element .goog-te-gadget {
-  color: transparent;
-  font-size: 0;
-  height: 32px;
-}
-#google_translate_element select {
+/* Custom language switcher — replaces Google's ugly widget */
+.lang-switcher {
   background: rgba(201, 168, 76, 0.1);
   color: #c9a84c;
-  border: 1px solid rgba(201, 168, 76, 0.3);
+  border: 1px solid rgba(201, 168, 76, 0.35);
   border-radius: 6px;
-  padding: 4px 10px;
+  padding: 5px 26px 5px 10px;
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
   outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='%23c9a84c'><path d='M7 10l5 5 5-5z'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 10px;
+  font-family: inherit;
+  transition: background-color 0.15s;
 }
-#google_translate_element select:hover {
-  background: rgba(201, 168, 76, 0.2);
+.lang-switcher:hover {
+  background-color: rgba(201, 168, 76, 0.2);
 }
-#google_translate_element select option {
+.lang-switcher option {
   background: #0f0a1f;
   color: #f4ecd8;
+  font-weight: 600;
+  padding: 6px;
+}
+
+/* Kill Google Translate's default UI completely */
+.goog-te-banner-frame,
+.goog-te-banner-frame.skiptranslate,
+iframe.goog-te-banner-frame,
+.goog-te-gadget,
+#goog-gt-tt,
+.goog-tooltip,
+.goog-tooltip:hover {
+  display: none !important;
+  visibility: hidden !important;
+}
+body {
+  top: 0 !important;
+  position: static !important;
+}
+.goog-text-highlight {
+  background-color: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+font[style*="background-color"] {
+  background-color: transparent !important;
 }
