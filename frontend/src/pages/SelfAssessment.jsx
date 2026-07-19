@@ -1,4 +1,3 @@
-jsx
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Brain, ShieldCheck, Clock, FileText, ArrowRight, ArrowLeft, AlertTriangle, CheckCircle, Share2, Sparkles, TrendingUp } from "lucide-react";
