@@ -1753,6 +1753,42 @@ async def book_order_verify(body: BookOrderVerifyIn, user: dict = Depends(get_cu
                 "tracking_url": sr.get("tracking_url"),
             }}
         )
+     # ── Send confirmation emails ──
+    try:
+        order_items = order.get("items") or []
+        if not order_items:
+            order_items = [{
+                "book_title": order.get("book_title", "Signed Book"),
+                "book_slug": order.get("book_slug", "book"),
+                "quantity": order.get("quantity", 1),
+                "unit_price": order.get("amount", 0),
+            }]
+        customer_email = order.get("email", "") or user.get("email", "")
+        await email_service.send_book_order_confirmation(
+            name=order.get("name", ""),
+            email=customer_email,
+            order_id=body.order_id,
+            items=order_items,
+            subtotal=order.get("subtotal", 0),
+            shipping=order.get("shipping", 0),
+            cod_fee=order.get("cod_fee", 0),
+            discount=order.get("discount", 0),
+            total=order.get("amount", 0),
+            payment_mode=order.get("payment_mode", "prepaid"),
+            address=order.get("address", {}),
+        )
+        await email_service.send_book_order_admin_notify(
+            order_id=body.order_id,
+            customer_name=order.get("name", ""),
+            customer_email=customer_email,
+            customer_phone=order.get("phone", ""),
+            items=order_items,
+            total=order.get("amount", 0),
+            payment_mode=order.get("payment_mode", "prepaid"),
+            address=order.get("address", {}),
+        )
+    except Exception:
+        logger.exception("Book order confirmation email failed (order still confirmed)")
     return {"ok": True, "status": "confirmed"}
 
 @api.get("/book-orders/me")
