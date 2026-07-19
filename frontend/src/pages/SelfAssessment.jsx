@@ -46,6 +46,8 @@ export default function SelfAssessment({ onOpenAuth }) {
   const [discoverySource, setDiscoverySource] = useState("");
   const [stats, setStats] = useState({ total_completed: 1247 });
   const [product, setProduct] = useState({ price: 199, is_active: false, has_pdf: false });
+  const [access, setAccess] = useState({ has_access: false, pdf_url: null });
+  const [paying, setPaying] = useState(false);
   const shareCanvasRef = useRef(null);
 
   // ── Load questions + stats + saved progress ──
@@ -69,6 +71,9 @@ export default function SelfAssessment({ onOpenAuth }) {
 
     api.get("/assessment/stats").then(({ data }) => setStats(data)).catch(() => {});
     api.get("/assessment/product").then(({ data }) => setProduct(data)).catch(() => {});
+     if (user) {
+      api.get("/assessment/product/access").then(({ data }) => setAccess(data)).catch(() => {});
+    }
 
     try {
       const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
@@ -77,7 +82,7 @@ export default function SelfAssessment({ onOpenAuth }) {
         setCurrentQ(saved.currentQ || 0);
       }
     } catch {}
-  }, []);
+  }, [user]);
 
   // ── Save progress on every answer ──
   useEffect(() => {
@@ -249,6 +254,46 @@ export default function SelfAssessment({ onOpenAuth }) {
         toast.success("Image downloaded! Share it on your Instagram Story ✨");
       }
     } catch {}
+  };
+
+  const buyWorkbook = async () => {
+    if (!user) { onOpenAuth("login"); return; }
+    if (paying) return;
+    setPaying(true);
+    try {
+      const { data } = await api.post("/assessment/product/checkout");
+      const loaded = await loadRazorpay();
+      if (!loaded) { toast.error("Payment gateway failed to load. Please try again."); setPaying(false); return; }
+      const rzp = new window.Razorpay({
+        key: data.razorpay_key,
+        amount: data.amount_paise,
+        currency: "INR",
+        name: "Vishnu Raghav",
+        description: product.title || "Mind Health Workbook",
+        order_id: data.razorpay_order_id,
+        prefill: data.prefill,
+        theme: { color: "#c9a84c" },
+        handler: async (response) => {
+          try {
+            const { data: v } = await api.post("/assessment/product/verify", {
+              order_id: data.order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_signature: response.razorpay_signature,
+            });
+            setAccess({ has_access: true, pdf_url: v.pdf_url });
+            toast.success("Payment successful! Your workbook is ready ��");
+          } catch (e) {
+            toast.error("Payment verification failed. Please contact support.");
+          } finally { setPaying(false); }
+        },
+        modal: { ondismiss: () => setPaying(false) },
+      });
+      rzp.open();
+    } catch (e) {
+      toast.error(formatApiError(e));
+      setPaying(false);
+    }
   };
 
   const shareText = async () => {
@@ -602,7 +647,7 @@ export default function SelfAssessment({ onOpenAuth }) {
             </button>
           </div>
 
-          {/* PDF WORKBOOK — Live or Coming Soon */}
+          {/* PDF WORKBOOK — Buy, Download, or Coming Soon */}
           <div className="bg-gradient-to-br from-brand-gold/10 to-brand-gold/[0.02] border border-brand-gold/25 rounded-2xl p-6 mb-6">
             <div className="flex items-start gap-4">
               <div className="w-12 h-12 rounded-xl bg-brand-gold/20 flex items-center justify-center flex-shrink-0">
@@ -610,24 +655,36 @@ export default function SelfAssessment({ onOpenAuth }) {
               </div>
               <div className="flex-1">
                 <div className="text-xs font-bold text-brand-gold uppercase tracking-widest mb-1">Deeper Self-Work</div>
-                <h3 className="font-serif text-xl font-black mb-2">{product.is_active && product.has_pdf ? product.title : "Your Personal Self-Help Workbook"}</h3>
+                <h3 className="font-serif text-xl font-black mb-2">
+                  {product.is_active && product.has_pdf ? product.title : "Your Personal Self-Help Workbook"}
+                </h3>
                 <p className="text-sm text-muted-foreground mb-4">
                   {product.description || "Vishnu Raghav ne aapki situation ke liye ek detailed workbook banaya hai — practical exercises, daily reflections aur mind reset techniques."}
                 </p>
-                {product.is_active && product.has_pdf ? (
-                  <button onClick={() => toast.info("Payment feature launching soon! Check back in a few days ✨")}
+                {access.has_access && access.pdf_url ? (
+                  <a href={access.pdf_url} target="_blank" rel="noreferrer"
+                    data-testid="download-workbook"
+                    className="w-full py-3 rounded-xl bg-green-500 text-white font-bold text-sm inline-flex items-center justify-center gap-2 hover:bg-green-600 no-underline">
+                    <Download className="w-4 h-4" /> Download Your Workbook (PDF)
+                  </a>
+                ) : product.is_active && product.has_pdf ? (
+                  <button onClick={buyWorkbook} disabled={paying}
                     data-testid="buy-workbook"
-                    className="w-full py-3 rounded-xl bg-gold-gradient text-ink-950 font-bold text-sm inline-flex items-center justify-center gap-2 hover:opacity-90">
-                    �� Buy Workbook — ₹{product.price}
+                    className="w-full py-3 rounded-xl bg-gold-gradient text-ink-950 font-bold text-sm inline-flex items-center justify-center gap-2 hover:opacity-90 disabled:opacity-60">
+                    {paying ? "Processing..." : `📥 Buy Workbook — ₹${product.price}`}
                   </button>
                 ) : (
                   <div className="bg-white/5 rounded-lg p-3 text-center">
                     <div className="text-xs text-muted-foreground">Coming soon — Workbook launching this week ✨</div>
                   </div>
                 )}
+                {access.has_access && (
+                  <p className="text-[10px] text-green-400 text-center mt-2">✓ Purchased • Lifetime access</p>
+                )}
               </div>
             </div>
           </div>
+
           
           {/* BOOK RECOMMENDATION - NEW */}
           {report.recommended_book && (
