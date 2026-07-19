@@ -662,17 +662,20 @@ export default function SelfAssessment({ onOpenAuth }) {
 
           {/* HEADER with decorative book covers in background */}
           <div className="relative overflow-hidden bg-gradient-to-br from-brand-gold/10 via-ink-900 to-transparent border border-brand-gold/20 rounded-3xl p-8 mb-6 text-center">
-            {allBooks.slice(0, 3).map((b, i) => b.cover_image && (
-              <img key={b.slug} src={b.cover_image} alt="" aria-hidden
-                className="absolute w-32 h-44 object-cover rounded-lg opacity-[0.08] pointer-events-none"
-                style={{
-                  top: i === 0 ? "10%" : i === 1 ? "50%" : "20%",
-                  left: i === 0 ? "-40px" : "auto",
-                  right: i === 1 ? "-30px" : i === 2 ? "10px" : "auto",
-                  transform: `rotate(${i === 0 ? -12 : i === 1 ? 8 : -6}deg)`,
-                  filter: "blur(1px)",
-                }} />
-            ))}
+            {[
+  { src: "/Dagmagate%20Pair.png", top: "10%", left: "-40px", right: "auto", rotate: -12 },
+  { src: "/Jo%20Mai%20Kah%20Na%20Saka.png", top: "50%", left: "auto", right: "-30px", rotate: 8 },
+].map((b, i) => (
+  <img key={i} src={b.src} alt="" aria-hidden
+    className="absolute w-32 h-44 object-contain opacity-[0.15] pointer-events-none"
+    style={{
+      top: b.top,
+      left: b.left,
+      right: b.right,
+      transform: `rotate(${b.rotate}deg)`,
+      filter: "blur(1px)",
+    }} />
+))}
             <div className="relative">
               <div className="text-xs uppercase tracking-widest text-brand-gold font-bold mb-2">Your Mind Health Report</div>
               <div className="text-6xl md:text-7xl font-black font-serif mb-2" style={{color: report.level.color}}>
