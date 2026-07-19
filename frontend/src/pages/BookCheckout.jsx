@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import { ShoppingCart, MapPin, CreditCard, Truck, CheckCircle, ArrowLeft, Package } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { ShoppingCart, MapPin, CreditCard, Truck, CheckCircle, ArrowLeft, Package, Plus, Minus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import api, { formatApiError } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
+import { useCart } from "../context/CartContext";
 
 function loadRazorpayScript() {
   return new Promise((resolve) => {
@@ -26,13 +27,14 @@ const INDIAN_STATES = [
   "Dadra and Nagar Haveli and Daman and Diu",
 ];
 
+const COD_EXTRA = 40;
+
 export default function BookCheckout({ onOpenAuth }) {
   const { user, loading } = useAuth();
-  const location = useLocation();
   const nav = useNavigate();
-  const book = location.state?.book;
+  const { items, subtotal, shipping, updateQty, removeFromCart, clearCart } = useCart();
 
-  const [step, setStep] = useState(1); // 1=cart, 2=address, 3=payment, 4=success
+  const [step, setStep] = useState(1);
   const [payMode, setPayMode] = useState("prepaid");
   const [busy, setBusy] = useState(false);
   const [orderId, setOrderId] = useState(null);
@@ -40,14 +42,9 @@ export default function BookCheckout({ onOpenAuth }) {
   const [couponResult, setCouponResult] = useState(null);
   const [couponBusy, setCouponBusy] = useState(false);
 
-  const SHIPPING = 60;
-  const COD_EXTRA = 40;
-  const bookPrice = book ? parseInt(book.price?.replace(/[^\d]/g, "") || "249") : 249;
-  const totalPrepaid = bookPrice + SHIPPING;
-  const totalCOD = bookPrice + SHIPPING + COD_EXTRA;
-  const total = payMode === "cod" ? totalCOD : totalPrepaid;
   const discount = couponResult?.valid ? couponResult.discount : 0;
-  const finalTotal = payMode === "cod" ? (totalPrepaid - discount) + COD_EXTRA : totalPrepaid - discount;
+  const baseTotal = subtotal + shipping - discount;
+  const finalTotal = payMode === "cod" ? baseTotal + COD_EXTRA : baseTotal;
 
   const [form, setForm] = useState({
     name: "", phone: "",
@@ -60,18 +57,19 @@ export default function BookCheckout({ onOpenAuth }) {
   }, [user, loading, onOpenAuth]);
 
   useEffect(() => {
-    if (!book) nav("/");
-  }, [book, nav]);
+    if (items.length === 0 && step !== 4) nav("/");
+  }, [items.length, step, nav]);
 
-  if (!book) return null;
   if (loading) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Loading...</div>;
+  if (items.length === 0 && step !== 4) return null;
 
   const handleChange = (e) => setForm(f => ({ ...f, [e.target.name]: e.target.value }));
+
   const applyCoupon = async () => {
     if (!couponCode.trim()) { toast.error("Enter a coupon code"); return; }
     setCouponBusy(true);
     try {
-      const { data } = await api.post("/coupons/validate-book", { code: couponCode.trim(), amount: totalPrepaid });
+      const { data } = await api.post("/coupons/validate-book", { code: couponCode.trim(), amount: subtotal + shipping });
       setCouponResult(data);
       if (data.valid) { toast.success(data.message); } else { toast.error(data.message); }
     } catch { toast.error("Could not validate coupon"); }
@@ -94,11 +92,19 @@ export default function BookCheckout({ onOpenAuth }) {
     if (!user) { onOpenAuth("login"); return; }
     setBusy(true);
     try {
+      const payloadItems = items.map(i => ({
+        book_slug: i.book.slug,
+        book_title: i.book.title,
+        quantity: i.quantity,
+        unit_price: parseInt(i.book.price?.replace(/[^\d]/g, "") || "249"),
+      }));
+
       const payload = {
-        book_slug: book.slug,
-        book_title: book.title,
-        quantity: 1,
-        amount: total,
+        items: payloadItems,
+        subtotal: subtotal,
+        shipping: shipping,
+        cod_fee: payMode === "cod" ? COD_EXTRA : 0,
+        amount: finalTotal,
         payment_mode: payMode,
         coupon_code: couponResult?.valid ? couponCode.trim().toUpperCase() : null,
         discount: discount,
@@ -111,11 +117,11 @@ export default function BookCheckout({ onOpenAuth }) {
 
       if (payMode === "cod") {
         setOrderId(data.order_id);
+        clearCart();
         setStep(4);
         return;
       }
 
-      // Prepaid — open Razorpay
       const loaded = await loadRazorpayScript();
       if (!loaded) { toast.error("Payment gateway failed to load. Please try again."); return; }
 
@@ -124,7 +130,7 @@ export default function BookCheckout({ onOpenAuth }) {
         amount: data.amount_paise,
         currency: "INR",
         name: "Vishnu Raghav",
-        description: `Signed Copy — ${book.title}`,
+        description: `Signed Copy — ${items.length} book${items.length > 1 ? "s" : ""}`,
         order_id: data.razorpay_order_id,
         prefill: data.prefill,
         theme: { color: "#c9a84c" },
@@ -137,6 +143,7 @@ export default function BookCheckout({ onOpenAuth }) {
               razorpay_signature: response.razorpay_signature,
             });
             setOrderId(data.order_id);
+            clearCart();
             setStep(4);
           } catch (e) {
             toast.error("Payment verification failed. Please contact support.");
@@ -152,7 +159,6 @@ export default function BookCheckout({ onOpenAuth }) {
     }
   };
 
-  // ── Step 4: Success ──
   if (step === 4) {
     return (
       <div className="min-h-screen flex items-center justify-center px-5">
@@ -160,20 +166,19 @@ export default function BookCheckout({ onOpenAuth }) {
           <div className="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
             <CheckCircle className="w-8 h-8 text-green-400" />
           </div>
-          <h2 className="font-serif text-2xl font-black mb-2">Order Placed! 🎉</h2>
+          <h2 className="font-serif text-2xl font-black mb-2">Order Placed! ��</h2>
           <p className="text-muted-foreground text-sm mb-2">
             {payMode === "cod"
               ? "Your COD order is confirmed. Our delivery partner will collect payment at delivery."
-              : "Payment successful! Your signed copy will be dispatched soon."}
+              : "Payment successful! Your signed copies will be dispatched soon."}
           </p>
           <div className="bg-brand-gold/5 border border-brand-gold/15 rounded-xl p-4 my-5 text-left">
-            <div className="text-xs text-muted-foreground mb-1">Order Summary</div>
-            <div className="font-semibold text-sm">{book.title}</div>
-            <div className="text-xs text-brand-gold mt-1">✍️ Personally signed by Vishnu Raghav</div>
-            <div className="text-xs text-muted-foreground mt-2">
+            <div className="text-xs text-muted-foreground mb-2">Order Summary</div>
+            <div className="text-xs text-brand-gold mb-2">✍️ Personally signed by Vishnu Raghav</div>
+            <div className="text-xs text-muted-foreground">
               {payMode === "cod" ? "Payment: Cash on Delivery" : "Payment: Paid Online"}
             </div>
-            <div className="text-xs text-muted-foreground">Amount: ₹{total}</div>
+            <div className="text-xs text-muted-foreground">Amount: ₹{finalTotal}</div>
           </div>
           <p className="text-xs text-muted-foreground mb-6">
             You can track your order from your Dashboard → My Book Orders
@@ -195,14 +200,12 @@ export default function BookCheckout({ onOpenAuth }) {
 
   return (
     <div className="max-w-5xl mx-auto px-5 lg:px-10 py-10">
-      {/* Header */}
       <button onClick={() => nav(-1)} className="flex items-center gap-2 text-muted-foreground text-sm mb-6 hover:text-foreground transition-colors">
         <ArrowLeft className="w-4 h-4" /> Back
       </button>
-      <h1 className="font-serif text-2xl font-black mb-1">Buy Signed Copy</h1>
-      <p className="text-sm text-muted-foreground mb-8">Get a personally signed copy from Vishnu Raghav, delivered to your door</p>
+      <h1 className="font-serif text-2xl font-black mb-1">Buy Signed Copies</h1>
+      <p className="text-sm text-muted-foreground mb-8">Get personally signed copies from Vishnu Raghav, delivered to your door</p>
 
-      {/* Progress Steps */}
       <div className="flex items-center gap-2 mb-8">
         {[{n:1,l:"Cart"},{n:2,l:"Address"},{n:3,l:"Payment"}].map(({n,l}) => (
           <React.Fragment key={n}>
@@ -216,30 +219,50 @@ export default function BookCheckout({ onOpenAuth }) {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr,340px] gap-6">
-        {/* Main form */}
         <div className="space-y-5">
 
-          {/* STEP 1: Cart */}
+          {/* CART with multiple items + qty controls */}
           <div className="bg-ink-900 border border-white/[0.07] rounded-2xl p-5">
             <div className="flex items-center gap-2 mb-4">
               <ShoppingCart className="w-4 h-4 text-brand-gold" />
-              <h2 className="font-bold text-sm">Your Cart</h2>
+              <h2 className="font-bold text-sm">Your Cart ({items.reduce((s,i) => s + i.quantity, 0)} items)</h2>
             </div>
-            <div className="flex gap-4 items-start">
-              {book.cover_image && (
-                <img src={book.cover_image} alt={book.title} className="w-16 h-20 object-cover rounded-lg border border-white/10" />
-              )}
-              <div className="flex-1">
-                <div className="font-serif font-extrabold text-base">{book.title}</div>
-                <div className="text-sm text-brand-gold italic mb-1">{book.hindi}</div>
-                <div className="text-xs text-green-400 font-semibold mb-2">✍️ Personally signed by author</div>
-                <div className="text-xs text-muted-foreground">Qty: 1</div>
-              </div>
-              <div className="text-sm font-bold text-brand-gold">₹{bookPrice}</div>
+            <div className="space-y-4">
+              {items.map((it) => {
+                const price = parseInt(it.book.price?.replace(/[^\d]/g, "") || "249");
+                return (
+                  <div key={it.book.slug} className="flex gap-4 items-start pb-4 border-b border-white/[0.05] last:border-0 last:pb-0">
+                    {it.book.cover_image && (
+                      <img src={it.book.cover_image} alt={it.book.title} className="w-16 h-20 object-cover rounded-lg border border-white/10" />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <div className="font-serif font-extrabold text-base truncate">{it.book.title}</div>
+                      {it.book.hindi && <div className="text-sm text-brand-gold italic mb-1">{it.book.hindi}</div>}
+                      <div className="text-xs text-green-400 font-semibold mb-2">✍️ Personally signed by author</div>
+                      <div className="flex items-center gap-2">
+                        <button onClick={() => updateQty(it.book.slug, it.quantity - 1)}
+                          className="w-7 h-7 rounded-md border border-white/10 hover:bg-white/5 flex items-center justify-center">
+                          <Minus className="w-3 h-3" />
+                        </button>
+                        <span className="text-sm font-bold w-6 text-center">{it.quantity}</span>
+                        <button onClick={() => updateQty(it.book.slug, it.quantity + 1)}
+                          className="w-7 h-7 rounded-md border border-white/10 hover:bg-white/5 flex items-center justify-center">
+                          <Plus className="w-3 h-3" />
+                        </button>
+                        <button onClick={() => removeFromCart(it.book.slug)}
+                          className="ml-2 text-red-400 hover:text-red-300 flex items-center gap-1 text-xs">
+                          <Trash2 className="w-3.5 h-3.5" /> Remove
+                        </button>
+                      </div>
+                    </div>
+                    <div className="text-sm font-bold text-brand-gold whitespace-nowrap">₹{price * it.quantity}</div>
+                  </div>
+                );
+              })}
             </div>
           </div>
 
-          {/* STEP 2: Address */}
+          {/* ADDRESS */}
           <div className="bg-ink-900 border border-white/[0.07] rounded-2xl p-5">
             <div className="flex items-center gap-2 mb-4">
               <MapPin className="w-4 h-4 text-brand-gold" />
@@ -292,7 +315,7 @@ export default function BookCheckout({ onOpenAuth }) {
             </div>
           </div>
 
-          {/* STEP 3: Payment Mode */}
+          {/* PAYMENT MODE */}
           <div className="bg-ink-900 border border-white/[0.07] rounded-2xl p-5">
             <div className="flex items-center gap-2 mb-4">
               <CreditCard className="w-4 h-4 text-brand-gold" />
@@ -307,7 +330,7 @@ export default function BookCheckout({ onOpenAuth }) {
                   <span className="ml-auto text-xs bg-green-500/10 text-green-400 px-2 py-0.5 rounded-full font-bold">Recommended</span>
                 </div>
                 <div className="text-xs text-muted-foreground">UPI, Credit/Debit Card, Net Banking</div>
-                <div className="text-sm font-bold text-brand-gold mt-2">₹{totalPrepaid}</div>
+                <div className="text-sm font-bold text-brand-gold mt-2">₹{baseTotal}</div>
               </button>
               <button onClick={() => setPayMode("cod")}
                 className={`p-4 rounded-xl border-2 text-left transition-all ${payMode === "cod" ? "border-brand-gold bg-brand-gold/5" : "border-white/10 hover:border-white/20"}`}>
@@ -315,26 +338,26 @@ export default function BookCheckout({ onOpenAuth }) {
                   <Truck className="w-4 h-4 text-blue-400" />
                   <span className="font-bold text-sm">Cash on Delivery</span>
                 </div>
-                <div className="text-xs text-muted-foreground">Pay when the book arrives</div>
-                <div className="text-sm font-bold text-brand-gold mt-2">₹{totalCOD} <span className="text-xs text-muted-foreground font-normal">(+₹{COD_EXTRA} COD fee)</span></div>
+                <div className="text-xs text-muted-foreground">Pay when the books arrive</div>
+                <div className="text-sm font-bold text-brand-gold mt-2">₹{baseTotal + COD_EXTRA} <span className="text-xs text-muted-foreground font-normal">(+₹{COD_EXTRA} COD fee)</span></div>
               </button>
             </div>
           </div>
         </div>
 
-        {/* Order Summary Sidebar */}
+        {/* SUMMARY */}
         <div className="bg-ink-900 border border-white/[0.07] rounded-2xl p-5 h-fit sticky top-20">
           <h3 className="font-bold text-sm mb-4 flex items-center gap-2">
             <Package className="w-4 h-4 text-brand-gold" /> Order Summary
           </h3>
           <div className="space-y-2 text-sm mb-4">
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Book Price</span>
-              <span>₹{bookPrice}</span>
+              <span className="text-muted-foreground">Subtotal ({items.reduce((s,i) => s + i.quantity, 0)} books)</span>
+              <span>₹{subtotal}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Shipping</span>
-              <span>₹{SHIPPING}</span>
+              <span>₹{shipping}</span>
             </div>
             {payMode === "cod" && (
               <div className="flex justify-between">
@@ -371,16 +394,16 @@ export default function BookCheckout({ onOpenAuth }) {
           </div>
           <div className="bg-green-500/5 border border-green-500/20 rounded-xl p-3 mb-4">
             <div className="text-xs text-green-400 font-semibold mb-1">✍️ What you get</div>
-            <div className="text-xs text-muted-foreground">Personally signed copy by Vishnu Raghav. Ships within 3-5 working days via Shiprocket.</div>
+            <div className="text-xs text-muted-foreground">Personally signed copies by Vishnu Raghav. Ships within 3-5 working days via Shiprocket.</div>
           </div>
 
           <button onClick={handlePlaceOrder} disabled={busy}
             className="w-full py-3 rounded-xl font-bold text-sm bg-gold-gradient text-ink-950 hover:opacity-90 transition-opacity disabled:opacity-60">
-            {busy ? "Processing..." : payMode === "cod" ? "🚚 Place COD Order" : "💳 Pay & Order"}
+            {busy ? "Processing..." : payMode === "cod" ? "�� Place COD Order" : "�� Pay & Order"}
           </button>
 
           <p className="text-[10px] text-muted-foreground text-center mt-3">
-            🔒 Secure payment via Razorpay. Your data is safe.
+            �� Secure payment via Razorpay. Your data is safe.
           </p>
         </div>
       </div>
