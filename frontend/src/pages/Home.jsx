@@ -332,7 +332,7 @@ export default function Home({ onOpenAuth, onOpenPay }) {
                       ) : null}
                       {b.status !== "upcoming" && (
                         <button
-                          onClick={() => { if (!user) { onOpenAuth("login"); } else { addToCart(b); nav("/book-checkout", { state: { book: b } }); } }}
+                          onClick={() => { if (!user) { onOpenAuth("login"); } else { addToCart(b); nav("/book-checkout"); } }}
                           data-testid={`book-signed-${b.slug}`}
                           className="w-full mt-1 py-2 rounded-md text-xs font-bold bg-gold-gradient text-ink-950 hover:opacity-90 transition-opacity text-center flex items-center justify-center gap-1">
                           ✍️ Buy Author Signed Copy
