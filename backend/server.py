@@ -1655,9 +1655,9 @@ class AssessmentAnswerIn(BaseModel):
     q_id: int
     value: int
 
-
 class AssessmentSubmitIn(BaseModel):
     answers: List[AssessmentAnswerIn]
+    discovery_source: Optional[str] = None
 
 
 def _build_personality_analysis(top_domains, level_key):
@@ -1710,6 +1710,57 @@ def _build_strengths(low_domains):
         result.extend(["Emotional Awareness", "Learning Mindset"])
     return result[:5]
 
+BOOK_RECOMMENDATION_MAP = {
+    "overthinking": {"slug": "uljha-jeevan", "title": "Uljha Jeevan", "hindi": "उलझा जीवन", "why": "Overthinking ke web ko decode karne ke liye"},
+    "mood": {"slug": "dagmagate-pair", "title": "Dagmagate Pair", "hindi": "डगमगाते पैर", "why": "Kamzor moments mein khud ko dubara khada karne ke liye"},
+    "self_worth": {"slug": "dagmagate-pair", "title": "Dagmagate Pair", "hindi": "डगमगाते पैर", "why": "Aatm-vishwas ko wapas laane ke liye"},
+    "stress": {"slug": "uljha-jeevan", "title": "Uljha Jeevan", "hindi": "उलझा जीवन", "why": "Uljhe hue mann ko shant karne ke liye"},
+    "daily_functioning": {"slug": "uljha-jeevan", "title": "Uljha Jeevan", "hindi": "उलझा जीवन", "why": "Focus aur clarity wapas paane ke liye"},
+    "relationships_purpose": {"slug": "jo-mai-kah-na-saka", "title": "Jo Mai Kah Na Saka", "hindi": "जो मैं कह न सका", "why": "Andar ki baaton ko samajhne aur express karne ke liye"},
+}
+
+
+def _build_three_actions(level_key, top_domain):
+    base = {
+        "healthy": [
+            "Daily 20-30 min walk continue rakhein",
+            "7-8 ghante ki neend prioritize karein",
+            "Weekly ek meaningful conversation kisi close person se karein",
+        ],
+        "mild": [
+            "Kal se roz 5 min journaling shuru karein",
+            "Din mein 2 baar 4-7-8 breathing (4s inhale, 7s hold, 8s exhale)",
+            "Screen time -30 min — sone se pehle phone door rakhein",
+        ],
+        "moderate": [
+            "Ek structured daily routine banayein (wake, work, rest)",
+            "Har raat 5 gratitude points likhein",
+            "Ek trusted person se apni feelings share karein is week",
+        ],
+        "high": [
+            "Aaj hi kisi trusted family member ya friend ko call karein",
+            "Ek mental health professional se online consultation book karein",
+            "Roz 10 min bina phone ke bahar bitayein",
+        ],
+        "very_high": [
+            "Turant kisi bharosemand vyakti ko batayein",
+            "Kiran Helpline 1800-599-0019 par baat karein (24×7 free)",
+            "Kisi qualified mental health professional se jald appointment lein",
+        ],
+    }
+    domain_addon = {
+        "overthinking": "Har baar overthinking ki chain shuru ho — 'STOP' bolein, 3 deep breaths lein",
+        "mood": "Roz subah 10 min sunlight lein (mood ke liye vitamin D crucial)",
+        "self_worth": "Ek 'wins list' banayein — har din 3 chhoti achievements likhein",
+        "stress": "Progressive muscle relaxation seekhein (YouTube par 10 min guided)",
+        "daily_functioning": "Bade task ko chhote 15-min blocks mein todein",
+        "relationships_purpose": "Ek purani meaningful connection ko is week revive karein",
+    }
+    actions = list(base.get(level_key, base["mild"]))
+    if top_domain and top_domain in domain_addon:
+        actions.append(domain_addon[top_domain])
+    return actions[:4]
+
 
 def _build_risks(level_key):
     return {
@@ -1750,7 +1801,10 @@ def calculate_assessment(answers):
     analysis = _build_personality_analysis(top_domains, level["key"])
     strengths = _build_strengths(low_domains)
     risks = _build_risks(level["key"])
-    course_slug = DOMAIN_TO_COURSE.get(top_domains[0] if top_domains else "overthinking", "overcoming-overthinking")
+    top_domain = top_domains[0] if top_domains else "overthinking"
+    course_slug = DOMAIN_TO_COURSE.get(top_domain, "overcoming-overthinking")
+    recommended_book = BOOK_RECOMMENDATION_MAP.get(top_domain, BOOK_RECOMMENDATION_MAP["overthinking"])
+    three_actions = _build_three_actions(level["key"], top_domain)
     percentile = min(99, max(1, round((total / 60) * 100)))
 
     return {
@@ -1760,6 +1814,7 @@ def calculate_assessment(answers):
         "safety_risk": safety_risk, "safety_answer": safety_answer,
         "analysis": analysis, "strengths": strengths, "risks": risks,
         "course_slug": course_slug, "percentile": percentile,
+        "recommended_book": recommended_book, "three_actions": three_actions,
     }
 
 
@@ -1789,6 +1844,7 @@ async def submit_assessment(body: AssessmentSubmitIn, user: dict = Depends(get_c
         "top_domains": report["top_domains"],
         "safety_risk": report["safety_risk"],
         "safety_answer": report["safety_answer"],
+        "discovery_source": body.discovery_source or None,
         "created_at": datetime.now(timezone.utc),
     }
     result = await db.assessments.insert_one(doc)
@@ -1810,6 +1866,13 @@ async def my_assessments(user: dict = Depends(get_current_user)):
             "created_at": a["created_at"].isoformat() if a.get("created_at") else None,
         })
     return out
+
+
+@api.get("/assessment/stats")
+async def assessment_stats():
+    total = await db.assessments.count_documents({})
+    display = max(total, 1247)  # baseline for early days
+    return {"total_completed": display, "actual": total}
 
 def _serialize_book_order(o: dict) -> dict:
     o["id"] = str(o.pop("_id"))
