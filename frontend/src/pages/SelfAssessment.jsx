@@ -135,7 +135,7 @@ export default function SelfAssessment({ onOpenAuth }) {
   };
 
   // ── Generate Instagram Story image ──
- const generateShareImage = async () => {
+  const generateShareImage = async () => {
     if (!report) return null;
     const canvas = document.createElement("canvas");
     canvas.width = 1080; canvas.height = 1920;
@@ -154,7 +154,6 @@ export default function SelfAssessment({ onOpenAuth }) {
       ctx.closePath();
     };
 
-    // Load images with CORS support
     const loadImg = (src) => new Promise((resolve) => {
       if (!src) return resolve(null);
       const img = new Image();
@@ -164,171 +163,262 @@ export default function SelfAssessment({ onOpenAuth }) {
       img.src = src;
     });
 
-    const [authorImg, ...bookImgs] = await Promise.all([
-  loadImg(assets.author_photo),
-  loadImg("/Dagmagate%20Pair.png"),
-  loadImg("/Jo%20Mai%20Kah%20Na%20Saka.png"),
-]);
-    const validBooks = bookImgs.filter(Boolean);
+    const [bookImg1, bookImg2] = await Promise.all([
+      loadImg("/Dagmagate%20Pair.png"),
+      loadImg("/Jo%20Mai%20Kah%20Na%20Saka.png"),
+    ]);
 
-    // Background gradient
+    // Palette (dark theme — matches website)
+    const BG_TOP = "#0f0a1f";
+    const BG_BOTTOM = "#1a0e2e";
+    const GOLD = "#c9a84c";
+    const GOLD_BRIGHT = "#e0c26a";
+    const COPPER = "#a67840";
+    const CREAM = "#f4ecd8";
+    const IVORY = "#e8dcc0";
+    const MUTED = "#9a8560";
+
+    // Background
     const bg = ctx.createLinearGradient(0, 0, 0, 1920);
-    bg.addColorStop(0, "#0f0a1f"); bg.addColorStop(0.55, "#1a0e2e"); bg.addColorStop(1, "#0a0817");
-    ctx.fillStyle = bg; ctx.fillRect(0, 0, 1080, 1920);
+    bg.addColorStop(0, BG_TOP);
+    bg.addColorStop(1, BG_BOTTOM);
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, 1080, 1920);
 
-    // Book covers as floating background elements (10% opacity, rotated)
-    if (validBooks.length > 0) {
-      const positions = [
-        { x: -70, y: 420, w: 300, h: 420, rotate: -14 },
-        { x: 860, y: 200, w: 280, h: 400, rotate: 15 },
-        { x: 100, y: 1420, w: 260, h: 370, rotate: -8 },
-      ];
+    // Corner mandala rings in all 4 corners
+    ctx.save();
+    ctx.globalAlpha = 0.08;
+    ctx.strokeStyle = GOLD;
+    ctx.lineWidth = 1.5;
+    [[0,0],[1080,0],[0,1920],[1080,1920]].forEach(([cx,cy]) => {
+      for (let r = 60; r < 500; r += 35) {
+        ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
+      }
+    });
+    ctx.restore();
+
+    // Central mandala petals behind score
+    ctx.save();
+    ctx.globalAlpha = 0.12;
+    ctx.strokeStyle = GOLD;
+    ctx.lineWidth = 2;
+    for (let i = 0; i < 16; i++) {
       ctx.save();
-      ctx.globalAlpha = 0.10;
-      validBooks.forEach((img, i) => {
-        const p = positions[i] || positions[0];
-        ctx.save();
-        ctx.translate(p.x + p.w/2, p.y + p.h/2);
-        ctx.rotate(p.rotate * Math.PI / 180);
-        ctx.drawImage(img, -p.w/2, -p.h/2, p.w, p.h);
-        ctx.restore();
-      });
+      ctx.translate(540, 900);
+      ctx.rotate((i * Math.PI * 2) / 16);
+      ctx.beginPath();
+      ctx.ellipse(0, -240, 30, 90, 0, 0, Math.PI * 2);
+      ctx.stroke();
       ctx.restore();
     }
+    ctx.restore();
 
-    // Radial glow behind score
-    const glow = ctx.createRadialGradient(540, 800, 100, 540, 800, 550);
-    glow.addColorStop(0, report.level.color + "40");
-    glow.addColorStop(1, "transparent");
-    ctx.fillStyle = glow; ctx.fillRect(0, 320, 1080, 1000);
+    ctx.textAlign = "center";
 
-    // Decorative gold rings
-    ctx.strokeStyle = "#c9a84c"; ctx.globalAlpha = 0.07; ctx.lineWidth = 2;
-    for (let r = 100; r < 560; r += 42) { ctx.beginPath(); ctx.arc(1050, -60, r, 0, Math.PI * 2); ctx.stroke(); }
-    for (let r = 100; r < 460; r += 42) { ctx.beginPath(); ctx.arc(30, 1980, r, 0, Math.PI * 2); ctx.stroke(); }
+    // Top lotus ornament
+    ctx.save();
+    ctx.fillStyle = GOLD;
+    for (let i = 0; i < 5; i++) {
+      ctx.save();
+      ctx.translate(540, 130);
+      ctx.rotate((i - 2) * 0.35);
+      ctx.beginPath();
+      ctx.ellipse(0, -15, 8, 22, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+    ctx.beginPath(); ctx.arc(540, 140, 4, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+
+    // Tagline
+    ctx.fillStyle = GOLD;
+    ctx.font = "600 22px Georgia, serif";
+    ctx.fillText("THE MIND HEALTH REPORT  ·  BY VISHNU RAGHAV", 540, 190);
+
+    // Divider
+    ctx.strokeStyle = GOLD;
+    ctx.globalAlpha = 0.4;
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(360, 220); ctx.lineTo(720, 220); ctx.stroke();
     ctx.globalAlpha = 1;
 
-    // Author photo (circular, top)
-    ctx.textAlign = "center";
-    if (authorImg) {
-      ctx.save();
-      ctx.beginPath();
-      ctx.arc(540, 140, 60, 0, Math.PI * 2);
-      ctx.clip();
-      ctx.drawImage(authorImg, 480, 80, 120, 120);
-      ctx.restore();
-      ctx.strokeStyle = "#c9a84c"; ctx.lineWidth = 5;
-      ctx.beginPath(); ctx.arc(540, 140, 60, 0, Math.PI * 2); ctx.stroke();
-    }
+    // "prepared for"
+    ctx.fillStyle = MUTED;
+    ctx.font = "italic 30px Georgia, serif";
+    ctx.fillText("prepared for", 540, 285);
 
-    // Brand
-    ctx.fillStyle = "#c9a84c"; ctx.font = "bold 26px sans-serif";
-    ctx.fillText("✍️  VISHNU RAGHAV", 540, 250);
-    ctx.strokeStyle = "#c9a84c"; ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(390, 268); ctx.lineTo(690, 268); ctx.stroke();
+    // User name in calligraphy
+    const rawName = (user && (user.name || (user.email && user.email.split('@')[0]))) || 'You';
+    const displayName = rawName.charAt(0).toUpperCase() + rawName.slice(1);
 
-    // Title
-    ctx.fillStyle = "#ffffff"; ctx.font = "bold 62px Georgia, serif";
-    ctx.fillText("Mind Health", 540, 350);
-    ctx.fillStyle = "#c9a84c"; ctx.font = "italic 42px Georgia, serif";
-    ctx.fillText("Report", 540, 410);
+    ctx.fillStyle = CREAM;
+    ctx.font = "italic 96px \"Brush Script MT\", \"Lucida Handwriting\", \"Segoe Script\", Georgia, serif";
+    ctx.fillText(displayName, 540, 400);
 
-    // Score circle
-    const cx = 540, cy = 800;
-    ctx.strokeStyle = "#2a1f3a"; ctx.lineWidth = 3;
-    ctx.beginPath(); ctx.arc(cx, cy, 320, 0, Math.PI * 2); ctx.stroke();
-
-    ctx.strokeStyle = report.level.color; ctx.lineWidth = 26; ctx.lineCap = "round";
+    const nameWidth = ctx.measureText(displayName).width;
+    ctx.strokeStyle = GOLD;
+    ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.arc(cx, cy, 280, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * (report.total / 60));
+    ctx.moveTo(540 - nameWidth/2 - 30, 425);
+    ctx.quadraticCurveTo(540, 442, 540 + nameWidth/2 + 30, 425);
     ctx.stroke();
 
-    ctx.fillStyle = "#0a0817";
-    ctx.beginPath(); ctx.arc(cx, cy, 250, 0, Math.PI * 2); ctx.fill();
+    // Score ring
+    const scx = 540, scy = 900, outerR = 240, innerR = 205;
 
-    ctx.fillStyle = report.level.color; ctx.font = "bold 220px Georgia, serif";
+    ctx.strokeStyle = GOLD; ctx.globalAlpha = 0.2; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.arc(scx, scy, outerR + 25, 0, Math.PI * 2); ctx.stroke();
+    ctx.globalAlpha = 0.15; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(scx, scy, outerR, 0, Math.PI * 2); ctx.stroke();
+    ctx.globalAlpha = 1;
+
+    const progressAngle = (report.total / 60) * Math.PI * 2;
+    const grad = ctx.createLinearGradient(scx - outerR, scy - outerR, scx + outerR, scy + outerR);
+    grad.addColorStop(0, GOLD_BRIGHT);
+    grad.addColorStop(0.5, GOLD);
+    grad.addColorStop(1, COPPER);
+    ctx.strokeStyle = grad; ctx.lineWidth = 14; ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.arc(scx, scy, outerR, -Math.PI / 2, -Math.PI / 2 + progressAngle);
+    ctx.stroke();
+    ctx.lineCap = "butt";
+
+    ctx.fillStyle = BG_TOP;
+    ctx.beginPath(); ctx.arc(scx, scy, innerR, 0, Math.PI * 2); ctx.fill();
+
+    ctx.strokeStyle = GOLD; ctx.globalAlpha = 0.12; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.arc(scx, scy, innerR - 15, 0, Math.PI * 2); ctx.stroke();
+    ctx.globalAlpha = 1;
+
+    ctx.fillStyle = CREAM;
+    ctx.font = "bold 180px Georgia, serif";
     ctx.textBaseline = "middle";
-    ctx.fillText(String(report.total), cx, cy - 20);
+    ctx.fillText(String(report.total), scx, scy - 10);
     ctx.textBaseline = "alphabetic";
-    ctx.fillStyle = "#9a9aab"; ctx.font = "34px sans-serif";
-    ctx.fillText("out of 60", cx, cy + 140);
 
-    // Level pill badge
-    const lvlTxt = `${report.level.emoji}  ${report.level.label}`;
-    ctx.font = "bold 40px sans-serif";
-    const bw = ctx.measureText(lvlTxt).width + 80;
-    const bx = cx - bw / 2, by = 1200;
-    ctx.fillStyle = report.level.color + "25";
-    ctx.strokeStyle = report.level.color; ctx.lineWidth = 2;
-    rr(bx, by, bw, 78, 39); ctx.fill(); ctx.stroke();
-    ctx.fillStyle = "#ffffff";
-    ctx.fillText(lvlTxt, cx, by + 52);
+    ctx.fillStyle = GOLD;
+    ctx.font = "500 32px Georgia, serif";
+    ctx.fillText("out of 60", scx, scy + 120);
 
-    // Top patterns
-    ctx.fillStyle = "#c9a84c"; ctx.font = "bold 24px sans-serif";
-    ctx.fillText("MY TOP PATTERNS", cx, 1350);
+    // Level label
+    ctx.fillStyle = CREAM;
+    ctx.font = "italic 56px Georgia, serif";
+    ctx.fillText(report.level.label, 540, 1240);
 
+    const lblWidth = ctx.measureText(report.level.label).width;
+    ctx.strokeStyle = GOLD; ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(540 - lblWidth/2, 1258);
+    ctx.quadraticCurveTo(540, 1272, 540 + lblWidth/2, 1258);
+    ctx.stroke();
+
+    const levelSubtitles = {
+      healthy: 'the mind is at ease — treasure this',
+      mild: 'the mind is asking for gentleness',
+      moderate: 'the mind is calling for care',
+      high: 'the mind needs rest and support',
+      very_high: 'reach out — you are not alone',
+    };
+    const subtitle = levelSubtitles[report.level.key] || 'a moment of reflection';
+    ctx.fillStyle = MUTED;
+    ctx.font = "italic 26px Georgia, serif";
+    ctx.fillText(subtitle, 540, 1305);
+
+    // Insight bars
     const top2 = (report.top_domains || []).slice(0, 2);
     top2.forEach((d, i) => {
       const label = DOMAIN_LABELS[d] || d;
       const pct = report.domain_pct[d] || 0;
-      const y = 1385 + i * 92;
-      ctx.fillStyle = "#1a1330"; rr(120, y, 840, 72, 16); ctx.fill();
-      const barColor = pct >= 70 ? "#ef4444" : pct >= 50 ? "#f97316" : "#eab308";
-      ctx.fillStyle = barColor + "40"; rr(120, y, 840 * (pct / 100), 72, 16); ctx.fill();
-      ctx.fillStyle = "#ffffff"; ctx.font = "bold 28px sans-serif";
-      ctx.textAlign = "left"; ctx.fillText(label, 160, y + 46);
-      ctx.fillStyle = barColor; ctx.font = "bold 30px sans-serif";
-      ctx.textAlign = "right"; ctx.fillText(pct + "%", 920, y + 46);
+      const yy = 1390 + i * 80;
+      const barX = 260, barW = 560;
+
+      ctx.fillStyle = IVORY;
+      ctx.font = "500 26px Georgia, serif";
+      ctx.textAlign = "left";
+      ctx.fillText(`${label}  ·  ${pct}%`, barX, yy);
+
+      ctx.strokeStyle = GOLD; ctx.globalAlpha = 0.15; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(barX, yy + 18); ctx.lineTo(barX + barW, yy + 18); ctx.stroke();
+      ctx.globalAlpha = 1;
+
+      const bgrad = ctx.createLinearGradient(barX, yy, barX + barW, yy);
+      bgrad.addColorStop(0, GOLD_BRIGHT);
+      bgrad.addColorStop(1, COPPER);
+      ctx.strokeStyle = bgrad; ctx.lineWidth = 3; ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(barX, yy + 18);
+      ctx.lineTo(barX + (barW * pct / 100), yy + 18);
+      ctx.stroke();
+      ctx.lineCap = "butt";
     });
     ctx.textAlign = "center";
 
-    // Personalized quote (level + top domain based — 25+ combinations)
+    // Quote
     const quotes = {
-      healthy: {
-        default: '"Balance is a habit —\nkeep tending to it."',
-        overthinking: '"A quiet mind\nis your greatest asset."',
-        mood: '"Joy is a choice\nyou make daily."',
-        stress: '"Peace is your natural state.\nProtect it."',
-      },
-      mild: {
-        default: '"Small changes today,\nreal clarity tomorrow."',
-        overthinking: '"The mind that thinks too much,\nalso feels too deeply."',
-        stress: '"Stress ends\nwhere breath begins."',
-        mood: '"Every storm passes.\nYours will too."',
-        self_worth: '"You are enough,\nexactly as you are."',
-      },
-      moderate: {
-        default: '"Awareness is the first step\nto transformation."',
-        overthinking: '"You are not your thoughts —\nyou are the awareness."',
-        stress: '"When the mind is heavy,\nkeep the steps small."',
-        self_worth: '"Your worth is not a score.\nIt is your existence."',
-        mood: '"Even the darkest night\nends in dawn."',
-        relationships_purpose: '"Reconnect with yourself,\nthen with others."',
-        daily_functioning: '"Progress, not perfection,\nis the goal."',
-      },
-      high: {
-        default: '"You are not alone.\nHelp is closer than you think."',
-        overthinking: '"Your mind is exhausted.\nBe kind to it."',
-        mood: '"Feeling low is not failure.\nIt is a signal."',
-        stress: '"Pause is not weakness —\nit is wisdom."',
-      },
-      very_high: {
-        default: '"Reaching out is strength,\nnot weakness."',
-      },
+      healthy: { default: '"Balance is a habit —\nkeep tending to it."', overthinking: '"A quiet mind\nis your greatest asset."', mood: '"Joy is a choice\nyou make daily."', stress: '"Peace is your natural state.\nProtect it."' },
+      mild: { default: '"Small changes today,\nreal clarity tomorrow."', overthinking: '"The mind that thinks too much,\nalso feels too deeply."', stress: '"Stress ends\nwhere breath begins."', mood: '"Every storm passes.\nYours will too."', self_worth: '"You are enough,\nexactly as you are."' },
+      moderate: { default: '"Awareness is the first step\nto transformation."', overthinking: '"You are not your thoughts —\nyou are the awareness."', stress: '"When the mind is heavy,\nkeep the steps small."', self_worth: '"Your worth is not a score.\nIt is your existence."', mood: '"Even the darkest night\nends in dawn."', relationships_purpose: '"Reconnect with yourself,\nthen with others."', daily_functioning: '"Progress, not perfection,\nis the goal."' },
+      high: { default: '"You are not alone.\nHelp is closer than you think."', overthinking: '"Your mind is exhausted.\nBe kind to it."', mood: '"Feeling low is not failure.\nIt is a signal."', stress: '"Pause is not weakness —\nit is wisdom."' },
+      very_high: { default: '"Reaching out is strength,\nnot weakness."' },
     };
     const topDomain = report.top_domains?.[0];
     const levelSet = quotes[report.level.key] || quotes.moderate;
     const quote = levelSet[topDomain] || levelSet.default;
 
-    ctx.fillStyle = "#c9a84c"; ctx.font = "italic 34px Georgia, serif";
-    quote.split("\n").forEach((line, i) => ctx.fillText(line, cx, 1700 + i * 46));
+    ctx.fillStyle = CREAM;
+    ctx.font = "italic 34px Georgia, serif";
+    quote.split("\n").forEach((line, i) => ctx.fillText(line, 480, 1610 + i * 46));
 
-    // CTA
-    ctx.fillStyle = "#ffffff"; ctx.font = "bold 28px sans-serif";
-    ctx.fillText("Take yours (5 min) →", cx, 1830);
-    ctx.fillStyle = "#c9a84c"; ctx.font = "bold 42px sans-serif";
-    ctx.fillText("authorvishnuraghav.in", cx, 1890);
+    ctx.fillStyle = MUTED;
+    ctx.font = "italic 24px Georgia, serif";
+    ctx.fillText("— Vishnu Raghav", 480, 1720);
+
+    // Book signature (bottom right)
+    const bookOptions = [
+      { img: bookImg1, title: "Dagmagate Pair" },
+      { img: bookImg2, title: "Jo Mai Kah Na Saka" },
+    ];
+    const topDom = report.top_domains?.[0];
+    const preferOverthinking = topDom === "overthinking" || topDom === "anxiety_stress";
+    const preferredOrder = preferOverthinking ? [bookOptions[0], bookOptions[1]] : [bookOptions[1], bookOptions[0]];
+    const selectedBook = preferredOrder.find(b => b.img) || null;
+
+    if (selectedBook) {
+      ctx.fillStyle = MUTED;
+      ctx.font = "500 16px Georgia, serif";
+      ctx.textAlign = "right";
+      const serialNo = "No. " + String(Math.floor(Date.now() / 1000)).slice(-4);
+      ctx.fillText(serialNo, 1000, 1620);
+
+      ctx.save();
+      ctx.globalAlpha = 0.98;
+      ctx.translate(910, 1740);
+      ctx.rotate(-0.08);
+      ctx.drawImage(selectedBook.img, -75, -100, 150, 210);
+      ctx.restore();
+
+      ctx.fillStyle = CREAM;
+      ctx.font = "italic 24px Georgia, serif";
+      ctx.textAlign = "right";
+      ctx.fillText(`"${selectedBook.title}"`, 810, 1860);
+
+      ctx.fillStyle = MUTED;
+      ctx.font = "500 14px Georgia, serif";
+      ctx.fillText("BY VISHNU RAGHAV  →", 810, 1885);
+    }
+    ctx.textAlign = "center";
+
+    // Footer
+    const dateStr = new Date().toLocaleDateString("en-IN", { day: 'numeric', month: 'long', year: 'numeric' });
+    ctx.fillStyle = MUTED;
+    ctx.font = "500 20px Georgia, serif";
+    ctx.textAlign = "left";
+    ctx.fillText(dateStr, 90, 1890);
+
+    ctx.fillStyle = GOLD;
+    ctx.font = "bold 28px Georgia, serif";
+    ctx.textAlign = "center";
+    ctx.fillText("authorvishnuraghav.in", 540, 1890);
 
     return new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
   };
