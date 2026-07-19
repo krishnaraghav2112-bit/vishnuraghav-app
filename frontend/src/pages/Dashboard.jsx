@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { BookOpen, TrendingUp, Award, CreditCard, User, LogOut, Clock, Brain, Sparkles, Heart, Flame, Package, MapPin, Truck } from "lucide-react";
+import { BookOpen, TrendingUp, Award, CreditCard, User, Brain, LogOut, Clock, Brain, Sparkles, Heart, Flame, Package, MapPin, Truck } from "lucide-react";
 import api, { formatApiError } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 
@@ -13,6 +13,7 @@ export default function Dashboard({ onOpenAuth }) {
   const [tab, setTab] = useState(location.state?.tab || "courses");
   const [enrollments, setEnrollments] = useState([]);
   const [bookOrders, setBookOrders] = useState([]);
+  const [assessments, setAssessments] = useState([]);
   const [profile, setProfile] = useState({ name: "", phone: "", city: "", occupation: "" });
 
   useEffect(() => {
@@ -23,6 +24,7 @@ export default function Dashboard({ onOpenAuth }) {
     if (user) {
       api.get("/enrollments/me").then((r) => setEnrollments(r.data)).catch(() => {});
       api.get("/book-orders/me").then((r) => setBookOrders(r.data)).catch(() => {});
+      api.get("/assessment/me").then((r) => setAssessments(r.data)).catch(() => {});
       setProfile({ name: user.name || "", phone: user.phone || "", city: user.city || "", occupation: user.occupation || "" });
     }
   }, [user]);
@@ -43,6 +45,7 @@ export default function Dashboard({ onOpenAuth }) {
     { id: "progress", label: "Progress", icon: TrendingUp },
     { id: "certs", label: "Certificates", icon: Award },
     { id: "payments", label: "Payments", icon: CreditCard },
+    { id: "mindreports", label: "Mind Reports", icon: Brain },
     { id: "profile", label: "Profile", icon: User },
   ];
 
@@ -256,6 +259,70 @@ export default function Dashboard({ onOpenAuth }) {
                 </>
               )}
             </>
+          )}
+
+           {tab === "mindreports" && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="font-serif text-2xl font-black">Your Mind Reports</h2>
+                <button onClick={() => nav("/self-assessment")}
+                  className="px-4 py-2 rounded-lg bg-gold-gradient text-ink-950 text-xs font-bold">
+                  Take New Assessment
+                </button>
+              </div>
+              {assessments.length === 0 ? (
+                <div className="bg-ink-900 border border-white/[0.07] rounded-2xl p-8 text-center">
+                  <Brain className="w-10 h-10 text-brand-gold mx-auto mb-3 opacity-60" />
+                  <p className="text-sm text-muted-foreground mb-4">Aap ne abhi tak koi mind assessment nahi liya. 5 minute ke Mind Health Test se apni current emotional state jaanein.</p>
+                  <button onClick={() => nav("/self-assessment")}
+                    className="px-5 py-2.5 rounded-lg bg-gold-gradient text-ink-950 text-sm font-bold">
+                    Start Assessment →
+                  </button>
+                </div>
+              ) : (
+                <>
+                  {assessments.length >= 2 && (() => {
+                    const latest = assessments[0].total;
+                    const prev = assessments[1].total;
+                    const diff = prev - latest;
+                    if (diff !== 0) return (
+                      <div className={`rounded-xl p-4 border ${diff > 0 ? "bg-green-500/5 border-green-500/20" : "bg-orange-500/5 border-orange-500/20"}`}>
+                        <div className="text-sm font-bold">
+                          {diff > 0 ? `📈 You improved by ${diff} points since last assessment!` : `⚠️ Your score went up by ${Math.abs(diff)} points — take care of yourself.`}
+                        </div>
+                      </div>
+                    );
+                    return null;
+                  })()}
+                  <div className="space-y-3">
+                    {assessments.map((a) => {
+                      const dateStr = a.created_at ? new Date(a.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "—";
+                      const levelColor = {
+                        healthy: "text-green-400 bg-green-500/10 border-green-500/20",
+                        mild: "text-yellow-400 bg-yellow-500/10 border-yellow-500/20",
+                        moderate: "text-orange-400 bg-orange-500/10 border-orange-500/20",
+                        high: "text-red-400 bg-red-500/10 border-red-500/20",
+                        very_high: "text-gray-300 bg-gray-500/10 border-gray-500/20",
+                      }[a.level_key] || "text-muted-foreground bg-white/5 border-white/10";
+                      return (
+                        <div key={a.id} className="bg-ink-900 border border-white/[0.07] rounded-xl p-4 flex items-center justify-between">
+                          <div>
+                            <div className="text-xs text-muted-foreground mb-1">{dateStr}</div>
+                            <div className="font-bold text-lg">{a.total}<span className="text-sm text-muted-foreground">/60</span></div>
+                            <div className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-full border mt-1 ${levelColor}`}>{a.level_label}</div>
+                          </div>
+                          <div className="text-right">
+                            {a.top_domains?.length > 0 && (
+                              <div className="text-[10px] text-muted-foreground">Top pattern: <span className="text-brand-gold font-bold">{a.top_domains[0].replace("_", " ")}</span></div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
+            </div>
           )}
 
           {tab === "profile" && (
