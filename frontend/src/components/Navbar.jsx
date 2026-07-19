@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { Youtube, Menu, X, LayoutDashboard } from "lucide-react";
+import { Youtube, Menu, X, LayoutDashboard, ShoppingCart } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import { useCart } from "../context/CartContext";
 
 export default function Navbar({ onOpenAuth }) {
   const { user } = useAuth();
+  const { totalItems, items } = useCart();
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const nav = useNavigate();
@@ -63,6 +65,19 @@ export default function Navbar({ onOpenAuth }) {
         </div>
 
         <div className="flex items-center gap-2">
+          {totalItems > 0 && (
+            <button
+              onClick={() => nav("/book-checkout", { state: { book: items[0].book } })}
+              data-testid="nav-cart"
+              aria-label="View cart"
+              className="relative flex items-center justify-center w-8 h-8 rounded-md border border-brand-gold/30 bg-brand-goldSoft text-brand-gold hover:bg-brand-gold/15 transition-colors"
+            >
+              <ShoppingCart className="w-4 h-4" />
+              <span className="absolute -top-1 -right-1 bg-brand-gold text-ink-950 text-[10px] font-black rounded-full w-4 h-4 flex items-center justify-center">
+                {totalItems}
+              </span>
+            </button>
+          )}
           <a
             href="https://youtube.com/@vishnuraghav"
             target="_blank"
