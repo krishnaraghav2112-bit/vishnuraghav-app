@@ -305,18 +305,25 @@ export default function Dashboard({ onOpenAuth }) {
                         very_high: "text-gray-300 bg-gray-500/10 border-gray-500/20",
                       }[a.level_key] || "text-muted-foreground bg-white/5 border-white/10";
                       return (
-                        <div key={a.id} className="bg-ink-900 border border-white/[0.07] rounded-xl p-4 flex items-center justify-between">
+                        <button key={a.id}
+                          onClick={() => nav(`/self-assessment?report_id=${a.id}`)}
+                          data-testid={`view-report-${a.id}`}
+                          className="w-full text-left bg-ink-900 border border-white/[0.07] rounded-xl p-4 flex items-center justify-between hover:border-brand-gold/40 hover:bg-ink-800 transition-all group">
                           <div>
                             <div className="text-xs text-muted-foreground mb-1">{dateStr}</div>
                             <div className="font-bold text-lg">{a.total}<span className="text-sm text-muted-foreground">/60</span></div>
                             <div className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-full border mt-1 ${levelColor}`}>{a.level_label}</div>
                           </div>
-                          <div className="text-right">
+                          <div className="flex items-center gap-3">
                             {a.top_domains?.length > 0 && (
-                              <div className="text-[10px] text-muted-foreground">Top pattern: <span className="text-brand-gold font-bold">{a.top_domains[0].replace("_", " ")}</span></div>
+                              <div className="text-right">
+                                <div className="text-[10px] text-muted-foreground">Top pattern</div>
+                                <div className="text-brand-gold font-bold text-xs">{a.top_domains[0].replace("_", " ")}</div>
+                              </div>
                             )}
+                            <div className="text-brand-gold group-hover:translate-x-1 transition-transform">→</div>
                           </div>
-                        </div>
+                        </button>
                       );
                     })}
                   </div>
