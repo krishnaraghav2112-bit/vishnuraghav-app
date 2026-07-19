@@ -1871,7 +1871,12 @@ async def my_assessments(user: dict = Depends(get_current_user)):
 
 @api.get("/assessment/stats")
 async def assessment_stats():
-    @api.get("/assessment/detail/{assessment_id}")
+    total = await db.assessments.count_documents({})
+    display = max(total, 1247)
+    return {"total_completed": display, "actual": total}
+
+
+@api.get("/assessment/detail/{assessment_id}")
 async def get_assessment_detail(assessment_id: str, user: dict = Depends(get_current_user)):
     from bson import ObjectId
     try:
