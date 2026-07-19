@@ -48,6 +48,8 @@ export default function SelfAssessment({ onOpenAuth }) {
   const [product, setProduct] = useState({ price: 199, is_active: false, has_pdf: false });
   const [access, setAccess] = useState({ has_access: false, pdf_url: null });
   const [paying, setPaying] = useState(false);
+  const [assets, setAssets] = useState({ author_photo: "" });
+  const [allBooks, setAllBooks] = useState([]);
   const shareCanvasRef = useRef(null);
 
   // ── Load questions + stats + saved progress ──
@@ -71,6 +73,8 @@ export default function SelfAssessment({ onOpenAuth }) {
 
     api.get("/assessment/stats").then(({ data }) => setStats(data)).catch(() => {});
     api.get("/assessment/product").then(({ data }) => setProduct(data)).catch(() => {});
+    api.get("/site/assets").then(({ data }) => setAssets(data)).catch(() => {});
+    api.get("/books").then(({ data }) => setAllBooks(data || [])).catch(() => {});
      if (user) {
       api.get("/assessment/product/access").then(({ data }) => setAccess(data)).catch(() => {});
     }
@@ -700,6 +704,42 @@ export default function SelfAssessment({ onOpenAuth }) {
                     Read this book <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* MORE BOOKS BY VISHNU */}
+          {allBooks.length > 0 && (
+            <div className="bg-ink-900 border border-white/[0.07] rounded-2xl p-6 mb-6">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <div className="text-xs font-bold text-brand-gold uppercase tracking-widest mb-1">More From Vishnu</div>
+                  <h3 className="font-serif text-xl font-black">Explore All Books</h3>
+                </div>
+                <button onClick={() => nav("/#books")}
+                  className="text-xs text-brand-gold font-bold inline-flex items-center gap-1 hover:gap-2 transition-all">
+                  View all <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
+                {allBooks.slice(0, 5).map((b) => (
+                  <button key={b.slug} onClick={() => nav("/#books")}
+                    data-testid={`report-book-${b.slug}`}
+                    className="group flex flex-col items-center hover:scale-105 transition-transform">
+                    <div className="aspect-[3/4] w-full rounded-lg overflow-hidden border border-white/10 group-hover:border-brand-gold/40 shadow-lg bg-ink-800">
+                      {b.cover_image ? (
+                        <img src={b.cover_image} alt={b.title} className="w-full h-full object-cover" loading="lazy" />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-brand-gold/20 to-ink-800 flex items-center justify-center">
+                          <BookOpen className="w-6 h-6 text-brand-gold/60" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="mt-2 text-[10px] font-bold text-center leading-tight line-clamp-2 group-hover:text-brand-gold transition-colors">
+                      {b.title}
+                    </div>
+                  </button>
+                ))}
               </div>
             </div>
           )}
