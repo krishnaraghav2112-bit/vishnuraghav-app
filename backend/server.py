@@ -1592,6 +1592,225 @@ class BookOrderVerifyIn(BaseModel):
     razorpay_order_id: str
     razorpay_signature: str
 
+python
+# ═══════════════════════════════════════════════════════════════════════
+# ─── MIND HEALTH ASSESSMENT ────────────────────────────────────────────
+# ═══════════════════════════════════════════════════════════════════════
+
+ASSESSMENT_QUESTIONS = [
+    {"id": 1, "domain": "mood", "text": "Mujhe adhiktar samay udaasi ya khaali-pan mehsoos hua."},
+    {"id": 2, "domain": "mood", "text": "Mujhe un cheezon mein bhi khushi nahi milti jo pehle mujhe pasand thi."},
+    {"id": 3, "domain": "mood", "text": "Subah uthkar din shuru karna mushkil lagta hai."},
+    {"id": 4, "domain": "mood", "text": "Main bina wajah bahut thaka hua mehsoos karta hoon."},
+    {"id": 5, "domain": "overthinking", "text": "Ek hi baat mere dimaag mein baar-baar chalti rehti hai."},
+    {"id": 6, "domain": "overthinking", "text": "Main future ki chinta mein present ko enjoy nahi kar pata."},
+    {"id": 7, "domain": "overthinking", "text": "Main apni purani galtiyon ko baar-baar yaad karta hoon."},
+    {"id": 8, "domain": "self_worth", "text": "Mujhe lagta hai main dusron jitna accha nahi hoon."},
+    {"id": 9, "domain": "self_worth", "text": "Main apni achievements ko bhi ignore kar deta hoon."},
+    {"id": 10, "domain": "stress", "text": "Main chhoti baaton ko lekar bahut zyada tension le leta hoon."},
+    {"id": 11, "domain": "daily_functioning", "text": "Mera dhyan aasani se bhatak jata hai."},
+    {"id": 12, "domain": "daily_functioning", "text": "Mujhe decision lene mein pehle se zyada mushkil hoti hai."},
+    {"id": 13, "domain": "daily_functioning", "text": "Meri neend pehle se kharab ho gayi hai."},
+    {"id": 14, "domain": "relationships_purpose", "text": "Main logon se milna ya baat karna avoid karta hoon."},
+    {"id": 15, "domain": "relationships_purpose", "text": "Mujhe lagta hai koi mujhe sach mein nahi samajhta."},
+    {"id": 16, "domain": "relationships_purpose", "text": "Mujhe lagta hai meri life mein direction ki kami hai."},
+    {"id": 17, "domain": "stress", "text": "Main apni emotions ko control nahi kar pata."},
+    {"id": 18, "domain": "stress", "text": "Stress ki wajah se meri daily life prabhavit ho rahi hai."},
+    {"id": 19, "domain": "relationships_purpose", "text": "Kabhi-kabhi mujhe lagta hai meri life ka koi purpose nahi hai."},
+    {"id": 20, "domain": "safety", "text": "Pichhle 2 hafton mein, kya kabhi aapke man mein aisa khayal aaya ki zindagi jeene ka koi matlab nahi hai ya khud ko nuksan pahunchane ka vichar aaya?"},
+]
+
+ASSESSMENT_OPTIONS = [
+    {"value": 0, "label": "Kabhi nahi"},
+    {"value": 1, "label": "Kuch din"},
+    {"value": 2, "label": "Aadhe se zyada din"},
+    {"value": 3, "label": "Lagbhag har din"},
+]
+
+DOMAIN_MAX = {
+    "mood": 12, "overthinking": 9, "self_worth": 6,
+    "stress": 9, "daily_functioning": 9, "relationships_purpose": 12,
+}
+
+DOMAIN_NAMES = {
+    "mood": "Mood",
+    "overthinking": "Overthinking",
+    "self_worth": "Self Worth",
+    "stress": "Anxiety & Stress",
+    "daily_functioning": "Daily Functioning",
+    "relationships_purpose": "Relationships & Purpose",
+}
+
+DOMAIN_TO_COURSE = {
+    "overthinking": "overcoming-overthinking",
+    "mood": "mind-control-meditation",
+    "self_worth": "mind-control-meditation",
+    "stress": "time-management-mastery",
+    "daily_functioning": "time-management-mastery",
+    "relationships_purpose": "relationship-emotional-clarity",
+}
+
+
+class AssessmentAnswerIn(BaseModel):
+    q_id: int
+    value: int
+
+
+class AssessmentSubmitIn(BaseModel):
+    answers: List[AssessmentAnswerIn]
+
+
+def _build_personality_analysis(top_domains, level_key):
+    combos = {
+        ("overthinking", "self_worth"): ("Overthinking + Self Doubt Pattern",
+            "Aap har situation ko bahut deeply analyse karte hain. Problem ye nahi ki aap zyada sochte hain — problem ye hai ki aapka dimaag har possibility ko danger samajhne lagta hai. Isi wajah se decision delay, self doubt, future anxiety aur mental exhaustion jaise patterns develop hote hain. Achhi baat ye hai ki ye permanent personality nahi hai — ye ek trained thinking pattern hai jise badla ja sakta hai."),
+        ("mood", "overthinking"): ("Low Mood + Overthinking Pattern",
+            "Aapka dimaag har chhoti baat par ruk jata hai aur usi ke baare mein baar-baar sochta hai. Ye lagataar overthinking dheere-dheere mood ko bhi girati hai — jaise ek dhundh mein sab kuch dhundhla lagne lagta hai. Ye ek cycle hai — sochna → mood down → phir aur zyada sochna. Is cycle ko break kiya ja sakta hai, sirf sahi tools ki zaroorat hoti hai."),
+        ("stress", "overthinking"): ("High Stress + Overthinking Pattern",
+            "Aapka mind hamesha 'ON' rehta hai — ek race jo kabhi ruk nahi rahi. Har chhoti situation ko threat samajhna, decisions par atakna, aur constant tension mehsoos karna — ye sab aapki mental energy ko drain kar rahe hain. Body aur mind dono ko rest chahiye."),
+        ("mood", "self_worth"): ("Low Mood + Self Worth Pattern",
+            "Aap khud ko doosron se compare karte hain aur apni achievements ko chhota samajhte hain. Ye habit dheere-dheere aapke aatmvishwas ko kamzor karti hai aur mood ko bhi giraati hai. Sach ye hai ki har insaan ki apni timing hai — aur aap jitna sochte hain, usse kahin zyada strong hain."),
+        ("relationships_purpose", "mood"): ("Purpose + Connection Gap",
+            "Aap logon ke beech hote hue bhi akela mehsoos karte hain, aur life ki direction unclear lagti hai. Ye common phase hai jab hum apni identity aur meaning ki tarah dhundhte hain. Ye kamzori nahi — balki growth ka signal hai."),
+        ("daily_functioning", "overthinking"): ("Focus + Overthinking Struggle",
+            "Overthinking ki wajah se aapka focus toot raha hai — decisions lena mushkil, neend disturbed, aur task complete karna challenging. Aapka mind saath dena chahta hai lekin overload ho gaya hai."),
+    }
+    single = {
+        "mood": ("Low Mood Pattern", "Aapke andar ek udasee ya khaali-pan hai jo daily life par asar dikha rahi hai. Ye phase temporary ho sakta hai, lekin ise ignore karna theek nahi."),
+        "overthinking": ("Overthinking Pattern", "Aapka dimaag har situation ko bar-bar analyse karta hai. Ye ek trained habit hai, jise unlearn kiya ja sakta hai."),
+        "self_worth": ("Self Worth Pattern", "Aap apni value ko underestimate karte hain. Aap doosron se kam nahi — bas khud ko waisi hi nazar se dekhna hai jaisi aap doosron ko dekhte hain."),
+        "stress": ("High Stress Pattern", "Aapke andar stress build up ho raha hai. Body aur mind ko rest chahiye."),
+        "daily_functioning": ("Focus & Function Gap", "Focus, decisions aur neend par asar padh raha hai. Ye ek recoverable phase hai."),
+        "relationships_purpose": ("Connection & Purpose Gap", "Aap emotionally akela mehsoos karte hain aur direction unclear lagti hai. Ye khud se dubara connect hone ka signal hai."),
+    }
+    if not top_domains:
+        return {"title": "Balanced Mind", "body": "Aap emotionally balanced lag rahe hain — ye ek achhi baat hai."}
+    if len(top_domains) >= 2:
+        for key in [(top_domains[0], top_domains[1]), (top_domains[1], top_domains[0])]:
+            if key in combos:
+                t, b = combos[key]
+                return {"title": t, "body": b}
+    t, b = single.get(top_domains[0], ("Your Mind Pattern", "Aapka mind kai directions mein kaam kar raha hai."))
+    return {"title": t, "body": b}
+
+
+def _build_strengths(low_domains):
+    strength_map = {
+        "mood": "Emotional Stability",
+        "overthinking": "Clear Thinking",
+        "self_worth": "Healthy Self Image",
+        "stress": "Stress Resilience",
+        "daily_functioning": "Focused Execution",
+        "relationships_purpose": "Strong Connections",
+    }
+    result = [strength_map[d] for d in low_domains if d in strength_map]
+    if not result:
+        result = ["Emotional Awareness", "Willingness to Reflect", "Learning Mindset"]
+    else:
+        result.extend(["Emotional Awareness", "Learning Mindset"])
+    return result[:5]
+
+
+def _build_risks(level_key):
+    return {
+        "healthy": [],
+        "mild": ["Overthinking build-up", "Emotional fatigue", "Sleep disturbance"],
+        "moderate": ["Burnout", "Chronic stress", "Motivation loss", "Relationship strain"],
+        "high": ["Depression signals", "Emotional shutdown", "Isolation"],
+        "very_high": ["Serious mental health concerns — Professional support strongly recommended"],
+    }.get(level_key, [])
+
+
+def calculate_assessment(answers):
+    ans_map = {a.q_id: a.value for a in answers}
+    total = sum(ans_map.get(q["id"], 0) for q in ASSESSMENT_QUESTIONS if q["domain"] != "safety")
+    domain_scores = {d: 0 for d in DOMAIN_MAX}
+    for q in ASSESSMENT_QUESTIONS:
+        if q["domain"] in domain_scores:
+            domain_scores[q["domain"]] += ans_map.get(q["id"], 0)
+    domain_pct = {d: round((s / DOMAIN_MAX[d]) * 100) for d, s in domain_scores.items()}
+    safety_answer = ans_map.get(20, 0)
+    safety_risk = safety_answer >= 1
+
+    if total <= 12:
+        level = {"key": "healthy", "label": "Healthy Mind", "emoji": "🟢", "color": "#22c55e"}
+    elif total <= 24:
+        level = {"key": "mild", "label": "Mild Emotional Stress", "emoji": "🟡", "color": "#eab308"}
+    elif total <= 36:
+        level = {"key": "moderate", "label": "Moderate Emotional Distress", "emoji": "🟠", "color": "#f97316"}
+    elif total <= 48:
+        level = {"key": "high", "label": "High Emotional Distress", "emoji": "🔴", "color": "#ef4444"}
+    else:
+        level = {"key": "very_high", "label": "Very High Emotional Distress", "emoji": "⚫", "color": "#71717a"}
+
+    sorted_domains = sorted(domain_pct.items(), key=lambda x: -x[1])
+    top_domains = [d for d, p in sorted_domains[:2] if p >= 40]
+    low_domains = [d for d, p in sorted_domains if p < 40]
+
+    analysis = _build_personality_analysis(top_domains, level["key"])
+    strengths = _build_strengths(low_domains)
+    risks = _build_risks(level["key"])
+    course_slug = DOMAIN_TO_COURSE.get(top_domains[0] if top_domains else "overthinking", "overcoming-overthinking")
+    percentile = min(99, max(1, round((total / 60) * 100)))
+
+    return {
+        "total": total, "max": 60, "level": level,
+        "domain_scores": domain_scores, "domain_pct": domain_pct,
+        "domain_names": DOMAIN_NAMES, "top_domains": top_domains,
+        "safety_risk": safety_risk, "safety_answer": safety_answer,
+        "analysis": analysis, "strengths": strengths, "risks": risks,
+        "course_slug": course_slug, "percentile": percentile,
+    }
+
+
+@api.get("/assessment/questions")
+async def get_assessment_questions():
+    return {"questions": ASSESSMENT_QUESTIONS, "options": ASSESSMENT_OPTIONS}
+
+
+@api.post("/assessment/submit")
+async def submit_assessment(body: AssessmentSubmitIn, user: dict = Depends(get_current_user)):
+    if len(body.answers) != 20:
+        raise HTTPException(status_code=400, detail="All 20 questions must be answered")
+    for a in body.answers:
+        if a.value < 0 or a.value > 3:
+            raise HTTPException(status_code=400, detail="Invalid answer value")
+    report = calculate_assessment(body.answers)
+    doc = {
+        "user_id": str(user["_id"]),
+        "email": user.get("email", ""),
+        "name": user.get("name", ""),
+        "answers": [a.model_dump() for a in body.answers],
+        "total": report["total"],
+        "level_key": report["level"]["key"],
+        "level_label": report["level"]["label"],
+        "domain_scores": report["domain_scores"],
+        "domain_pct": report["domain_pct"],
+        "top_domains": report["top_domains"],
+        "safety_risk": report["safety_risk"],
+        "safety_answer": report["safety_answer"],
+        "created_at": datetime.now(timezone.utc),
+    }
+    result = await db.assessments.insert_one(doc)
+    report["assessment_id"] = str(result.inserted_id)
+    return report
+
+
+@api.get("/assessment/me")
+async def my_assessments(user: dict = Depends(get_current_user)):
+    cursor = db.assessments.find({"user_id": str(user["_id"])}).sort("created_at", -1).limit(10)
+    out = []
+    async for a in cursor:
+        out.append({
+            "id": str(a["_id"]),
+            "total": a["total"],
+            "level_label": a["level_label"],
+            "level_key": a["level_key"],
+            "top_domains": a.get("top_domains", []),
+            "created_at": a["created_at"].isoformat() if a.get("created_at") else None,
+        })
+    return out
+
 def _serialize_book_order(o: dict) -> dict:
     o["id"] = str(o.pop("_id"))
     if isinstance(o.get("created_at"), datetime):
