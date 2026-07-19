@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { BookOpen, TrendingUp, Award, CreditCard, User, Brain, LogOut, Clock, Brain, Sparkles, Heart, Flame, Package, MapPin, Truck } from "lucide-react";
+import { BookOpen, TrendingUp, Award, CreditCard, User, Brain, LogOut, Clock, Sparkles, Heart, Flame, Package, MapPin, Truck } from "lucide-react";
 import api, { formatApiError } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 
