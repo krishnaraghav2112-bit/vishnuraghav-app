@@ -135,7 +135,7 @@ export default function SelfAssessment({ onOpenAuth }) {
   };
 
   // ── Generate Instagram Story image ──
-  const generateShareImage = async () => {
+ const generateShareImage = async () => {
     if (!report) return null;
     const canvas = document.createElement("canvas");
     canvas.width = 1080; canvas.height = 1920;
@@ -154,31 +154,86 @@ export default function SelfAssessment({ onOpenAuth }) {
       ctx.closePath();
     };
 
+    // Load images with CORS support
+    const loadImg = (src) => new Promise((resolve) => {
+      if (!src) return resolve(null);
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.onload = () => resolve(img);
+      img.onerror = () => resolve(null);
+      img.src = src;
+    });
+
+    const [authorImg, ...bookImgs] = await Promise.all([
+      loadImg(assets.author_photo),
+      ...(allBooks.slice(0, 3).map(b => loadImg(b.cover_image))),
+    ]);
+    const validBooks = bookImgs.filter(Boolean);
+
+    // Background gradient
     const bg = ctx.createLinearGradient(0, 0, 0, 1920);
     bg.addColorStop(0, "#0f0a1f"); bg.addColorStop(0.55, "#1a0e2e"); bg.addColorStop(1, "#0a0817");
     ctx.fillStyle = bg; ctx.fillRect(0, 0, 1080, 1920);
 
-    const glow = ctx.createRadialGradient(540, 780, 100, 540, 780, 550);
+    // Book covers as floating background elements (10% opacity, rotated)
+    if (validBooks.length > 0) {
+      const positions = [
+        { x: -70, y: 420, w: 300, h: 420, rotate: -14 },
+        { x: 860, y: 200, w: 280, h: 400, rotate: 15 },
+        { x: 100, y: 1420, w: 260, h: 370, rotate: -8 },
+      ];
+      ctx.save();
+      ctx.globalAlpha = 0.10;
+      validBooks.forEach((img, i) => {
+        const p = positions[i] || positions[0];
+        ctx.save();
+        ctx.translate(p.x + p.w/2, p.y + p.h/2);
+        ctx.rotate(p.rotate * Math.PI / 180);
+        ctx.drawImage(img, -p.w/2, -p.h/2, p.w, p.h);
+        ctx.restore();
+      });
+      ctx.restore();
+    }
+
+    // Radial glow behind score
+    const glow = ctx.createRadialGradient(540, 800, 100, 540, 800, 550);
     glow.addColorStop(0, report.level.color + "40");
     glow.addColorStop(1, "transparent");
-    ctx.fillStyle = glow; ctx.fillRect(0, 300, 1080, 1000);
+    ctx.fillStyle = glow; ctx.fillRect(0, 320, 1080, 1000);
 
+    // Decorative gold rings
     ctx.strokeStyle = "#c9a84c"; ctx.globalAlpha = 0.07; ctx.lineWidth = 2;
     for (let r = 100; r < 560; r += 42) { ctx.beginPath(); ctx.arc(1050, -60, r, 0, Math.PI * 2); ctx.stroke(); }
     for (let r = 100; r < 460; r += 42) { ctx.beginPath(); ctx.arc(30, 1980, r, 0, Math.PI * 2); ctx.stroke(); }
     ctx.globalAlpha = 1;
 
+    // Author photo (circular, top)
     ctx.textAlign = "center";
-    ctx.fillStyle = "#c9a84c"; ctx.font = "bold 30px sans-serif";
-    ctx.fillText("✍️  VISHNU RAGHAV", 540, 130);
-    ctx.beginPath(); ctx.moveTo(390, 158); ctx.lineTo(690, 158); ctx.stroke();
+    if (authorImg) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(540, 140, 60, 0, Math.PI * 2);
+      ctx.clip();
+      ctx.drawImage(authorImg, 480, 80, 120, 120);
+      ctx.restore();
+      ctx.strokeStyle = "#c9a84c"; ctx.lineWidth = 5;
+      ctx.beginPath(); ctx.arc(540, 140, 60, 0, Math.PI * 2); ctx.stroke();
+    }
 
-    ctx.fillStyle = "#ffffff"; ctx.font = "bold 66px Georgia, serif";
-    ctx.fillText("Mind Health", 540, 250);
-    ctx.fillStyle = "#c9a84c"; ctx.font = "italic 44px Georgia, serif";
-    ctx.fillText("Report™", 540, 315);
+    // Brand
+    ctx.fillStyle = "#c9a84c"; ctx.font = "bold 26px sans-serif";
+    ctx.fillText("✍️  VISHNU RAGHAV", 540, 250);
+    ctx.strokeStyle = "#c9a84c"; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(390, 268); ctx.lineTo(690, 268); ctx.stroke();
 
-    const cx = 540, cy = 720;
+    // Title
+    ctx.fillStyle = "#ffffff"; ctx.font = "bold 62px Georgia, serif";
+    ctx.fillText("Mind Health", 540, 350);
+    ctx.fillStyle = "#c9a84c"; ctx.font = "italic 42px Georgia, serif";
+    ctx.fillText("Report™", 540, 410);
+
+    // Score circle
+    const cx = 540, cy = 800;
     ctx.strokeStyle = "#2a1f3a"; ctx.lineWidth = 3;
     ctx.beginPath(); ctx.arc(cx, cy, 320, 0, Math.PI * 2); ctx.stroke();
 
@@ -190,56 +245,89 @@ export default function SelfAssessment({ onOpenAuth }) {
     ctx.fillStyle = "#0a0817";
     ctx.beginPath(); ctx.arc(cx, cy, 250, 0, Math.PI * 2); ctx.fill();
 
-    ctx.fillStyle = report.level.color; ctx.font = "bold 230px Georgia, serif";
+    ctx.fillStyle = report.level.color; ctx.font = "bold 220px Georgia, serif";
     ctx.textBaseline = "middle";
     ctx.fillText(String(report.total), cx, cy - 20);
     ctx.textBaseline = "alphabetic";
-    ctx.fillStyle = "#9a9aab"; ctx.font = "36px sans-serif";
+    ctx.fillStyle = "#9a9aab"; ctx.font = "34px sans-serif";
     ctx.fillText("out of 60", cx, cy + 140);
 
+    // Level pill badge
     const lvlTxt = `${report.level.emoji}  ${report.level.label}`;
-    ctx.font = "bold 42px sans-serif";
-    const bw = ctx.measureText(lvlTxt).width + 90;
-    const bx = cx - bw / 2, by = 1140;
+    ctx.font = "bold 40px sans-serif";
+    const bw = ctx.measureText(lvlTxt).width + 80;
+    const bx = cx - bw / 2, by = 1200;
     ctx.fillStyle = report.level.color + "25";
     ctx.strokeStyle = report.level.color; ctx.lineWidth = 2;
-    rr(bx, by, bw, 82, 41); ctx.fill(); ctx.stroke();
+    rr(bx, by, bw, 78, 39); ctx.fill(); ctx.stroke();
     ctx.fillStyle = "#ffffff";
-    ctx.fillText(lvlTxt, cx, by + 55);
+    ctx.fillText(lvlTxt, cx, by + 52);
 
-    ctx.fillStyle = "#c9a84c"; ctx.font = "bold 26px sans-serif";
-    ctx.fillText("MY TOP PATTERNS", cx, 1310);
+    // Top patterns
+    ctx.fillStyle = "#c9a84c"; ctx.font = "bold 24px sans-serif";
+    ctx.fillText("MY TOP PATTERNS", cx, 1350);
 
     const top2 = (report.top_domains || []).slice(0, 2);
     top2.forEach((d, i) => {
       const label = DOMAIN_LABELS[d] || d;
       const pct = report.domain_pct[d] || 0;
-      const y = 1355 + i * 100;
-      ctx.fillStyle = "#1a1330"; rr(120, y, 840, 78, 18); ctx.fill();
+      const y = 1385 + i * 92;
+      ctx.fillStyle = "#1a1330"; rr(120, y, 840, 72, 16); ctx.fill();
       const barColor = pct >= 70 ? "#ef4444" : pct >= 50 ? "#f97316" : "#eab308";
-      ctx.fillStyle = barColor + "40"; rr(120, y, 840 * (pct / 100), 78, 18); ctx.fill();
-      ctx.fillStyle = "#ffffff"; ctx.font = "bold 30px sans-serif";
-      ctx.textAlign = "left"; ctx.fillText(label, 160, y + 49);
-      ctx.fillStyle = barColor; ctx.font = "bold 32px sans-serif";
-      ctx.textAlign = "right"; ctx.fillText(pct + "%", 920, y + 49);
+      ctx.fillStyle = barColor + "40"; rr(120, y, 840 * (pct / 100), 72, 16); ctx.fill();
+      ctx.fillStyle = "#ffffff"; ctx.font = "bold 28px sans-serif";
+      ctx.textAlign = "left"; ctx.fillText(label, 160, y + 46);
+      ctx.fillStyle = barColor; ctx.font = "bold 30px sans-serif";
+      ctx.textAlign = "right"; ctx.fillText(pct + "%", 920, y + 46);
     });
     ctx.textAlign = "center";
 
-    const taglines = {
-      healthy: '"Balance is a habit — keep it going."',
-      mild: '"Small changes today,\nreal clarity tomorrow."',
-      moderate: '"Awareness is the first step\nto transformation."',
-      high: '"You are not alone.\nHelp is closer than you think."',
-      very_high: '"Reaching out is strength,\nnot weakness."',
+    // Personalized quote (level + top domain based — 25+ combinations)
+    const quotes = {
+      healthy: {
+        default: '"Balance is a habit —\nkeep tending to it."',
+        overthinking: '"A quiet mind\nis your greatest asset."',
+        mood: '"Joy is a choice\nyou make daily."',
+        stress: '"Peace is your natural state.\nProtect it."',
+      },
+      mild: {
+        default: '"Small changes today,\nreal clarity tomorrow."',
+        overthinking: '"The mind that thinks too much,\nalso feels too deeply."',
+        stress: '"Stress ends\nwhere breath begins."',
+        mood: '"Every storm passes.\nYours will too."',
+        self_worth: '"You are enough,\nexactly as you are."',
+      },
+      moderate: {
+        default: '"Awareness is the first step\nto transformation."',
+        overthinking: '"You are not your thoughts —\nyou are the awareness."',
+        stress: '"When the mind is heavy,\nkeep the steps small."',
+        self_worth: '"Your worth is not a score.\nIt is your existence."',
+        mood: '"Even the darkest night\nends in dawn."',
+        relationships_purpose: '"Reconnect with yourself,\nthen with others."',
+        daily_functioning: '"Progress, not perfection,\nis the goal."',
+      },
+      high: {
+        default: '"You are not alone.\nHelp is closer than you think."',
+        overthinking: '"Your mind is exhausted.\nBe kind to it."',
+        mood: '"Feeling low is not failure.\nIt is a signal."',
+        stress: '"Pause is not weakness —\nit is wisdom."',
+      },
+      very_high: {
+        default: '"Reaching out is strength,\nnot weakness."',
+      },
     };
-    const tg = taglines[report.level.key] || taglines.moderate;
-    ctx.fillStyle = "#c9a84c"; ctx.font = "italic 34px Georgia, serif";
-    tg.split("\n").forEach((line, i) => ctx.fillText(line, cx, 1650 + i * 46));
+    const topDomain = report.top_domains?.[0];
+    const levelSet = quotes[report.level.key] || quotes.moderate;
+    const quote = levelSet[topDomain] || levelSet.default;
 
-    ctx.fillStyle = "#ffffff"; ctx.font = "bold 30px sans-serif";
-    ctx.fillText("Take yours (5 min) →", cx, 1805);
-    ctx.fillStyle = "#c9a84c"; ctx.font = "bold 44px sans-serif";
-    ctx.fillText("authorvishnuraghav.in", cx, 1870);
+    ctx.fillStyle = "#c9a84c"; ctx.font = "italic 34px Georgia, serif";
+    quote.split("\n").forEach((line, i) => ctx.fillText(line, cx, 1700 + i * 46));
+
+    // CTA
+    ctx.fillStyle = "#ffffff"; ctx.font = "bold 28px sans-serif";
+    ctx.fillText("Take yours (5 min) →", cx, 1830);
+    ctx.fillStyle = "#c9a84c"; ctx.font = "bold 42px sans-serif";
+    ctx.fillText("authorvishnuraghav.in", cx, 1890);
 
     return new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
   };
