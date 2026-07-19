@@ -542,16 +542,53 @@ export default function SelfAssessment({ onOpenAuth }) {
       <div className="min-h-screen bg-ink-950 text-foreground">
         <div className="max-w-3xl mx-auto px-5 lg:px-10 py-12">
 
-          {/* HEADER */}
-          <div className="bg-gradient-to-br from-brand-gold/10 to-transparent border border-brand-gold/20 rounded-3xl p-8 mb-6 text-center">
-            <div className="text-xs uppercase tracking-widest text-brand-gold font-bold mb-2">Your Mind Health Report</div>
-            <div className="text-6xl md:text-7xl font-black font-serif mb-2" style={{color: report.level.color}}>
-              {report.total}<span className="text-2xl text-muted-foreground">/60</span>
+         {/* AUTHOR SIGNATURE BANNER */}
+          <div className="relative overflow-hidden bg-gradient-to-r from-brand-gold/15 via-brand-gold/5 to-brand-gold/15 border border-brand-gold/30 rounded-2xl p-5 mb-6">
+            <div className="absolute -right-8 -top-8 w-40 h-40 rounded-full bg-brand-gold/10 blur-2xl" />
+            <div className="absolute -left-10 -bottom-10 w-32 h-32 rounded-full bg-brand-gold/10 blur-2xl" />
+            <div className="relative flex items-center gap-4">
+              {assets.author_photo && (
+                <img src={assets.author_photo} alt="Vishnu Raghav"
+                  className="w-14 h-14 md:w-16 md:h-16 rounded-full object-cover border-2 border-brand-gold shadow-lg flex-shrink-0" />
+              )}
+              <div className="flex-1 min-w-0">
+                <div className="text-[10px] uppercase tracking-widest text-brand-gold font-bold mb-0.5">Personally Prepared By</div>
+                <div className="font-serif text-lg md:text-xl font-black">Vishnu Raghav</div>
+                <div className="text-[11px] text-muted-foreground italic">✍️ Author · Life Coach · Educator</div>
+              </div>
+              <div className="hidden sm:block">
+                <svg width="80" height="30" viewBox="0 0 80 30" className="text-brand-gold opacity-80">
+                  <path d="M5,20 Q15,5 25,15 T45,15 T65,15 L75,20" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
+                  <circle cx="72" cy="22" r="1.5" fill="currentColor"/>
+                  <circle cx="76" cy="24" r="1" fill="currentColor"/>
+                </svg>
+              </div>
             </div>
-            <div className="text-lg font-bold mb-1">{report.level.emoji} {report.level.label}</div>
-            <div className="text-xs text-muted-foreground">Assessment Date: {new Date().toLocaleDateString("en-IN")}</div>
-            <div className="mt-4 inline-flex items-center gap-1.5 bg-white/5 rounded-full px-3 py-1 text-xs text-muted-foreground">
-              <TrendingUp className="w-3 h-3 text-brand-gold" /> You're in the {report.percentile > 50 ? `top ${100 - report.percentile}%` : `bottom ${report.percentile}%`} of assessment takers
+          </div>
+
+          {/* HEADER with decorative book covers in background */}
+          <div className="relative overflow-hidden bg-gradient-to-br from-brand-gold/10 via-ink-900 to-transparent border border-brand-gold/20 rounded-3xl p-8 mb-6 text-center">
+            {allBooks.slice(0, 3).map((b, i) => b.cover_image && (
+              <img key={b.slug} src={b.cover_image} alt="" aria-hidden
+                className="absolute w-32 h-44 object-cover rounded-lg opacity-[0.08] pointer-events-none"
+                style={{
+                  top: i === 0 ? "10%" : i === 1 ? "50%" : "20%",
+                  left: i === 0 ? "-40px" : "auto",
+                  right: i === 1 ? "-30px" : i === 2 ? "10px" : "auto",
+                  transform: `rotate(${i === 0 ? -12 : i === 1 ? 8 : -6}deg)`,
+                  filter: "blur(1px)",
+                }} />
+            ))}
+            <div className="relative">
+              <div className="text-xs uppercase tracking-widest text-brand-gold font-bold mb-2">Your Mind Health Report</div>
+              <div className="text-6xl md:text-7xl font-black font-serif mb-2" style={{color: report.level.color}}>
+                {report.total}<span className="text-2xl text-muted-foreground">/60</span>
+              </div>
+              <div className="text-lg font-bold mb-1">{report.level.emoji} {report.level.label}</div>
+              <div className="text-xs text-muted-foreground">Assessment Date: {new Date().toLocaleDateString("en-IN")}</div>
+              <div className="mt-4 inline-flex items-center gap-1.5 bg-white/5 rounded-full px-3 py-1 text-xs text-muted-foreground">
+                <TrendingUp className="w-3 h-3 text-brand-gold" /> You're in the {report.percentile > 50 ? `top ${100 - report.percentile}%` : `bottom ${report.percentile}%`} of assessment takers
+              </div>
             </div>
           </div>
 
