@@ -175,18 +175,18 @@ export default function Home({ onOpenAuth, onOpenPay }) {
             </div>
 
             <div className="flex items-end gap-5">
-              <div className="rounded-lg overflow-hidden shadow-2xl shadow-black/70 animate-float-y">
-                <img
-                  src={books.find(b => b.slug === "dagmagate-pair")?.cover_image || makeBookCover({ title: "Dagmagate Pair", hindi: "डगमगाते", emoji: "🚶", palette: ["#4a6741", "#8a9a5a"] })}
-                  alt="Dagmagate Pair" width={82} height={112} className="block object-cover w-[82px] h-[112px]"
-                />
-              </div>
-              <div className="rounded-lg overflow-hidden shadow-2xl shadow-black/70 animate-float-y2">
-                <img
-                  src={books.find(b => b.slug === "jo-mai-kah-na-saka")?.cover_image || makeBookCover({ title: "Jo Mai Kah", hindi: "जो मैं", emoji: "💬", palette: ["#1a3a5c", "#2c5f8a"] })}
-                  alt="Jo Mai Kah Na Saka" width={92} height={126} className="block object-cover w-[92px] h-[126px]"
-                />
-              </div>
+             <div className="animate-float-y drop-shadow-2xl">
+  <img
+    src="/book1-float.png"
+    alt="Dagmagate Pair" width={82} height={112} className="block w-[82px] h-[112px] object-contain"
+  />
+</div>
+<div className="animate-float-y2 drop-shadow-2xl">
+  <img
+    src="/book2-float.png"
+    alt="Jo Mai Kah Na Saka" width={92} height={126} className="block w-[92px] h-[126px] object-contain"
+  />
+</div>
             </div>
 
             <div className="text-center">
