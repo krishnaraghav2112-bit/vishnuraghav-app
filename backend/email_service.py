@@ -341,3 +341,37 @@ async def send_book_order_admin_notify(
         order_id, customer_name, customer_email, customer_phone, items, total, payment_mode, address
     )
     return await send_email(ADMIN_NOTIFY_EMAIL, subject, html, reply_to=customer_email)
+    # ───────────────────────── PDF Workbook Purchase Email ──────────────────
+def pdf_purchase_confirmation_template(name: str, pdf_title: str, pdf_url: str, amount: int) -> tuple[str, str]:
+    name_clean = escape((name or "friend").strip())
+    title_clean = escape(pdf_title or "Mind Health Workbook")
+    inner = f"""
+        <h1 style="font-family:Georgia,serif;font-size:24px;color:{BRAND_TEXT};margin:0 0 8px;">Your Workbook is Ready 📥</h1>
+        <p style="margin:0 0 18px;color:{BRAND_TEXT};">Hi {name_clean}, thank you for purchasing <strong>{title_clean}</strong> — Vishnu ne aapke liye ye workbook banaya hai. Isse aap apni pace se, apni jagah, apne thoughts par kaam kar sakte hain.</p>
+        <p style="margin:0 0 18px;color:{BRAND_MUTED};font-size:14px;">Amount paid: <strong style="color:{BRAND_TEXT};">₹{amount}</strong></p>
+        {_btn("📥 Download Workbook (PDF)", pdf_url or "#")}
+        <div style="background:{BRAND_BG};border:1px solid #2a1f3a;border-radius:10px;padding:16px;margin:18px 0;">
+          <div style="color:{BRAND_GOLD};font-size:12px;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">How to use</div>
+          <ul style="margin:0;padding-left:20px;color:{BRAND_TEXT};font-size:14px;line-height:1.8;">
+            <li>Ise print karke rakhein — likh kar bharein</li>
+            <li>Har din 10-15 min ke liye ek quiet space chunein</li>
+            <li>Sab kuch ek din mein poora karne ki koshish na karein</li>
+          </ul>
+        </div>
+        <p style="margin:18px 0 6px;color:{BRAND_TEXT};font-size:14px;">Aap ise apni Dashboard se bhi kabhi bhi dobara download kar sakte hain — lifetime access.</p>
+        <p style="margin:0;color:{BRAND_MUTED};font-size:13px;">Questions? Reply to this email or WhatsApp us at +91 84391 11502.</p>
+    """
+    return "Your Mind Health Workbook — Vishnu Raghav 📥", _shell(inner, preheader="Download link inside — your workbook is ready.")
+
+
+async def send_pdf_purchase_confirmation(
+    name: str,
+    email: str,
+    pdf_title: str,
+    pdf_url: str,
+    amount: int,
+) -> Optional[str]:
+    if not email:
+        return None
+    subject, html = pdf_purchase_confirmation_template(name, pdf_title, pdf_url, amount)
+    return await send_email(email, subject, html)
