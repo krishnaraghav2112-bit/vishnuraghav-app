@@ -76,12 +76,19 @@ async def create_shiprocket_order(book_order: dict) -> Optional[dict]:
         "billing_email": book_order.get("email", ""),
         "billing_phone": book_order.get("phone", ""),
         "shipping_is_billing": True,
-        "order_items": [{
-            "name": book_order.get("book_title", "Signed Book"),
-            "sku": book_order.get("book_slug", "book"),
-            "units": book_order.get("quantity", 1),
-            "selling_price": book_order.get("amount", 0),
-        }],
+        "order_items": [
+            {
+                "name": it.get("book_title", "Signed Book"),
+                "sku": it.get("book_slug", "book"),
+                "units": it.get("quantity", 1),
+                "selling_price": it.get("unit_price", 0),
+            } for it in (book_order.get("items") or [{
+                "book_title": book_order.get("book_title", "Signed Book"),
+                "book_slug": book_order.get("book_slug", "book"),
+                "quantity": book_order.get("quantity", 1),
+                "unit_price": book_order.get("amount", 0),
+            }])
+        ],
         "payment_method": "Prepaid" if book_order.get("payment_mode") != "cod" else "COD",
         "sub_total": book_order.get("amount", 0),
         "length": 22, "breadth": 15, "height": 3, "weight": 0.5,
