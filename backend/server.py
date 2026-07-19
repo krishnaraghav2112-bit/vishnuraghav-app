@@ -1546,6 +1546,120 @@ async def admin_save_assessment_product(body: AssessmentProductIn, _: dict = Dep
     }
     await db.settings.update_one({"_id": "assessment_product"}, {"$set": update}, upsert=True)
     return {"ok": True}
+    # ─── Assessment PDF Payment Flow ──────────────────────────────────────
+class PdfVerifyIn(BaseModel):
+    order_id: str
+    razorpay_payment_id: str
+    razorpay_order_id: str
+    razorpay_signature: str
+
+
+@api.get("/assessment/product/access")
+async def check_pdf_access(user: dict = Depends(get_current_user)):
+    prod = await db.settings.find_one({"_id": "assessment_product"})
+    if not prod or not prod.get("is_active") or not prod.get("pdf_url"):
+        return {"has_access": False, "pdf_url": None}
+    purchase = await db.pdf_purchases.find_one({
+        "user_id": str(user["_id"]),
+        "status": "paid",
+    })
+    if purchase:
+        return {
+            "has_access": True,
+            "pdf_url": prod.get("pdf_url"),
+            "title": prod.get("title", "Mind Health Workbook"),
+            "purchased_at": purchase.get("purchased_at").isoformat() if purchase.get("purchased_at") else None,
+        }
+    return {"has_access": False, "pdf_url": None}
+
+
+@api.post("/assessment/product/checkout")
+async def pdf_checkout(user: dict = Depends(get_current_user)):
+    prod = await db.settings.find_one({"_id": "assessment_product"})
+    if not prod or not prod.get("is_active") or not prod.get("pdf_url"):
+        raise HTTPException(status_code=400, detail="Workbook is not available for purchase")
+    existing = await db.pdf_purchases.find_one({"user_id": str(user["_id"]), "status": "paid"})
+    if existing:
+        raise HTTPException(status_code=400, detail="You already own this workbook")
+    price = int(prod.get("price", 199))
+    if not (RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET):
+        raise HTTPException(status_code=500, detail="Payment not configured")
+    try:
+        client_rzp = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
+        user_short = str(user["_id"])[-8:]
+        rzp_order = client_rzp.order.create({
+            "amount": price * 100,
+            "currency": "INR",
+            "receipt": f"pdf_{user_short}",
+            "payment_capture": 1,
+            "notes": {"product": "assessment_pdf", "user_id": str(user["_id"])},
+        })
+    except Exception:
+        logger.exception("Razorpay PDF order create failed")
+        raise HTTPException(status_code=500, detail="Could not initiate payment. Please try again.")
+    doc = {
+        "user_id": str(user["_id"]),
+        "email": user.get("email", ""),
+        "name": user.get("name", ""),
+        "amount": price,
+        "razorpay_order_id": rzp_order["id"],
+        "razorpay_payment_id": None,
+        "status": "pending",
+        "created_at": datetime.now(timezone.utc),
+        "purchased_at": None,
+    }
+    result = await db.pdf_purchases.insert_one(doc)
+    return {
+        "order_id": str(result.inserted_id),
+        "razorpay_key": RAZORPAY_KEY_ID,
+        "razorpay_order_id": rzp_order["id"],
+        "amount_paise": rzp_order["amount"],
+        "prefill": {"name": user.get("name", ""), "email": user.get("email", ""), "contact": user.get("phone", "")},
+    }
+
+
+@api.post("/assessment/product/verify")
+async def pdf_verify(body: PdfVerifyIn, user: dict = Depends(get_current_user)):
+    from bson import ObjectId
+    try:
+        oid = ObjectId(body.order_id)
+    except Exception:
+        raise HTTPException(status_code=404, detail="Order not found")
+    order = await db.pdf_purchases.find_one({"_id": oid, "user_id": str(user["_id"])})
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    try:
+        client_rzp = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
+        client_rzp.utility.verify_payment_signature({
+            "razorpay_order_id": body.razorpay_order_id,
+            "razorpay_payment_id": body.razorpay_payment_id,
+            "razorpay_signature": body.razorpay_signature,
+        })
+    except Exception:
+        raise HTTPException(status_code=400, detail="Payment verification failed")
+    await db.pdf_purchases.update_one(
+        {"_id": oid},
+        {"$set": {
+            "status": "paid",
+            "razorpay_payment_id": body.razorpay_payment_id,
+            "purchased_at": datetime.now(timezone.utc),
+        }}
+    )
+    prod = await db.settings.find_one({"_id": "assessment_product"})
+    pdf_url = prod.get("pdf_url") if prod else None
+    pdf_title = prod.get("title", "Mind Health Workbook") if prod else "Mind Health Workbook"
+    try:
+        await email_service.send_pdf_purchase_confirmation(
+            name=order.get("name") or user.get("name", "friend"),
+            email=order.get("email") or user.get("email", ""),
+            pdf_title=pdf_title,
+            pdf_url=pdf_url,
+            amount=order.get("amount", 0),
+        )
+    except Exception:
+        logger.exception("PDF confirmation email failed")
+    return {"ok": True, "pdf_url": pdf_url}
+
 
 @api.post("/admin/upload")
 async def admin_upload(file: UploadFile = File(...), _: dict = Depends(require_admin)):
