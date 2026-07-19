@@ -389,12 +389,12 @@ export default function SelfAssessment({ onOpenAuth }) {
 
   const shareText = async () => {
   const url = `${window.location.origin}/self-assessment`;
-  const text = `Take the Mind Health Assessment by Vishnu Raghav — 5 min, free. Know your mind better.`;
+  const message = `Take the Mind Health Assessment by Vishnu Raghav — 5 min, free. Know your mind better.\n\n${url}`;
   try {
     if (navigator.share) {
-      await navigator.share({ title: "Mind Health Assessment", text, url });
+      await navigator.share({ title: "Mind Health Assessment", text: message });
     } else {
-      await navigator.clipboard.writeText(`${text}\n\n${url}`);
+      await navigator.clipboard.writeText(message);
       toast.success("Link copied to clipboard!");
     }
   } catch {}
