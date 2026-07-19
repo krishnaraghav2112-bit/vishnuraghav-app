@@ -388,13 +388,18 @@ export default function SelfAssessment({ onOpenAuth }) {
   };
 
   const shareText = async () => {
-    const text = `I just took the Mind Health Assessment by Vishnu Raghav.\n\nMy score: ${report.total}/60 (${report.level.label})\n\nTake yours (5 min): ${window.location.origin}/self-assessment`;
-    try {
-      if (navigator.share) await navigator.share({ text, title: "My Mind Health Report", url: `${window.location.origin}/self-assessment` });
-      else { await navigator.clipboard.writeText(text); toast.success("Copied to clipboard!"); }
-    } catch {}
-  };
-
+  const url = `${window.location.origin}/self-assessment`;
+  const text = `Take the Mind Health Assessment by Vishnu Raghav — 5 min, free. Know your mind better.`;
+  try {
+    if (navigator.share) {
+      await navigator.share({ title: "Mind Health Assessment", text, url });
+    } else {
+      await navigator.clipboard.writeText(`${text}\n\n${url}`);
+      toast.success("Link copied to clipboard!");
+    }
+  } catch {}
+};
+  
   // ═══════════════════════════════════════════════
   // ─── LANDING ────────────────────────────────
   // ═══════════════════════════════════════════════
