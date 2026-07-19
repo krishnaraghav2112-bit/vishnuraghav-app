@@ -78,7 +78,110 @@ export default function Navbar({ onOpenAuth }) {
               </span>
             </button>
           )}
+          Loading...
+Analyzing source: https://raw.githubusercontent.co...
+Jul 20 at 12:14 AM
+
+Analyzing source: https://raw.githubusercontent.co...
+Jul 20 at 12:14 AM
+
+Agent asked a question
+Answered
+Up
+Jul 20 at 12:15 AM
+
+
+
+
+Screenshot 2026-07-20 at 12.18.01 AM.webp
+...
+Jul 20 at 12:20 AM
+
+Agent asked a question
+Answered
+Up
+Jul 20 at 12:20 AM
+
+
+
+
+Screenshot 2026-07-20 at 12.19.58 AM.webp
+on chrome it is there. but it is very odd and why this is showing google there why there is a white line
+Jul 20 at 12:22 AM
+
+Agent asked a question
+Answered
+Up
+Jul 20 at 12:22 AM
+
+
+
+
+Screenshot 2026-07-20 at 12.23.46 AM.webp
+...
+Jul 20 at 12:25 AM
+
+Agent asked a question
+Answered
+Up
+Jul 20 at 12:25 AM
+
+
+
+
+remove and custom
+Jul 20 at 12:30 AM
+
+Agent is asking a question, Please answer it to further continue :
+Custom language dropdown (clean & premium)
+We'll KEEP Google's translation engine running silently in the background (it does the actual translation work) but HIDE its ugly widget completely, and put OUR OWN pretty gold dropdown in the navbar.
+Only 2 files need editing. The index.html stays as-is (Google script still runs).
+Edit 1: Navbar.jsx
+Step 1.1: Open the file
+Go to https://github.com/krishnaraghav2112-bit/vishnuraghav-app
+Click frontend → src → components → Navbar.jsx
+Click pencil ✏️.
+Step 1.2: Find the widget div
+Press Cmd + F.
+Type: google_translate_element
+Press Enter — you'll land on this line:
           <div id="google_translate_element" className="notranslate"></div>
+Step 1.3: Replace it with our custom dropdown
+Delete that ONE line and paste these lines in its place:
+          <select
+            onChange={(e) => {
+              const lang = e.target.value;
+              const host = window.location.hostname;
+              ["", "."].forEach((p) => {
+                document.cookie = `googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${p}${host};`;
+              });
+              document.cookie = "googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+              if (lang !== "en") {
+                document.cookie = `googtrans=/en/${lang}; path=/;`;
+                ["", "."].forEach((p) => {
+                  document.cookie = `googtrans=/en/${lang}; path=/; domain=${p}${host};`;
+                });
+              }
+              window.location.reload();
+            }}
+            defaultValue={(document.cookie.match(/googtrans=\/en\/(\w+)/) || [])[1] || "en"}
+            data-testid="lang-switcher"
+            className="lang-switcher notranslate"
+            aria-label="Select language"
+          >
+            <option value="en">🌐 EN</option>
+            <option value="hi">हिन्दी</option>
+            <option value="mr">मराठी</option>
+            <option value="ta">தமிழ்</option>
+            <option value="te">తెలుగు</option>
+            <option value="bn">বাংলা</option>
+            <option value="gu">ગુજરાતી</option>
+            <option value="pa">ਪੰਜਾਬੀ</option>
+            <option value="kn">ಕನ್ನಡ</option>
+            <option value="ml">മലയാളം</option>
+            <option value="ur">اردو</option>
+          </select>
+          <div id="google_translate_element" className="notranslate" style={{position:"absolute", left:"-9999px", top:"-9999px", visibility:"hidden"}}></div>
           <a
             href="https://youtube.com/@vishnuraghav"
             target="_blank"
