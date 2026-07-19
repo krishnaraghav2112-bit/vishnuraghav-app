@@ -888,7 +888,9 @@ export default function SelfAssessment({ onOpenAuth }) {
                   {product.description || "Vishnu Raghav ne aapki situation ke liye ek detailed workbook banaya hai — practical exercises, daily reflections aur mind reset techniques."}
                 </p>
                 {access.has_access && access.pdf_url ? (
-                  <a href={access.pdf_url} target="_blank" rel="noreferrer"
+                   <a href={access.pdf_url.includes('/upload/') ? access.pdf_url.replace('/upload/', '/upload/fl_attachment:Mind-Health-Workbook.pdf/') : access.pdf_url}
+                    download="Mind-Health-Workbook.pdf"
+                    target="_blank" rel="noreferrer"
                     data-testid="download-workbook"
                     className="w-full py-3 rounded-xl bg-green-500 text-white font-bold text-sm inline-flex items-center justify-center gap-2 hover:bg-green-600 no-underline">
                     <Download className="w-4 h-4" /> Download Your Workbook (PDF)
