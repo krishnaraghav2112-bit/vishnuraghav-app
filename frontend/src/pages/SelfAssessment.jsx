@@ -34,6 +34,7 @@ export default function SelfAssessment({ onOpenAuth }) {
   const [report, setReport] = useState(null);
   const [discoverySource, setDiscoverySource] = useState("");
   const [stats, setStats] = useState({ total_completed: 1247 });
+  const [product, setProduct] = useState({ price: 199, is_active: false, has_pdf: false });
   const shareCanvasRef = useRef(null);
 
   // ── Load questions + stats + saved progress ──
@@ -56,6 +57,7 @@ export default function SelfAssessment({ onOpenAuth }) {
     }).catch(() => toast.error("Could not load assessment. Try again."));
 
     api.get("/assessment/stats").then(({ data }) => setStats(data)).catch(() => {});
+    api.get("/assessment/product").then(({ data }) => setProduct(data)).catch(() => {});
 
     try {
       const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
@@ -589,7 +591,7 @@ export default function SelfAssessment({ onOpenAuth }) {
             </button>
           </div>
 
-          {/* PDF PLACEHOLDER */}
+          {/* PDF WORKBOOK — Live or Coming Soon */}
           <div className="bg-gradient-to-br from-brand-gold/10 to-brand-gold/[0.02] border border-brand-gold/25 rounded-2xl p-6 mb-6">
             <div className="flex items-start gap-4">
               <div className="w-12 h-12 rounded-xl bg-brand-gold/20 flex items-center justify-center flex-shrink-0">
@@ -597,15 +599,25 @@ export default function SelfAssessment({ onOpenAuth }) {
               </div>
               <div className="flex-1">
                 <div className="text-xs font-bold text-brand-gold uppercase tracking-widest mb-1">Deeper Self-Work</div>
-                <h3 className="font-serif text-xl font-black mb-2">Your Personal Self-Help Workbook</h3>
-                <p className="text-sm text-muted-foreground mb-4">Vishnu Raghav ne aapki situation ke liye ek detailed workbook banaya hai — practical exercises, daily reflections aur mind reset techniques.</p>
-                <div className="bg-white/5 rounded-lg p-3 text-center">
-                  <div className="text-xs text-muted-foreground">Coming soon — Workbook launching this week ✨</div>
-                </div>
+                <h3 className="font-serif text-xl font-black mb-2">{product.is_active && product.has_pdf ? product.title : "Your Personal Self-Help Workbook"}</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  {product.description || "Vishnu Raghav ne aapki situation ke liye ek detailed workbook banaya hai — practical exercises, daily reflections aur mind reset techniques."}
+                </p>
+                {product.is_active && product.has_pdf ? (
+                  <button onClick={() => toast.info("Payment feature launching soon! Check back in a few days ✨")}
+                    data-testid="buy-workbook"
+                    className="w-full py-3 rounded-xl bg-gold-gradient text-ink-950 font-bold text-sm inline-flex items-center justify-center gap-2 hover:opacity-90">
+                    �� Buy Workbook — ₹{product.price}
+                  </button>
+                ) : (
+                  <div className="bg-white/5 rounded-lg p-3 text-center">
+                    <div className="text-xs text-muted-foreground">Coming soon — Workbook launching this week ✨</div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
-
+          
           {/* BOOK RECOMMENDATION - NEW */}
           {report.recommended_book && (
             <div className="bg-ink-900 border border-white/[0.07] rounded-2xl p-6 mb-6">
