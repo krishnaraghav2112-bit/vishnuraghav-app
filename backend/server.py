@@ -1774,7 +1774,7 @@ def _build_risks(level_key):
 
 def calculate_assessment(answers):
     ans_map = {a.q_id: a.value for a in answers}
-    total = sum(ans_map.get(q["id"], 0) for q in ASSESSMENT_QUESTIONS if q["domain"] != "safety")
+    total = sum(ans_map.get(q["id"], 0) for q in ASSESSMENT_QUESTIONS)
     domain_scores = {d: 0 for d in DOMAIN_MAX}
     for q in ASSESSMENT_QUESTIONS:
         if q["domain"] in domain_scores:
