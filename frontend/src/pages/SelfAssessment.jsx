@@ -243,19 +243,17 @@ export default function SelfAssessment({ onOpenAuth }) {
   const shareToInstagram = async () => {
     const blob = await generateShareImage();
     if (!blob) return;
-    const file = new File([blob], "mind-health-report.png", { type: "image/png" });
-    try {
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({ files: [file], title: "My Mind Health Report" });
-      } else {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url; a.download = "mind-health-report.png"; a.click();
-        toast.success("Image downloaded! Share it on your Instagram Story ✨");
-      }
-    } catch {}
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `mind-health-report-${report.total}.png`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 500);
+    toast.success("Image downloaded! ✨ Ab isse Instagram Story par lagayein", { duration: 5000 });
   };
-
+  
   const buyWorkbook = async () => {
     if (!user) { onOpenAuth("login"); return; }
     if (paying) return;
