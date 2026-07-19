@@ -1453,6 +1453,100 @@ async def admin_delete_coupon(code: str, _: dict = Depends(require_admin)):
     await db.coupons.delete_one({"code": code})
     return {"ok": True}
 
+# ─── Assessment PDF Product ────────────────────────────────────────────
+ALLOWED_PDF_EXT = {".pdf"}
+MAX_PDF_BYTES = 30 * 1024 * 1024  # 30 MB
+
+
+class AssessmentProductIn(BaseModel):
+    pdf_url: Optional[str] = ""
+    price: int = 199
+    is_active: bool = False
+    title: Optional[str] = "Mind Health Workbook"
+    description: Optional[str] = ""
+
+
+@api.post("/admin/upload-pdf")
+async def admin_upload_pdf(file: UploadFile = File(...), _: dict = Depends(require_admin)):
+    filename = file.filename or "workbook.pdf"
+    ext = Path(filename).suffix.lower()
+    if ext not in ALLOWED_PDF_EXT:
+        raise HTTPException(status_code=400, detail="Only .pdf files are allowed")
+    data = await file.read()
+    if len(data) > MAX_PDF_BYTES:
+        raise HTTPException(status_code=400, detail="PDF too large (max 30 MB)")
+    if len(data) == 0:
+        raise HTTPException(status_code=400, detail="Empty file")
+
+    if not CLOUDINARY_ENABLED:
+        raise HTTPException(status_code=500, detail="File storage not configured. Please set Cloudinary env vars.")
+
+    try:
+        result = cloudinary.uploader.upload(
+            data,
+            folder=f"{CLOUDINARY_FOLDER}/pdfs",
+            resource_type="raw",
+            overwrite=False,
+            use_filename=True,
+            unique_filename=True,
+            invalidate=True,
+        )
+    except Exception as e:
+        logger.exception("Cloudinary PDF upload failed")
+        raise HTTPException(status_code=502, detail=f"PDF upload service error: {e}")
+
+    url = result.get("secure_url")
+    if not url:
+        raise HTTPException(status_code=502, detail="PDF upload did not return a URL")
+    return {
+        "url": url,
+        "filename": result.get("public_id", filename),
+        "public_id": result.get("public_id", ""),
+        "size": result.get("bytes", len(data)),
+    }
+
+
+@api.get("/assessment/product")
+async def get_assessment_product_public():
+    doc = await db.settings.find_one({"_id": "assessment_product"})
+    if not doc:
+        return {"price": 199, "is_active": False, "title": "Mind Health Workbook", "description": "", "has_pdf": False}
+    return {
+        "price": doc.get("price", 199),
+        "is_active": doc.get("is_active", False),
+        "title": doc.get("title", "Mind Health Workbook"),
+        "description": doc.get("description", ""),
+        "has_pdf": bool(doc.get("pdf_url")),
+    }
+
+
+@api.get("/admin/assessment-product")
+async def admin_get_assessment_product(_: dict = Depends(require_admin)):
+    doc = await db.settings.find_one({"_id": "assessment_product"})
+    if not doc:
+        return {"pdf_url": "", "price": 199, "is_active": False, "title": "Mind Health Workbook", "description": ""}
+    return {
+        "pdf_url": doc.get("pdf_url", ""),
+        "price": doc.get("price", 199),
+        "is_active": doc.get("is_active", False),
+        "title": doc.get("title", "Mind Health Workbook"),
+        "description": doc.get("description", ""),
+    }
+
+
+@api.post("/admin/assessment-product")
+async def admin_save_assessment_product(body: AssessmentProductIn, _: dict = Depends(require_admin)):
+    update = {
+        "pdf_url": (body.pdf_url or "").strip(),
+        "price": max(1, int(body.price)),
+        "is_active": bool(body.is_active),
+        "title": (body.title or "Mind Health Workbook").strip(),
+        "description": (body.description or "").strip(),
+        "updated_at": datetime.now(timezone.utc),
+    }
+    await db.settings.update_one({"_id": "assessment_product"}, {"$set": update}, upsert=True)
+    return {"ok": True}
+
 @api.post("/admin/upload")
 async def admin_upload(file: UploadFile = File(...), _: dict = Depends(require_admin)):
     """Upload an image.
