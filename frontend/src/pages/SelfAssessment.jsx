@@ -477,6 +477,27 @@ export default function SelfAssessment({ onOpenAuth }) {
     }
   };
 
+  const downloadWorkbook = async () => {
+    if (!access?.pdf_url) return;
+    try {
+      toast.success("Preparing your download...");
+      const response = await fetch(access.pdf_url);
+      if (!response.ok) throw new Error("Failed");
+      const blob = await response.blob();
+      const pdfBlob = new Blob([blob], { type: "application/pdf" });
+      const objUrl = URL.createObjectURL(pdfBlob);
+      const a = document.createElement("a");
+      a.href = objUrl;
+      a.download = "Mind-Health-Workbook.pdf";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(objUrl), 1500);
+    } catch (e) {
+      toast.error("Download failed. Please try again.");
+    }
+  };
+
   const shareText = async () => {
   const url = `${window.location.origin}/self-assessment`;
   const message = `Take the Mind Health Assessment by Vishnu Raghav — 5 min, free. Know your mind better.\n\n${url}`;
@@ -888,13 +909,11 @@ export default function SelfAssessment({ onOpenAuth }) {
                   {product.description || "Vishnu Raghav ne aapki situation ke liye ek detailed workbook banaya hai — practical exercises, daily reflections aur mind reset techniques."}
                 </p>
                 {access.has_access && access.pdf_url ? (
-                   <a href={access.pdf_url.includes('/upload/') ? access.pdf_url.replace('/upload/', '/upload/fl_attachment:Mind-Health-Workbook.pdf/') : access.pdf_url}
-                    download="Mind-Health-Workbook.pdf"
-                    target="_blank" rel="noreferrer"
+                    <button onClick={downloadWorkbook}
                     data-testid="download-workbook"
-                    className="w-full py-3 rounded-xl bg-green-500 text-white font-bold text-sm inline-flex items-center justify-center gap-2 hover:bg-green-600 no-underline">
+                    className="w-full py-3 rounded-xl bg-green-500 text-white font-bold text-sm inline-flex items-center justify-center gap-2 hover:bg-green-600">
                     <Download className="w-4 h-4" /> Download Your Workbook (PDF)
-                  </a>
+                  </button>
                 ) : product.is_active && product.has_pdf ? (
                   <button onClick={buyWorkbook} disabled={paying}
                     data-testid="buy-workbook"
