@@ -637,8 +637,7 @@ export default function SelfAssessment({ onOpenAuth }) {
             <div className="relative flex items-center gap-4">
               {assets.author_photo && (
                 <img src={assets.author_photo} alt="Vishnu Raghav"
-                  className="w-14 h-14 md:w-16 md:h-16 rounded-full object-cover border-2 border-brand-gold shadow-lg flex-shrink-0" />
-              )}
+  className="w-14 h-14 md:w-16 md:h-16 rounded-full object-cover object-top border-2 border-brand-gold shadow-lg flex-shrink-0" />
               <div className="flex-1 min-w-0">
                 <div className="text-[10px] uppercase tracking-widest text-brand-gold font-bold mb-0.5">Personally Prepared By</div>
                 <div className="font-serif text-lg md:text-xl font-black">Vishnu Raghav</div>
