@@ -230,7 +230,7 @@ export default function SelfAssessment({ onOpenAuth }) {
     ctx.fillStyle = "#ffffff"; ctx.font = "bold 62px Georgia, serif";
     ctx.fillText("Mind Health", 540, 350);
     ctx.fillStyle = "#c9a84c"; ctx.font = "italic 42px Georgia, serif";
-    ctx.fillText("Report™", 540, 410);
+    ctx.fillText("Report", 540, 410);
 
     // Score circle
     const cx = 540, cy = 800;
@@ -387,7 +387,7 @@ export default function SelfAssessment({ onOpenAuth }) {
   };
 
   const shareText = async () => {
-    const text = `I just took the Mind Health Assessment™ by Vishnu Raghav.\n\nMy score: ${report.total}/60 (${report.level.label})\n\nTake yours (5 min): ${window.location.origin}/self-assessment`;
+    const text = `I just took the Mind Health Assessment by Vishnu Raghav.\n\nMy score: ${report.total}/60 (${report.level.label})\n\nTake yours (5 min): ${window.location.origin}/self-assessment`;
     try {
       if (navigator.share) await navigator.share({ text, title: "My Mind Health Report", url: `${window.location.origin}/self-assessment` });
       else { await navigator.clipboard.writeText(text); toast.success("Copied to clipboard!"); }
@@ -404,7 +404,7 @@ export default function SelfAssessment({ onOpenAuth }) {
           <Sparkles className="w-3.5 h-3.5" /> By Vishnu Raghav
         </div>
         <h1 className="font-serif text-4xl md:text-6xl font-black leading-tight mb-4">Discover Your Mind</h1>
-        <h2 className="font-serif text-2xl md:text-3xl text-brand-gold mb-6 italic">Mind Health Assessment™</h2>
+        <h2 className="font-serif text-2xl md:text-3xl text-brand-gold mb-6 italic">Mind Health Assessment</h2>
         <p className="text-lg text-muted-foreground mb-8 max-w-2xl">
           Sirf 5 minute mein jaaniye ki aapka dimaag kis sthiti mein hai. Har insaan stress feel karta hai — lekin har stress normal nahi hota.
         </p>
