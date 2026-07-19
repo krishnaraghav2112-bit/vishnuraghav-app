@@ -165,9 +165,10 @@ export default function SelfAssessment({ onOpenAuth }) {
     });
 
     const [authorImg, ...bookImgs] = await Promise.all([
-      loadImg(assets.author_photo),
-      ...(allBooks.slice(0, 3).map(b => loadImg(b.cover_image))),
-    ]);
+  loadImg(assets.author_photo),
+  loadImg("/Dagmagate%20Pair.png"),
+  loadImg("/Jo%20Mai%20Kah%20Na%20Saka.png"),
+]);
     const validBooks = bookImgs.filter(Boolean);
 
     // Background gradient
