@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { BarChart3, Users, ShoppingBag, BookOpen, GraduationCap, FileText, Mail, MessageSquare, Image, Plus, Edit2, Trash2, Save, X, LogOut, Ticket } from "lucide-react";
+import { BarChart3, Users, ShoppingBag, BookOpen, GraduationCap, FileText, Mail, MessageSquare, Image, Plus, Edit2, Trash2, Save, X, LogOut, Ticket, Brain, Upload, Loader2 } from "lucide-react";
 import api, { formatApiError } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import ImageUpload from "../components/ImageUpload";
@@ -16,6 +16,7 @@ const TABS = [
   { id: "coupons", label: "Coupons", icon: Ticket },
   { id: "newsletter", label: "Newsletter", icon: Mail },
   { id: "contacts", label: "Contacts", icon: MessageSquare },
+  { id: "assessment", label: "Assessment PDF", icon: Brain },
   { id: "site", label: "Site Settings", icon: Image },
 ];
 
@@ -70,6 +71,7 @@ export default function AdminPanel({ onOpenAuth }) {
           {tab === "coupons" && <CouponsPanel />}
           {tab === "newsletter" && <NewsletterPanel />}
           {tab === "contacts" && <ContactsPanel />}
+          {tab === "assessment" && <AssessmentProductPanel />}
           {tab === "site" && <SiteSettingsPanel />}
         </main>
       </div>
@@ -850,6 +852,195 @@ function DataTable({ rows, cols }) {
           ))}
         </tbody>
       </table>
+    </div>
+  );
+}
+// ═══════════════════════════════════════════════════════════════════════
+// ─── Assessment PDF Product Panel ─────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════
+function AssessmentProductPanel() {
+  const [form, setForm] = useState({
+    pdf_url: "", price: 199, is_active: false,
+    title: "Mind Health Workbook", description: "",
+  });
+  const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const fileInputRef = React.useRef(null);
+
+  useEffect(() => {
+    api.get("/admin/assessment-product").then(({ data }) => {
+      setForm({
+        pdf_url: data.pdf_url || "",
+        price: data.price ?? 199,
+        is_active: !!data.is_active,
+        title: data.title || "Mind Health Workbook",
+        description: data.description || "",
+      });
+    }).catch(() => toast.error("Could not load product"))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const handleUpload = async (file) => {
+    if (!file) return;
+    if (!file.name.toLowerCase().endsWith(".pdf")) {
+      toast.error("Please select a .pdf file"); return;
+    }
+    if (file.size > 30 * 1024 * 1024) {
+      toast.error("PDF too large (max 30 MB)"); return;
+    }
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const { data } = await api.post("/admin/upload-pdf", fd, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      setForm(f => ({ ...f, pdf_url: data.url }));
+      toast.success("PDF uploaded successfully!");
+    } catch (e) {
+      toast.error(formatApiError(e));
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleSave = async () => {
+    if (form.is_active && !form.pdf_url) {
+      toast.error("Please upload a PDF before making product active"); return;
+    }
+    if (form.price < 1) {
+      toast.error("Price must be at least ₹1"); return;
+    }
+    setSaving(true);
+    try {
+      await api.post("/admin/assessment-product", form);
+      toast.success("Assessment PDF settings saved!");
+    } catch (e) {
+      toast.error(formatApiError(e));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) return <div className="text-muted-foreground">Loading...</div>;
+
+  return (
+    <div className="space-y-6 max-w-2xl">
+      <div>
+        <h2 className="font-serif text-2xl font-black mb-1">Assessment PDF Workbook</h2>
+        <p className="text-sm text-muted-foreground">Manage the paid workbook that appears on the Mind Assessment result page.</p>
+      </div>
+
+      {/* Active toggle */}
+      <div className="bg-ink-800 border border-white/10 rounded-xl p-4 flex items-center justify-between">
+        <div>
+          <div className="font-bold text-sm mb-1">Sell this workbook</div>
+          <div className="text-xs text-muted-foreground">Turn ON to show "Buy for ₹{form.price}" on assessment results. Turn OFF to show "Coming soon".</div>
+        </div>
+        <button onClick={() => setForm(f => ({ ...f, is_active: !f.is_active }))}
+          data-testid="assessment-active-toggle"
+          className={`relative w-14 h-7 rounded-full transition-colors ${form.is_active ? "bg-green-500" : "bg-ink-600"}`}>
+          <div className={`absolute top-0.5 w-6 h-6 bg-white rounded-full transition-transform ${form.is_active ? "translate-x-7" : "translate-x-0.5"}`} />
+        </button>
+      </div>
+
+      {/* PDF upload */}
+      <div>
+        <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-2 block">PDF File</label>
+        <div className="bg-ink-800 border border-white/10 rounded-xl p-4">
+          {form.pdf_url ? (
+            <div className="space-y-3">
+              <div className="flex items-center gap-3 p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
+                <FileText className="w-5 h-5 text-green-400 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-bold text-green-400">PDF uploaded ✓</div>
+                  <a href={form.pdf_url} target="_blank" rel="noreferrer"
+                    className="text-xs text-brand-gold underline truncate block">Preview PDF</a>
+                </div>
+                <button onClick={() => setForm(f => ({ ...f, pdf_url: "" }))}
+                  data-testid="remove-pdf"
+                  className="text-red-400 hover:text-red-300 text-xs font-bold">
+                  Remove
+                </button>
+              </div>
+              <button onClick={() => fileInputRef.current?.click()} disabled={uploading}
+                className="w-full py-2 rounded-lg border border-white/10 text-xs font-bold hover:bg-white/5">
+                {uploading ? "Uploading..." : "Replace with new PDF"}
+              </button>
+            </div>
+          ) : (
+            <button onClick={() => fileInputRef.current?.click()} disabled={uploading}
+              data-testid="upload-pdf-btn"
+              className="w-full py-8 rounded-lg border-2 border-dashed border-white/15 hover:border-brand-gold/50 hover:bg-brand-gold/5 transition-colors flex flex-col items-center gap-2">
+              {uploading ? (
+                <><Loader2 className="w-6 h-6 text-brand-gold animate-spin" /><span className="text-sm">Uploading PDF...</span></>
+              ) : (
+                <><Upload className="w-6 h-6 text-brand-gold" /><span className="text-sm font-bold">Click to upload PDF</span><span className="text-xs text-muted-foreground">Max 30 MB</span></>
+              )}
+            </button>
+          )}
+          <input ref={fileInputRef} type="file" accept=".pdf,application/pdf" hidden
+            onChange={(e) => { const f = e.target.files?.[0]; if (f) handleUpload(f); e.target.value = ""; }} />
+        </div>
+      </div>
+
+      {/* Title */}
+      <div>
+        <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-2 block">Title</label>
+        <input value={form.title} onChange={(e) => setForm(f => ({ ...f, title: e.target.value }))}
+          data-testid="assessment-title-input"
+          className="w-full bg-ink-800 border border-white/10 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-brand-gold/50"
+          placeholder="Mind Health Workbook" />
+      </div>
+
+      {/* Description */}
+      <div>
+        <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-2 block">Description</label>
+        <textarea value={form.description} onChange={(e) => setForm(f => ({ ...f, description: e.target.value }))}
+          data-testid="assessment-description-input"
+          rows={3}
+          className="w-full bg-ink-800 border border-white/10 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-brand-gold/50"
+          placeholder="A short description shown on the assessment result page..." />
+      </div>
+
+      {/* Price */}
+      <div>
+        <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-2 block">Price (₹)</label>
+        <div className="flex items-center gap-3">
+          <div className="relative flex-1 max-w-[200px]">
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-gold font-bold">₹</span>
+            <input type="number" value={form.price}
+              onChange={(e) => setForm(f => ({ ...f, price: parseInt(e.target.value) || 0 }))}
+              data-testid="assessment-price-input"
+              className="w-full bg-ink-800 border border-white/10 rounded-lg pl-9 pr-4 py-2.5 text-lg font-bold focus:outline-none focus:border-brand-gold/50" />
+          </div>
+          <div className="text-xs text-muted-foreground">
+            Suggested: ₹99, ₹149, ₹199, ₹249
+          </div>
+        </div>
+      </div>
+
+      {/* Save */}
+      <div className="flex gap-3 pt-4 border-t border-white/[0.07]">
+        <button onClick={handleSave} disabled={saving}
+          data-testid="save-assessment-product"
+          className="px-6 py-3 rounded-xl bg-gold-gradient text-ink-950 font-bold text-sm hover:opacity-90 disabled:opacity-60 inline-flex items-center gap-2">
+          <Save className="w-4 h-4" /> {saving ? "Saving..." : "Save Settings"}
+        </button>
+      </div>
+
+      {/* Status card */}
+      <div className={`rounded-xl p-4 border ${form.is_active && form.pdf_url ? "bg-green-500/5 border-green-500/20" : "bg-orange-500/5 border-orange-500/20"}`}>
+        <div className="text-sm font-bold mb-1">
+          {form.is_active && form.pdf_url ? "🟢 Live — customers can buy" : "🟠 Not live"}
+        </div>
+        <div className="text-xs text-muted-foreground">
+          {form.is_active && form.pdf_url
+            ? `Assessment result page shows: "Buy Workbook — ₹${form.price}"`
+            : "Assessment result page shows: 'Coming soon'"}
+        </div>
+      </div>
     </div>
   );
 }
