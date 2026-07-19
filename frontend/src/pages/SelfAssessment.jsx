@@ -119,71 +119,105 @@ export default function SelfAssessment({ onOpenAuth }) {
     canvas.width = 1080; canvas.height = 1920;
     const ctx = canvas.getContext("2d");
 
-    // Background gradient
-    const grad = ctx.createLinearGradient(0, 0, 0, 1920);
-    grad.addColorStop(0, "#0a0817");
-    grad.addColorStop(1, "#1a1330");
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, 1080, 1920);
+    const rr = (x, y, w, h, r) => {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y); ctx.lineTo(x + w - r, y);
+      ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+      ctx.lineTo(x + w, y + h - r);
+      ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+      ctx.lineTo(x + r, y + h);
+      ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+      ctx.lineTo(x, y + r);
+      ctx.quadraticCurveTo(x, y, x + r, y);
+      ctx.closePath();
+    };
 
-    // Gold accent circles
-    ctx.fillStyle = "rgba(201, 168, 76, 0.08)";
-    ctx.beginPath(); ctx.arc(900, 200, 300, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.arc(150, 1750, 250, 0, Math.PI * 2); ctx.fill();
+    const bg = ctx.createLinearGradient(0, 0, 0, 1920);
+    bg.addColorStop(0, "#0f0a1f"); bg.addColorStop(0.55, "#1a0e2e"); bg.addColorStop(1, "#0a0817");
+    ctx.fillStyle = bg; ctx.fillRect(0, 0, 1080, 1920);
 
-    // Top brand
-    ctx.fillStyle = "#c9a84c";
-    ctx.font = "bold 32px sans-serif";
+    const glow = ctx.createRadialGradient(540, 780, 100, 540, 780, 550);
+    glow.addColorStop(0, report.level.color + "40");
+    glow.addColorStop(1, "transparent");
+    ctx.fillStyle = glow; ctx.fillRect(0, 300, 1080, 1000);
+
+    ctx.strokeStyle = "#c9a84c"; ctx.globalAlpha = 0.07; ctx.lineWidth = 2;
+    for (let r = 100; r < 560; r += 42) { ctx.beginPath(); ctx.arc(1050, -60, r, 0, Math.PI * 2); ctx.stroke(); }
+    for (let r = 100; r < 460; r += 42) { ctx.beginPath(); ctx.arc(30, 1980, r, 0, Math.PI * 2); ctx.stroke(); }
+    ctx.globalAlpha = 1;
+
     ctx.textAlign = "center";
-    ctx.fillText("✍️  VISHNU RAGHAV", 540, 200);
+    ctx.fillStyle = "#c9a84c"; ctx.font = "bold 30px sans-serif";
+    ctx.fillText("✍️  VISHNU RAGHAV", 540, 130);
+    ctx.beginPath(); ctx.moveTo(390, 158); ctx.lineTo(690, 158); ctx.stroke();
 
+    ctx.fillStyle = "#ffffff"; ctx.font = "bold 66px Georgia, serif";
+    ctx.fillText("Mind Health", 540, 250);
+    ctx.fillStyle = "#c9a84c"; ctx.font = "italic 44px Georgia, serif";
+    ctx.fillText("Report™", 540, 315);
+
+    const cx = 540, cy = 720;
+    ctx.strokeStyle = "#2a1f3a"; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(cx, cy, 320, 0, Math.PI * 2); ctx.stroke();
+
+    ctx.strokeStyle = report.level.color; ctx.lineWidth = 26; ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.arc(cx, cy, 280, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * (report.total / 60));
+    ctx.stroke();
+
+    ctx.fillStyle = "#0a0817";
+    ctx.beginPath(); ctx.arc(cx, cy, 250, 0, Math.PI * 2); ctx.fill();
+
+    ctx.fillStyle = report.level.color; ctx.font = "bold 230px Georgia, serif";
+    ctx.textBaseline = "middle";
+    ctx.fillText(String(report.total), cx, cy - 20);
+    ctx.textBaseline = "alphabetic";
+    ctx.fillStyle = "#9a9aab"; ctx.font = "36px sans-serif";
+    ctx.fillText("out of 60", cx, cy + 140);
+
+    const lvlTxt = `${report.level.emoji}  ${report.level.label}`;
+    ctx.font = "bold 42px sans-serif";
+    const bw = ctx.measureText(lvlTxt).width + 90;
+    const bx = cx - bw / 2, by = 1140;
+    ctx.fillStyle = report.level.color + "25";
+    ctx.strokeStyle = report.level.color; ctx.lineWidth = 2;
+    rr(bx, by, bw, 82, 41); ctx.fill(); ctx.stroke();
     ctx.fillStyle = "#ffffff";
-    ctx.font = "bold 56px Georgia, serif";
-    ctx.fillText("Mind Health Report™", 540, 280);
+    ctx.fillText(lvlTxt, cx, by + 55);
 
-    // Big score circle
-    ctx.strokeStyle = report.level.color;
-    ctx.lineWidth = 20;
-    ctx.beginPath(); ctx.arc(540, 700, 260, 0, Math.PI * 2); ctx.stroke();
+    ctx.fillStyle = "#c9a84c"; ctx.font = "bold 26px sans-serif";
+    ctx.fillText("MY TOP PATTERNS", cx, 1310);
 
-    ctx.fillStyle = report.level.color;
-    ctx.font = "bold 200px Georgia, serif";
-    ctx.fillText(String(report.total), 540, 760);
-
-    ctx.fillStyle = "#a0a0b0";
-    ctx.font = "42px sans-serif";
-    ctx.fillText("out of 60", 540, 830);
-
-    // Level label
-    ctx.fillStyle = "#ffffff";
-    ctx.font = "bold 54px sans-serif";
-    ctx.fillText(`${report.level.emoji} ${report.level.label}`, 540, 1080);
-
-    // Top domains
-    ctx.fillStyle = "#c9a84c";
-    ctx.font = "bold 34px sans-serif";
-    ctx.fillText("MY TOP PATTERNS", 540, 1220);
-
-    const top2 = report.top_domains.slice(0, 2);
-    ctx.fillStyle = "#ffffff";
-    ctx.font = "40px sans-serif";
+    const top2 = (report.top_domains || []).slice(0, 2);
     top2.forEach((d, i) => {
       const label = DOMAIN_LABELS[d] || d;
       const pct = report.domain_pct[d] || 0;
-      ctx.fillText(`${label} — ${pct}%`, 540, 1290 + i * 60);
+      const y = 1355 + i * 100;
+      ctx.fillStyle = "#1a1330"; rr(120, y, 840, 78, 18); ctx.fill();
+      const barColor = pct >= 70 ? "#ef4444" : pct >= 50 ? "#f97316" : "#eab308";
+      ctx.fillStyle = barColor + "40"; rr(120, y, 840 * (pct / 100), 78, 18); ctx.fill();
+      ctx.fillStyle = "#ffffff"; ctx.font = "bold 30px sans-serif";
+      ctx.textAlign = "left"; ctx.fillText(label, 160, y + 49);
+      ctx.fillStyle = barColor; ctx.font = "bold 32px sans-serif";
+      ctx.textAlign = "right"; ctx.fillText(pct + "%", 920, y + 49);
     });
+    ctx.textAlign = "center";
 
-    // Bottom CTA
-    ctx.fillStyle = "#c9a84c";
-    ctx.font = "bold 44px sans-serif";
-    ctx.fillText("Take yours (5 min):", 540, 1620);
-    ctx.fillStyle = "#ffffff";
-    ctx.font = "bold 40px sans-serif";
-    ctx.fillText("authorvishnuraghav.in", 540, 1690);
+    const taglines = {
+      healthy: '"Balance is a habit — keep it going."',
+      mild: '"Small changes today,\nreal clarity tomorrow."',
+      moderate: '"Awareness is the first step\nto transformation."',
+      high: '"You are not alone.\nHelp is closer than you think."',
+      very_high: '"Reaching out is strength,\nnot weakness."',
+    };
+    const tg = taglines[report.level.key] || taglines.moderate;
+    ctx.fillStyle = "#c9a84c"; ctx.font = "italic 34px Georgia, serif";
+    tg.split("\n").forEach((line, i) => ctx.fillText(line, cx, 1650 + i * 46));
 
-    ctx.fillStyle = "#666680";
-    ctx.font = "28px sans-serif";
-    ctx.fillText("/self-assessment", 540, 1740);
+    ctx.fillStyle = "#ffffff"; ctx.font = "bold 30px sans-serif";
+    ctx.fillText("Take yours (5 min) →", cx, 1805);
+    ctx.fillStyle = "#c9a84c"; ctx.font = "bold 44px sans-serif";
+    ctx.fillText("authorvishnuraghav.in", cx, 1870);
 
     return new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
   };
