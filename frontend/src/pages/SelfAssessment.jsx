@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Brain, ShieldCheck, Clock, FileText, ArrowRight, ArrowLeft, AlertTriangle, CheckCircle, Share2, Sparkles, TrendingUp, Users, BookOpen, ListChecks, Download, Instagram } from "lucide-react";
 import { toast } from "sonner";
 import api, { formatApiError } from "../lib/api";
@@ -23,6 +23,7 @@ const DISCOVERY_SOURCES = [
 export default function SelfAssessment({ onOpenAuth }) {
   const { user, loading: authLoading } = useAuth();
   const nav = useNavigate();
+  const location = useLocation();
 
   const [stage, setStage] = useState("landing");
   const [questions, setQuestions] = useState([]);
@@ -36,6 +37,18 @@ export default function SelfAssessment({ onOpenAuth }) {
   const shareCanvasRef = useRef(null);
 
   // ── Load questions + stats + saved progress ──
+  // ── If URL has ?report_id=xxx, load that report directly ──
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const reportId = params.get("report_id");
+    if (!reportId) return;
+    if (!user) return;
+    api.get(`/assessment/detail/${reportId}`).then(({ data }) => {
+      setReport(data);
+      setStage("result");
+    }).catch(() => toast.error("Could not load that report"));
+  }, [location.search, user]);
+
   useEffect(() => {
     api.get("/assessment/questions").then(({ data }) => {
       setQuestions(data.questions || []);
