@@ -97,14 +97,6 @@ export default function Home({ onOpenAuth, onOpenPay }) {
   // ── HERO ─────────────────────────────────────────────────────
   return (
     <main data-testid="home-page">
-      {totalItems > 0 && (
-        <button
-          onClick={() => nav("/book-checkout")}
-          className="fixed bottom-24 right-6 z-50 flex items-center gap-2 bg-gold-gradient text-ink-950 font-bold px-4 py-3 rounded-full shadow-2xl hover:opacity-90 transition-opacity">
-          <ShoppingCart className="w-4 h-4" />
-          View Cart ({totalItems})
-        </button>
-      )}
       <section id="home" className="relative min-h-[94vh] flex items-center px-5 lg:px-10 py-16 overflow-hidden">
         <div className="absolute inset-0 pointer-events-none"
              style={{ background: "radial-gradient(ellipse 70% 60% at 65% 42%,rgba(124,92,252,.12),transparent 60%),radial-gradient(ellipse 45% 38% at 10% 78%,rgba(201,168,76,.07),transparent 55%)" }} />
