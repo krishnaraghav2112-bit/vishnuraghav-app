@@ -67,7 +67,7 @@ export default function Navbar({ onOpenAuth }) {
         <div className="flex items-center gap-2">
           {totalItems > 0 && (
             <button
-              onClick={() => nav("/book-checkout", { state: { book: items[0].book } })}
+              onClick={() => nav("/book-checkout")}
               data-testid="nav-cart"
               aria-label="View cart"
               className="relative flex items-center justify-center w-8 h-8 rounded-md border border-brand-gold/30 bg-brand-goldSoft text-brand-gold hover:bg-brand-gold/15 transition-colors"
