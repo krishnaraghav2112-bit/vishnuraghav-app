@@ -177,13 +177,13 @@ export default function Home({ onOpenAuth, onOpenPay }) {
             <div className="flex items-end gap-5">
              <div className="animate-float-y drop-shadow-2xl">
   <img
-    src="/book1-float.png"
+    src="/Dagmagate%20Pair.png"
     alt="Dagmagate Pair" width={82} height={112} className="block w-[82px] h-[112px] object-contain"
   />
 </div>
 <div className="animate-float-y2 drop-shadow-2xl">
   <img
-    src="/book2-float.png"
+    src="/Jo%20Mai%20Kah%20Na%20Saka.png"
     alt="Jo Mai Kah Na Saka" width={92} height={126} className="block w-[92px] h-[126px] object-contain"
   />
 </div>
