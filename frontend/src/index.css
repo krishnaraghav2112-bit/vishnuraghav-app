@@ -77,7 +77,7 @@
 
 [data-debug-wrapper="true"] { display: contents !important; }
 
-* Custom language switcher — replaces Google's ugly widget */
+/*Custom language switcher — replaces Google's ugly widget */
 .lang-switcher {
   background: rgba(201, 168, 76, 0.1);
   color: #c9a84c;
