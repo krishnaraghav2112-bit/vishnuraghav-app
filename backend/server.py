@@ -1844,6 +1844,7 @@ async def submit_assessment(body: AssessmentSubmitIn, user: dict = Depends(get_c
         "top_domains": report["top_domains"],
         "safety_risk": report["safety_risk"],
         "safety_answer": report["safety_answer"],
+        "report": report,
         "discovery_source": body.discovery_source or None,
         "created_at": datetime.now(timezone.utc),
     }
@@ -1870,6 +1871,24 @@ async def my_assessments(user: dict = Depends(get_current_user)):
 
 @api.get("/assessment/stats")
 async def assessment_stats():
+    @api.get("/assessment/detail/{assessment_id}")
+async def get_assessment_detail(assessment_id: str, user: dict = Depends(get_current_user)):
+    from bson import ObjectId
+    try:
+        oid = ObjectId(assessment_id)
+    except Exception:
+        raise HTTPException(status_code=404, detail="Not found")
+    doc = await db.assessments.find_one({"_id": oid, "user_id": str(user["_id"])})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Not found")
+    report = doc.get("report")
+    if not report:
+        answers = [AssessmentAnswerIn(**a) for a in doc.get("answers", [])]
+        report = calculate_assessment(answers)
+    report["assessment_id"] = str(doc["_id"])
+    report["created_at"] = doc.get("created_at").isoformat() if doc.get("created_at") else None
+    return report
+
     total = await db.assessments.count_documents({})
     display = max(total, 1247)  # baseline for early days
     return {"total_completed": display, "actual": total}
