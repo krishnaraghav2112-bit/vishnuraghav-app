@@ -523,21 +523,21 @@ export default function SelfAssessment({ onOpenAuth }) {
         <h1 className="font-serif text-4xl md:text-6xl font-black leading-tight mb-4">Discover Your Mind</h1>
         <h2 className="font-serif text-2xl md:text-3xl text-brand-gold mb-6 italic">Mind Health Assessment</h2>
         <p className="text-lg text-muted-foreground mb-8 max-w-2xl">
-          Sirf 5 minute mein jaaniye ki aapka dimaag kis sthiti mein hai. Har insaan stress feel karta hai — lekin har stress normal nahi hota.
+          In just 5 minutes, discover the current state of your mind. Everyone feels stress — but not all stress is normal.
         </p>
 
         {/* SOCIAL PROOF */}
         <div className="inline-flex items-center gap-2 bg-green-500/10 border border-green-500/20 rounded-full px-4 py-2 mb-10 text-sm font-bold text-green-400">
-          <Users className="w-4 h-4" /> �� {stats.total_completed.toLocaleString("en-IN")}+ log ye test le chuke hain
+          <Users className="w-4 h-4" /> �� {stats.total_completed.toLocaleString("en-IN")}+ people have already taken this test
         </div>
 
         <div className="bg-ink-900 border border-white/[0.07] rounded-2xl p-6 mb-8">
-          <div className="text-sm font-bold text-brand-gold mb-3">Ye assessment aapko batayega —</div>
+          <div className="text-sm font-bold text-brand-gold mb-3">This assessment will tell you —</div>
           <ul className="space-y-2.5 text-sm text-foreground">
-            <li className="flex gap-3"><CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> Aap kitna emotional stress feel kar rahe hain</li>
-            <li className="flex gap-3"><CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> Kya overthinking aapki life ko control kar rahi hai</li>
-            <li className="flex gap-3"><CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> Kya anxiety ya depression ke warning signs dikh rahe hain</li>
-            <li className="flex gap-3"><CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> Aapko ab kis direction mein kaam karna chahiye</li>
+            <li className="flex gap-3"><CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> How much emotional stress you are experiencing</li>
+            <li className="flex gap-3"><CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> Whether overthinking is controlling your life</li>
+            <li className="flex gap-3"><CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> Whether you're showing warning signs of anxiety or depression</li>
+            <li className="flex gap-3"><CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> Which direction you should focus on next</li>
           </ul>
         </div>
 
@@ -589,15 +589,15 @@ export default function SelfAssessment({ onOpenAuth }) {
           <h2 className="font-serif text-2xl font-black">Before You Begin</h2>
         </div>
         <p className="text-sm text-muted-foreground mb-3">
-          Ye assessment kisi disease ka diagnosis nahi karta. Iska purpose sirf aapki current emotional aur mental well-being ko samajhna hai.
+          This assessment does not diagnose any disease. Its purpose is only to help you understand your current emotional and mental well-being.
         </p>
         <p className="text-sm text-muted-foreground mb-6">
-          Agar result <strong className="text-yellow-400">High Distress</strong> dikhaye to kisi qualified mental health professional se consult karna faydemand ho sakta hai.
+          If the result shows **High Distress**, consulting a qualified mental health professional can be beneficial.
         </p>
         <label className="flex items-start gap-3 cursor-pointer mb-6 p-3 rounded-lg bg-ink-800 hover:bg-ink-800/80 transition-colors">
           <input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)}
             data-testid="agree-checkbox" className="mt-0.5 w-4 h-4 accent-brand-gold" />
-          <span className="text-sm">I Understand — main isse ek self-reflection tool ke roop mein le raha hoon</span>
+          <span className="text-sm">I Understand — I am taking this as a self-reflection tool</span>
         </label>
         <div className="flex gap-3">
           <button onClick={() => setStage("landing")}
