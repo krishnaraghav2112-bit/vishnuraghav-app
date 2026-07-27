@@ -160,7 +160,7 @@ export default function BuyEbook({ onOpenAuth }) {
               <Sparkles className="w-3.5 h-3.5" /> Instant PDF Download
             </div>
             <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-black leading-tight mb-5">
-              {product.title || "Mind Health"} <span className="text-brand-gold italic">Workbook</span>
+              <span className="text-brand-gold italic">{product.title || "Mind Health Workbook"}</span>
             </h1>
             <p className="text-base md:text-lg text-muted-foreground mb-6 leading-relaxed">
               {product.description || "Vishnu Raghav's practical, no-fluff eBook. Silence overthinking, master your time, and reclaim mental clarity — one page at a time."}
@@ -205,19 +205,43 @@ export default function BuyEbook({ onOpenAuth }) {
 
           <div className="relative">
             <div className="relative mx-auto max-w-sm">
-              <div className="aspect-[3/4] rounded-2xl bg-gradient-to-br from-brand-gold/20 via-purple-500/10 to-transparent border border-brand-gold/30 flex items-center justify-center overflow-hidden shadow-2xl shadow-brand-gold/10">
-                <div className="text-center px-6">
-                  <FileText className="w-16 h-16 text-brand-gold mx-auto mb-4" />
-                  <div className="text-xs uppercase tracking-widest text-brand-gold font-bold mb-2">Digital eBook · PDF</div>
-                  <div className="font-serif text-2xl md:text-3xl font-black mb-2 leading-tight">
-                    {product.title || "Mind Health Workbook"}
+              <div className="aspect-[3/4] rounded-2xl overflow-hidden shadow-2xl shadow-black/50 border border-amber-900/40"
+                style={{ background: "linear-gradient(135deg, #7a4a1e 0%, #5c3416 50%, #3d2410 100%)" }}>
+                <div className="h-full w-full flex flex-col items-center justify-between px-6 py-10 text-center relative">
+                  <div className="absolute inset-0 opacity-[0.15]"
+                    style={{ background: "repeating-linear-gradient(135deg, transparent 0, transparent 8px, rgba(255,255,255,0.08) 8px, rgba(255,255,255,0.08) 9px)" }} />
+                  <div className="relative">
+                    <div className="text-[10px] tracking-[0.3em] text-amber-100/70 uppercase mb-6">
+                      विष्णु राघव प्रस्तुत करते हैं
+                    </div>
+                    <div className="font-serif text-4xl md:text-5xl font-black text-amber-50 mb-4 leading-tight" style={{ fontFamily: "Georgia, serif" }}>
+                      उलझा जीवन
+                    </div>
+                    <div className="text-sm text-amber-100/90 font-medium mb-6">
+                      21 दिनों का माइंड रीसेट सिस्टम
+                    </div>
+                    <div className="w-16 h-px bg-amber-200/40 mx-auto mb-4" />
+                    <div className="text-xs italic text-amber-100/80 leading-relaxed max-w-[220px] mx-auto">
+                      मन तब तक शोर करता है,<br/>जब तक उसे सुना नहीं जाता।
+                    </div>
+                    <div className="w-16 h-px bg-amber-200/40 mx-auto mt-4" />
                   </div>
-                  <div className="text-xs text-muted-foreground italic">by Vishnu Raghav</div>
-                  <div className="mt-6 pt-4 border-t border-white/10 text-[10px] text-muted-foreground uppercase tracking-widest">
-                    Instant download · Lifetime access
+                  <div className="relative text-center">
+                    <div className="text-sm italic text-amber-100/70 mb-4">— विष्णु राघव</div>
+                    <div className="text-[9px] text-amber-200/50 leading-relaxed max-w-[240px] mx-auto">
+                      एक मनोवैज्ञानिक ट्रांसफ़ॉर्मेशन सिस्टम,<br/>प्रेरणादायक किताब नहीं।
+                    </div>
+                    <div className="text-[10px] text-amber-300/70 font-bold tracking-wider mt-2">
+                      authorvishnuraghav.in
+                    </div>
                   </div>
                 </div>
               </div>
+              <div className="absolute -top-3 -right-3 bg-red-500 text-white text-xs font-black px-3 py-1.5 rounded-full shadow-lg rotate-6">
+                {discountPct}% OFF
+              </div>
+            </div>
+          </div>
               <div className="absolute -top-3 -right-3 bg-red-500 text-white text-xs font-black px-3 py-1.5 rounded-full shadow-lg rotate-6">
                 {discountPct}% OFF
               </div>
