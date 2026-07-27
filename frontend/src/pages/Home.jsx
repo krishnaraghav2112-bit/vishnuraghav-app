@@ -360,6 +360,66 @@ export default function Home({ onOpenAuth, onOpenPay }) {
         </div>
       </section>
 
+     {/* EBOOK PROMO */}
+      <section className="px-5 lg:px-10 py-20 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-brand-gold/[0.08] via-transparent to-purple-500/[0.05] pointer-events-none" />
+        <div className="max-w-6xl mx-auto relative">
+          <div className="grid md:grid-cols-2 gap-10 items-center bg-gradient-to-br from-ink-900 to-ink-900/60 border border-brand-gold/25 rounded-3xl p-8 md:p-12 reveal">
+            <div>
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-brand-gold/30 bg-brand-gold/5 text-brand-gold text-xs font-bold uppercase tracking-widest mb-5">
+                <Sparkles className="w-3.5 h-3.5" /> Instant PDF Download
+              </div>
+              <h2 className="font-serif text-3xl md:text-5xl font-black leading-tight mb-4">
+                Get Vishnu's <span className="text-brand-gold italic">eBook</span> Now
+              </h2>
+              <p className="text-muted-foreground text-base md:text-lg mb-6 leading-relaxed">
+                A practical, no-fluff workbook — silence overthinking, master your time, and reclaim mental clarity. Read on phone, laptop, or print it. Yours forever.
+              </p>
+              <div className="flex items-center gap-4 mb-6">
+                <div className="flex items-center gap-1">
+                  {[1,2,3,4,5].map(i => <Star key={i} className="w-4 h-4 fill-brand-gold text-brand-gold" />)}
+                </div>
+                <div className="text-sm text-muted-foreground">4.9★ · 340+ readers</div>
+              </div>
+              <div className="flex items-baseline gap-3 mb-6">
+                <div className="text-4xl md:text-5xl font-black text-brand-gold">₹299</div>
+                <div className="text-lg text-muted-foreground line-through">₹897</div>
+                <div className="text-xs font-bold text-green-400 bg-green-500/10 px-2 py-1 rounded">67% OFF</div>
+              </div>
+              <Link to="/buy-ebook"
+                data-testid="home-buy-ebook"
+                className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-gold-gradient text-ink-950 font-black text-base hover:opacity-90 shadow-lg shadow-brand-gold/20">
+                🔥 Get the eBook Now
+              </Link>
+              <div className="flex flex-wrap items-center gap-4 mt-5 text-xs text-muted-foreground">
+                <div className="inline-flex items-center gap-1.5"><Lock className="w-3.5 h-3.5 text-brand-gold" /> Secure Razorpay</div>
+                <div className="inline-flex items-center gap-1.5"><Zap className="w-3.5 h-3.5 text-brand-gold" /> Instant delivery</div>
+                <div className="inline-flex items-center gap-1.5"><Shield className="w-3.5 h-3.5 text-brand-gold" /> 7-day refund</div>
+              </div>
+            </div>
+
+            <div className="relative">
+              <div className="relative mx-auto max-w-sm">
+                <div className="aspect-[3/4] rounded-2xl bg-gradient-to-br from-brand-gold/20 via-purple-500/10 to-transparent border border-brand-gold/30 flex items-center justify-center overflow-hidden shadow-2xl shadow-brand-gold/10">
+                  <div className="text-center px-6">
+                    <BookOpen className="w-16 h-16 text-brand-gold mx-auto mb-4" />
+                    <div className="text-xs uppercase tracking-widest text-brand-gold font-bold mb-2">Digital eBook · PDF</div>
+                    <div className="font-serif text-2xl md:text-3xl font-black mb-2 leading-tight">Mind Health Workbook</div>
+                    <div className="text-xs text-muted-foreground italic">by Vishnu Raghav</div>
+                    <div className="mt-6 pt-4 border-t border-white/10 text-[10px] text-muted-foreground uppercase tracking-widest">
+                      30+ pages · Lifetime access
+                    </div>
+                  </div>
+                </div>
+                <div className="absolute -top-3 -right-3 bg-red-500 text-white text-xs font-black px-3 py-1.5 rounded-full shadow-lg rotate-6">
+                  67% OFF
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section> 
+      
       {/* ABOUT */}
       <section id="about" className="px-5 lg:px-10 py-20">
         <div className="max-w-6xl mx-auto reveal">
