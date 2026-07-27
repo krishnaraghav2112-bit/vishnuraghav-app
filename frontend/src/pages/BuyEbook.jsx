@@ -198,7 +198,7 @@ const benefits = [
         <div className="max-w-6xl mx-auto px-5 md:px-8 py-12 md:py-20 grid md:grid-cols-2 gap-10 items-center relative">
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-brand-gold/30 bg-brand-gold/5 text-brand-gold text-xs font-bold uppercase tracking-widest mb-5">
-              <Sparkles className="w-3.5 h-3.5" /> Instant PDF Download
+              <Sparkles className="w-3.5 h-3.5" /> Instant PDF Download · 141 Pages
             </div>
             <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-black leading-tight mb-5">
               {product.title || "Mind Health"} <span className="text-brand-gold italic">Workbook</span>
