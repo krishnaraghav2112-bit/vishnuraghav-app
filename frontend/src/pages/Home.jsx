@@ -41,6 +41,9 @@ export default function Home({ onOpenAuth, onOpenPay }) {
   const [books, setBooks] = useState([]);
   const [courses, setCourses] = useState([]);
   const [blogs, setBlogs] = useState([]);
+  const [product, setProduct] = useState({ price: 199, is_active: false, has_pdf: false });
+  const originalPrice = Math.round((product.price || 199) * 3);
+  const discountPct = Math.round(((originalPrice - (product.price || 199)) / originalPrice) * 100);
   const [assets, setAssets] = useState({ author_photo: "", youtube_videos: [], youtube_channel_url: "https://youtube.com/@vishnuraghav" });
   const [blogQ, setBlogQ] = useState("");
   const [blogCat, setBlogCat] = useState("all");
@@ -57,6 +60,7 @@ export default function Home({ onOpenAuth, onOpenPay }) {
     api.get("/books").then((r) => setBooks(r.data)).catch(() => {});
     api.get("/courses").then((r) => setCourses(r.data)).catch(() => {});
     api.get("/site/assets").then((r) => setAssets(r.data)).catch(() => {});
+    api.get("/assessment/product").then(({ data }) => setProduct(data)).catch(() => {});
   }, []);
   useEffect(() => {
     const params = new URLSearchParams();
@@ -383,8 +387,8 @@ export default function Home({ onOpenAuth, onOpenPay }) {
               </div>
               <div className="flex items-baseline gap-3 mb-6">
                 <div className="text-4xl md:text-5xl font-black text-brand-gold">₹199</div>
-                <div className="text-lg text-muted-foreground line-through">₹597</div>
-                <div className="text-xs font-bold text-green-400 bg-green-500/10 px-2 py-1 rounded">67% OFF</div>
+                <div className="text-lg text-muted-foreground line-through">₹{originalPrice}</div>
+                <div className="text-xs font-bold text-green-400 bg-green-500/10 px-2 py-1 rounded">{discountPct}% OFF</div>
               </div>
               <Link to="/buy-ebook"
                 data-testid="home-buy-ebook"
