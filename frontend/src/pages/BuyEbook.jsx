@@ -397,14 +397,4 @@ export default function BuyEbook({ onOpenAuth }) {
             ) : (
               <div className="text-sm text-muted-foreground">Launching this week ✨</div>
             )}
-            <div className="flex flex-wrap items-center gap-4 mt-5 text-xs text-muted-foreground justify-center">
-              <div className="inline-flex items-center gap-1.5"><Lock className="w-3.5 h-3.5 text-brand-gold" /> Secure Razorpay</div>
-              <div className="inline-flex items-center gap-1.5"><Zap className="w-3.5 h-3.5 text-brand-gold" /> Instant delivery</div>
-              <div className="inline-flex items-center gap-1.5"><Shield className="w-3.5 h-3.5 text-brand-gold" /> 7-day refund</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
+            
