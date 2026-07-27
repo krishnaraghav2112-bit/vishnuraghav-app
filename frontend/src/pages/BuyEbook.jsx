@@ -24,6 +24,10 @@ function loadRazorpay() {
 export default function BuyEbook({ onOpenAuth }) {
   const { user, loading: authLoading } = useAuth();
   const nav = useNavigate();
+  // 👇 Force page to open from the top (fixes FAQ landing issue)
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   const [product, setProduct] = useState({ price: 199, is_active: false, has_pdf: false, title: "Mind Health Workbook", description: "" });
   const [access, setAccess] = useState({ has_access: false, pdf_url: null });
@@ -210,6 +214,13 @@ export default function BuyEbook({ onOpenAuth }) {
                 <div className="h-full w-full flex flex-col items-center justify-between px-6 py-10 text-center relative">
                   <div className="absolute inset-0 opacity-[0.15]"
                     style={{ background: "repeating-linear-gradient(135deg, transparent 0, transparent 8px, rgba(255,255,255,0.08) 8px, rgba(255,255,255,0.08) 9px)" }} />
+                 <div className="relative">
+            <div className="relative mx-auto max-w-sm">
+              <div className="aspect-[3/4] rounded-2xl overflow-hidden shadow-2xl shadow-black/50 border border-amber-900/40"
+                style={{ background: "linear-gradient(135deg, #7a4a1e 0%, #5c3416 50%, #3d2410 100%)" }}>
+                <div className="h-full w-full flex flex-col items-center justify-between px-6 py-10 text-center relative">
+                  <div className="absolute inset-0 opacity-[0.15]"
+                    style={{ background: "repeating-linear-gradient(135deg, transparent 0, transparent 8px, rgba(255,255,255,0.08) 8px, rgba(255,255,255,0.08) 9px)" }} />
                   <div className="relative">
                     <div className="text-[10px] tracking-[0.3em] text-amber-100/70 uppercase mb-6">
                       विष्णु राघव प्रस्तुत करते हैं
@@ -242,8 +253,7 @@ export default function BuyEbook({ onOpenAuth }) {
               </div>
             </div>
           </div>
-        </div>
-       </section>
+
 
       {/* BENEFITS */}
       <section className="max-w-6xl mx-auto px-5 md:px-8 py-16">
