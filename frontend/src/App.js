@@ -22,6 +22,7 @@ import RefundPolicy from "./pages/RefundPolicy";
 import ResetPassword from "./pages/ResetPassword";
 import BookCheckout from "./pages/BookCheckout";
 import SelfAssessment from "./pages/SelfAssessment";
+import BuyEbook from "./pages/BuyEbook";
 
 function useReveal() {
   useEffect(() => {
@@ -64,6 +65,7 @@ function AppShell() {
             <Route path="/book-checkout" element={<BookCheckout onOpenAuth={openAuth} />} />
             <Route path="/learn/:slug" element={<CoursePlayer onOpenAuth={openAuth} onOpenPay={openPay} />} />
             <Route path="/self-assessment" element={<SelfAssessment onOpenAuth={openAuth} />} />
+            <Route path="/buy-ebook" element={<BuyEbook onOpenAuth={openAuth} />} />
             <Route path="/blog/:slug" element={<BlogPostPage />} />
             <Route path="/admin" element={<AdminPanel onOpenAuth={openAuth} />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
