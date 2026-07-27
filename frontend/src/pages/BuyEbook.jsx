@@ -405,6 +405,6 @@ export default function BuyEbook({ onOpenAuth }) {
           </div>
         </div>
       </div>
-      </section>
+    </section>
   );
 }
