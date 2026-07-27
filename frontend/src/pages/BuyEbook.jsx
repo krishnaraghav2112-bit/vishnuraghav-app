@@ -242,12 +242,6 @@ export default function BuyEbook({ onOpenAuth }) {
               </div>
             </div>
           </div>
-              <div className="absolute -top-3 -right-3 bg-red-500 text-white text-xs font-black px-3 py-1.5 rounded-full shadow-lg rotate-6">
-                {discountPct}% OFF
-              </div>
-            </div>
-          </div>
-        </div>
       </section>
 
       {/* BENEFITS */}
