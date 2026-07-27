@@ -203,6 +203,10 @@ const benefits = [
             <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-black leading-tight mb-5">
               {product.title || "Mind Health"} <span className="text-brand-gold italic">Workbook</span>
             </h1>
+            <blockquote className="border-l-2 border-brand-gold pl-4 mb-5 italic text-foreground/80 text-base md:text-lg">
+              "The mind keeps making noise, until you truly listen to it."
+            </blockquote>
+
             <p className="text-base md:text-lg text-muted-foreground mb-6 leading-relaxed">
               {product.description || "Vishnu Raghav's practical, no-fluff eBook. Silence overthinking, master your time, and reclaim mental clarity — one page at a time."}
             </p>
