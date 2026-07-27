@@ -242,7 +242,8 @@ export default function BuyEbook({ onOpenAuth }) {
               </div>
             </div>
           </div>
-      </section>
+        </div>
+       </section>
 
       {/* BENEFITS */}
       <section className="max-w-6xl mx-auto px-5 md:px-8 py-16">
