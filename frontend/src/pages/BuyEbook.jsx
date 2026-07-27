@@ -397,4 +397,6 @@ export default function BuyEbook({ onOpenAuth }) {
             ) : (
               <div className="text-sm text-muted-foreground">Launching this week ✨</div>
             )}
+             </div>
+      </section>
             
