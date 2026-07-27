@@ -400,17 +400,9 @@ export default function Home({ onOpenAuth, onOpenPay }) {
 
             <div className="relative">
               <div className="relative mx-auto max-w-sm">
-                <div className="aspect-[3/4] rounded-2xl bg-gradient-to-br from-brand-gold/20 via-purple-500/10 to-transparent border border-brand-gold/30 flex items-center justify-center overflow-hidden shadow-2xl shadow-brand-gold/10">
-                  <div className="text-center px-6">
-                    <BookOpen className="w-16 h-16 text-brand-gold mx-auto mb-4" />
-                    <div className="text-xs uppercase tracking-widest text-brand-gold font-bold mb-2">Digital eBook · PDF</div>
-                    <div className="font-serif text-2xl md:text-3xl font-black mb-2 leading-tight">Mind Health Workbook</div>
-                    <div className="text-xs text-muted-foreground italic">by Vishnu Raghav</div>
-                    <div className="mt-6 pt-4 border-t border-white/10 text-[10px] text-muted-foreground uppercase tracking-widest">
-                      30+ pages · Lifetime access
-                    </div>
-                  </div>
-                </div>
+               <div className="aspect-[3/4] rounded-2xl overflow-hidden shadow-2xl shadow-brand-gold/10 border border-brand-gold/30">
+              <img src="/ebook-cover.jpg" alt="Ulajha Jeevan eBook" className="w-full h-full object-cover" />
+            </div>
                 <div className="absolute -top-3 -right-3 bg-red-500 text-white text-xs font-black px-3 py-1.5 rounded-full shadow-lg rotate-6">
                   67% OFF
                 </div>
