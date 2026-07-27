@@ -136,7 +136,6 @@ export default function BuyEbook({ onOpenAuth }) {
     { q: "In which language is the eBook?", a: "Simple Hinglish (Hindi written in English + Hindi where it matters). Easy to read for both Hindi and English readers." },
     { q: "Do I need to do the free assessment first?", a: "No! You can buy this eBook directly — no quiz, no waiting. Just click Buy Now, complete payment, and download." },
     { q: "Is the payment secure?", a: "100% secure. We use Razorpay (India's most trusted gateway) — the same used by Zomato, Swiggy, and CRED. Your card details never touch our server." },
-    { q: "What if I don't like it?", a: "We offer a 7-day no-questions-asked refund. Just email vishnuraghav955@gmail.com — full refund, no drama." },
     { q: "Can I share it with friends?", a: "The eBook is for personal use. Please ask friends to buy their own copy — it supports Vishnu's work and keeps prices low for everyone." },
   ];
 
@@ -200,7 +199,6 @@ export default function BuyEbook({ onOpenAuth }) {
             <div className="flex flex-wrap items-center gap-4 mt-5 text-xs text-muted-foreground">
               <div className="inline-flex items-center gap-1.5"><Lock className="w-3.5 h-3.5 text-brand-gold" /> Secure Razorpay</div>
               <div className="inline-flex items-center gap-1.5"><Zap className="w-3.5 h-3.5 text-brand-gold" /> Instant delivery</div>
-              <div className="inline-flex items-center gap-1.5"><Shield className="w-3.5 h-3.5 text-brand-gold" /> 7-day refund</div>
             </div>
           </div>
 
@@ -253,13 +251,13 @@ export default function BuyEbook({ onOpenAuth }) {
             </ul>
           </div>
           <div className="bg-gradient-to-br from-brand-gold/10 to-transparent border border-brand-gold/20 rounded-2xl p-8">
-            <div className="text-6xl font-black text-brand-gold mb-2">30+</div>
+            <div className="text-6xl font-black text-brand-gold mb-2">140+</div>
             <div className="text-sm uppercase tracking-widest text-muted-foreground mb-6">Pages of practical wisdom</div>
             <div className="grid grid-cols-2 gap-4 pt-6 border-t border-white/10">
-              <div><div className="text-3xl font-black">20+</div><div className="text-xs text-muted-foreground uppercase tracking-widest mt-1">Exercises</div></div>
-              <div><div className="text-3xl font-black">30</div><div className="text-xs text-muted-foreground uppercase tracking-widest mt-1">Day Journey</div></div>
+              <div><div className="text-3xl font-black">100+</div><div className="text-xs text-muted-foreground uppercase tracking-widest mt-1">Journal Prompts</div></div>
+              <div><div className="text-3xl font-black">21</div><div className="text-xs text-muted-foreground uppercase tracking-widest mt-1">Day System</div></div>
               <div><div className="text-3xl font-black">∞</div><div className="text-xs text-muted-foreground uppercase tracking-widest mt-1">Lifetime Access</div></div>
-              <div><div className="text-3xl font-black">7</div><div className="text-xs text-muted-foreground uppercase tracking-widest mt-1">Day Refund</div></div>
+              <div><div className="text-3xl font-black">50</div><div className="text-xs text-muted-foreground uppercase tracking-widest mt-1">Healing Exercises</div></div>
             </div>
           </div>
         </div>
@@ -362,7 +360,6 @@ export default function BuyEbook({ onOpenAuth }) {
             <div className="flex flex-wrap items-center gap-4 mt-5 text-xs text-muted-foreground justify-center">
               <div className="inline-flex items-center gap-1.5"><Lock className="w-3.5 h-3.5 text-brand-gold" /> Secure Razorpay</div>
               <div className="inline-flex items-center gap-1.5"><Zap className="w-3.5 h-3.5 text-brand-gold" /> Instant delivery</div>
-              <div className="inline-flex items-center gap-1.5"><Shield className="w-3.5 h-3.5 text-brand-gold" /> 7-day refund</div>
             </div>
           </div>
         </div>
