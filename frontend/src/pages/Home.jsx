@@ -382,8 +382,8 @@ export default function Home({ onOpenAuth, onOpenPay }) {
                 <div className="text-sm text-muted-foreground">4.9★ · 340+ readers</div>
               </div>
               <div className="flex items-baseline gap-3 mb-6">
-                <div className="text-4xl md:text-5xl font-black text-brand-gold">₹299</div>
-                <div className="text-lg text-muted-foreground line-through">₹897</div>
+                <div className="text-4xl md:text-5xl font-black text-brand-gold">₹199</div>
+                <div className="text-lg text-muted-foreground line-through">₹597</div>
                 <div className="text-xs font-bold text-green-400 bg-green-500/10 px-2 py-1 rounded">67% OFF</div>
               </div>
               <Link to="/buy-ebook"
@@ -394,7 +394,6 @@ export default function Home({ onOpenAuth, onOpenPay }) {
               <div className="flex flex-wrap items-center gap-4 mt-5 text-xs text-muted-foreground">
                 <div className="inline-flex items-center gap-1.5"><Lock className="w-3.5 h-3.5 text-brand-gold" /> Secure Razorpay</div>
                 <div className="inline-flex items-center gap-1.5"><Zap className="w-3.5 h-3.5 text-brand-gold" /> Instant delivery</div>
-                <div className="inline-flex items-center gap-1.5"><Shield className="w-3.5 h-3.5 text-brand-gold" /> 7-day refund</div>
               </div>
             </div>
 
