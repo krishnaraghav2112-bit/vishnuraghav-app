@@ -29,6 +29,7 @@ export default function BuyEbook({ onOpenAuth }) {
   const [access, setAccess] = useState({ has_access: false, pdf_url: null });
   const [paying, setPaying] = useState(false);
   const [openFaq, setOpenFaq] = useState(null);
+  useEffect(() => { window.scrollTo(0, 0); }, []);
 
   useEffect(() => {
     api.get("/assessment/product").then(({ data }) => setProduct(data)).catch(() => {});
@@ -205,7 +206,9 @@ export default function BuyEbook({ onOpenAuth }) {
 
           <div className="relative">
             <div className="relative mx-auto max-w-sm">
-              <div className="aspect-[3/4] rounded-2xl bg-gradient-to-br from-brand-gold/20 via-purple-500/10 to-transparent border border-brand-gold/30 flex items-center justify-center overflow-hidden shadow-2xl shadow-brand-gold/10">
+             <div className="aspect-[3/4] rounded-2xl overflow-hidden shadow-2xl shadow-brand-gold/10 border border-brand-gold/30">
+              <img src="/ebook-cover.jpg" alt={product.title || "Mind Health Workbook"} className="w-full h-full object-cover" />
+          </div>
                 <div className="text-center px-6">
                   <FileText className="w-16 h-16 text-brand-gold mx-auto mb-4" />
                   <div className="text-xs uppercase tracking-widest text-brand-gold font-bold mb-2">Digital eBook · PDF</div>
