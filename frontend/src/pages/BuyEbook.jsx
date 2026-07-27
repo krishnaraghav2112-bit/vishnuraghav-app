@@ -146,6 +146,39 @@ const benefits = [
     { q: "Is the payment secure?", a: "100% secure. We use Razorpay (India's most trusted gateway) — the same used by Zomato, Swiggy, and CRED. Your card details never touch our server." },
     { q: "Can I share it with friends?", a: "The eBook is for personal use. Please ask friends to buy their own copy — it supports Vishnu's work and keeps prices low for everyone." },
   ];
+
+  const daysJourney = [
+    { day: 1, title: "Overcoming Mind Wandering" },
+    { day: 2, title: "Stop Personalizing Everything" },
+    { day: 3, title: "Facing Fear" },
+    { day: 4, title: "Releasing Past Memories" },
+    { day: 5, title: "Managing Future Anxiety" },
+    { day: 6, title: "Letting Go of Control" },
+    { day: 7, title: "Mindfulness Review — Week 1" },
+    { day: 8, title: "Breaking Comparison Habits" },
+    { day: 9, title: "Stopping People-Pleasing" },
+    { day: 10, title: "Beating Self-Doubt" },
+    { day: 11, title: "Recovering from Perfectionism" },
+    { day: 12, title: "Silencing Negative Self-Talk" },
+    { day: 13, title: "Ending Emotional Dependency" },
+    { day: 14, title: "Overcoming Fear of Rejection" },
+    { day: 15, title: "Making Confident Decisions" },
+    { day: 16, title: "Releasing Guilt" },
+    { day: 17, title: "Breaking the Overthinking Loop" },
+    { day: 18, title: "Healing Loneliness" },
+    { day: 19, title: "Embracing Change" },
+    { day: 20, title: "Self-Acceptance" },
+    { day: 21, title: "New Identity — Mindful Living" },
+  ];
+
+  const whoIsThisFor = [
+    "Your mind keeps looping on the same thoughts",
+    "You overthink every decision, big or small",
+    "Fear, self-doubt, or anxiety hold you back daily",
+    "You want practical self-work, not motivational fluff",
+    "You've tried other self-help books but nothing stuck",
+    "You can commit 20-30 minutes a day for 21 days",
+  ];
   
   const originalPrice = Math.round((product.price || 199) * 3);
   const discountPct = Math.round(((originalPrice - (product.price || 199)) / originalPrice) * 100);
@@ -272,6 +305,48 @@ const benefits = [
       </section>
 
       {/* AUTHOR */}
+      {/* 21 DAYS JOURNEY */}
+      <section className="max-w-6xl mx-auto px-5 md:px-8 py-16">
+        <div className="text-center mb-12">
+          <div className="text-xs uppercase tracking-widest text-brand-gold font-bold mb-2">Your Journey</div>
+          <h2 className="font-serif text-3xl md:text-4xl font-black">21 Days to a <span className="text-brand-gold italic">reset mind.</span></h2>
+          <p className="text-muted-foreground mt-3 max-w-2xl mx-auto">One focused topic each day. One small win each day. In three weeks, a whole new relationship with your mind.</p>
+        </div>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {daysJourney.map((d) => (
+            <div key={d.day} className="bg-ink-900 border border-white/[0.07] rounded-xl p-4 hover:border-brand-gold/30 transition-all flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-brand-gold/15 flex items-center justify-center flex-shrink-0">
+                <div className="text-brand-gold font-black text-sm">{d.day}</div>
+              </div>
+              <div className="text-sm font-medium">{d.title}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* WHO IS THIS FOR */}
+      <section className="border-y border-white/5 bg-white/[0.015]">
+        <div className="max-w-4xl mx-auto px-5 md:px-8 py-16">
+          <div className="text-center mb-10">
+            <div className="text-xs uppercase tracking-widest text-brand-gold font-bold mb-2">Is this for you?</div>
+            <h2 className="font-serif text-3xl md:text-4xl font-black">This book is <span className="text-brand-gold italic">for you if...</span></h2>
+          </div>
+          <ul className="space-y-3 max-w-2xl mx-auto mb-10">
+            {whoIsThisFor.map((item, i) => (
+              <li key={i} className="flex items-start gap-3 bg-ink-900 border border-white/[0.07] rounded-xl p-4">
+                <CheckCircle className="w-5 h-5 text-brand-gold flex-shrink-0 mt-0.5" />
+                <span className="text-sm text-foreground">{item}</span>
+              </li>
+            ))}
+          </ul>
+          <div className="max-w-2xl mx-auto bg-red-500/5 border border-red-500/20 rounded-xl p-5 text-center">
+            <div className="text-xs uppercase tracking-widest text-red-400 font-bold mb-2">Please Note</div>
+            <div className="text-sm text-muted-foreground leading-relaxed">
+              This book is <strong>not</strong> a substitute for professional therapy. If you're dealing with severe depression, anxiety disorder, or suicidal thoughts, please consult a licensed mental health professional first.
+            </div>
+          </div>
+        </div>
+      </section>
       <section className="max-w-4xl mx-auto px-5 md:px-8 py-16 text-center">
         <div className="text-xs uppercase tracking-widest text-brand-gold font-bold mb-2">About the Author</div>
         <h2 className="font-serif text-3xl md:text-4xl font-black mb-6">A voice for the <span className="text-brand-gold italic">silent mind</span></h2>
