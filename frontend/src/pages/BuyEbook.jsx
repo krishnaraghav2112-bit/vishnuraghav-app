@@ -106,21 +106,28 @@ export default function BuyEbook({ onOpenAuth }) {
     }
   };
 
-  const benefits = [
-    { icon: Brain, title: "Silence Overthinking", desc: "Practical daily exercises to stop the mental noise and reclaim mental peace." },
-    { icon: Clock, title: "Master Your Time", desc: "Frameworks that helped 2K+ students accomplish more in 4 hours than 8." },
-    { icon: Heart, title: "Emotional Clarity", desc: "Vishnu's honest, tested-in-real-life techniques to process buried feelings." },
-    { icon: TrendingUp, title: "Daily Reset Rituals", desc: "5-minute morning & night routines to keep your mind sharp and calm." },
+const benefits = [
+    { icon: Brain, title: "Stop Overthinking", desc: "Break the endless mental noise. Understand WHY your mind loops and get proven tools to reset it — day by day." },
+    { icon: Heart, title: "Master Your Emotions", desc: "Face fear, guilt, self-doubt, and rejection with structured daily exercises. Release what's held you back for years." },
+    { icon: Sparkles, title: "Build Deep Self-Awareness", desc: "Identify the exact thought patterns keeping you stuck — and rewrite them using CBT worksheets and reflection prompts." },
+    { icon: TrendingUp, title: "Lasting Change in 21 Days", desc: "Not motivation. Not theory. A step-by-step system with 30-day and 90-day extension plans for lifelong transformation." },
   ];
-
+  
   const whatsInside = [
-    "20+ practical exercises rooted in Vishnu's writing",
-    "Daily reflection prompts (30-day guided journey)",
-    "Overthinking reset framework — step by step",
-    "Time-blocking templates you can use tomorrow",
-    "Emotional check-in worksheets in Hinglish",
-    "Vishnu's personal 'reset the day' script",
-    "Printable PDF — read on phone, laptop or paper",
+    "21 daily modules — one focused topic each day",
+    "100+ deep journal questions",
+    "50 emotional healing exercises",
+    "25 guided breathing practices",
+    "25 visualization exercises",
+    "20+ printable worksheets (mood tracker, habit tracker, life vision, values, boundaries, and more)",
+    "CBT Thought Records + Circles of Control worksheet",
+    "Mind Reset Cards + Affirmation Cards",
+    "Weekly Progress Dashboards (Week 1, 2, 3)",
+    "30-Day Extension Plan + 90-Day Continuation Planner",
+    "Life Operating System framework",
+    "Morning & Evening Reset Routines",
+    "Emergency Tools for overwhelm moments",
+    "Printable PDF — read on phone, laptop, or paper",
     "Lifetime access — download once, keep forever",
   ];
 
@@ -132,13 +139,14 @@ export default function BuyEbook({ onOpenAuth }) {
 
   const faqs = [
     { q: "How do I get the eBook after paying?", a: "Instantly. As soon as your payment succeeds, a download button appears on this page. You'll also see it in your dashboard forever." },
-    { q: "Is this a physical book or PDF?", a: "It's a beautifully-designed PDF eBook. Read it on your phone, laptop, tablet, or print it — it's yours forever." },
-    { q: "In which language is the eBook?", a: "Simple Hinglish (Hindi written in English + Hindi where it matters). Easy to read for both Hindi and English readers." },
+    { q: "Is this a physical book or PDF?", a: "It's a beautifully-designed 141-page PDF eBook. Read it on your phone, laptop, tablet, or print it — it's yours forever." },
+    { q: "In which language is the eBook?", a: "The book is written in simple, easy-to-read Hindi (Devanagari script). Perfect for readers who prefer Hindi self-help over English." },
+    { q: "How much time do I need daily?", a: "Just 20-30 minutes a day for 21 days. Each module has a short read + a practical exercise + a reflection prompt. Simple and doable." },
     { q: "Do I need to do the free assessment first?", a: "No! You can buy this eBook directly — no quiz, no waiting. Just click Buy Now, complete payment, and download." },
     { q: "Is the payment secure?", a: "100% secure. We use Razorpay (India's most trusted gateway) — the same used by Zomato, Swiggy, and CRED. Your card details never touch our server." },
     { q: "Can I share it with friends?", a: "The eBook is for personal use. Please ask friends to buy their own copy — it supports Vishnu's work and keeps prices low for everyone." },
   ];
-
+  
   const originalPrice = Math.round((product.price || 199) * 3);
   const discountPct = Math.round(((originalPrice - (product.price || 199)) / originalPrice) * 100);
 
@@ -240,7 +248,7 @@ export default function BuyEbook({ onOpenAuth }) {
           <div>
             <div className="text-xs uppercase tracking-widest text-brand-gold font-bold mb-2">Inside the eBook</div>
             <h2 className="font-serif text-3xl md:text-4xl font-black mb-6">Everything you get for <span className="text-brand-gold">₹{product.price || 199}</span></h2>
-            <p className="text-muted-foreground mb-6">A carefully-crafted PDF workbook, not just theory. Every page is designed for action.</p>
+            <p className="text-muted-foreground mb-6">A carefully-crafted 141-page PDF workbook. Not just theory — every page is designed for action.</p>
             <ul className="space-y-3">
               {whatsInside.map((item, i) => (
                 <li key={i} className="flex items-start gap-3">
