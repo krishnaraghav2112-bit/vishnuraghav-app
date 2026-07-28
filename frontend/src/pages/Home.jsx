@@ -269,15 +269,25 @@ export default function Home({ onOpenAuth, onOpenPay }) {
                     </div>
                     <span className="text-[10px] text-green-400 font-bold">{disc}% OFF</span>
                   </div>
-                  <button
-                    data-testid={`enroll-${c.slug}`}
-                    onClick={() => enrollClick(c)}
-                    className={`mt-auto w-full py-2.5 rounded-lg font-extrabold text-sm transition-all hover:-translate-y-0.5 ${
-                      c.color === "gold" ? "bg-gold-gradient text-ink-950" : "bg-purple-gradient text-white"
-                    }`}
-                  >
-                    Buy Now — ₹{c.price.toLocaleString("en-IN")} →
-                  </button>
+                  {c.is_available ? (
+                      <button
+                        data-testid={`enroll-${c.slug}`}
+                        onClick={() => enrollClick(c)}
+                        className={`mt-auto w-full py-2.5 rounded-lg font-extrabold text-sm transition-all hover:-translate-y-0.5 ${
+                          c.color === "gold" ? "bg-gold-gradient text-ink-950" : "bg-purple-gradient text-white"
+                        }`}
+                      >
+                        Buy Now — ₹{c.price.toLocaleString("en-IN")} →
+                      </button>
+                    ) : (
+                      <button
+                        disabled
+                        data-testid={`coming-soon-${c.slug}`}
+                        className="mt-auto w-full py-2.5 rounded-lg font-extrabold text-sm bg-white/[0.06] text-muted-foreground border border-white/[0.07] cursor-not-allowed"
+                      >
+                        Coming Soon
+                      </button>
+                    )}
                 </div>
               </div>
             );
