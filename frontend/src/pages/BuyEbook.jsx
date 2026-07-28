@@ -241,6 +241,11 @@ const benefits = [
               </div>
             )}
 
+            <a href="/Uljha-Jeevan-FREE-Sample.pdf" target="_blank" rel="noopener noreferrer"
+              className="mt-4 inline-flex items-center gap-2 text-sm text-brand-gold hover:text-brand-gold/80 underline underline-offset-4">
+              📖 Read Free Sample (12 pages, no signup needed)
+            </a>
+
             <div className="flex flex-wrap items-center gap-4 mt-5 text-xs text-muted-foreground">
               <div className="inline-flex items-center gap-1.5"><Lock className="w-3.5 h-3.5 text-brand-gold" /> Secure Razorpay</div>
               <div className="inline-flex items-center gap-1.5"><Zap className="w-3.5 h-3.5 text-brand-gold" /> Instant delivery</div>
@@ -444,6 +449,10 @@ const benefits = [
             ) : (
               <div className="text-sm text-muted-foreground">Launching this week ✨</div>
             )}
+            <a href="/Uljha-Jeevan-FREE-Sample.pdf" target="_blank" rel="noopener noreferrer"
+              className="mt-4 inline-flex items-center gap-2 text-sm text-brand-gold hover:text-brand-gold/80 underline underline-offset-4">
+              📖 Read Free Sample first
+            </a>
             <div className="flex flex-wrap items-center gap-4 mt-5 text-xs text-muted-foreground justify-center">
               <div className="inline-flex items-center gap-1.5"><Lock className="w-3.5 h-3.5 text-brand-gold" /> Secure Razorpay</div>
               <div className="inline-flex items-center gap-1.5"><Zap className="w-3.5 h-3.5 text-brand-gold" /> Instant delivery</div>
