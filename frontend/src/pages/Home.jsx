@@ -281,11 +281,11 @@ export default function Home({ onOpenAuth, onOpenPay }) {
                       </button>
                     ) : (
                       <button
-                        disabled
-                        data-testid={`coming-soon-${c.slug}`}
-                        className="mt-auto w-full py-2.5 rounded-lg font-extrabold text-sm bg-white/[0.06] text-muted-foreground border border-white/[0.07] cursor-not-allowed"
+                        onClick={() => toast.success("🔔 You're on the waitlist! We'll email you at launch.")}
+                        data-testid={`course-waitlist-${c.slug || i}`}
+                        className="mt-auto w-full py-2.5 rounded-lg font-extrabold text-sm bg-brand-gold/10 border border-brand-gold/30 text-brand-gold hover:bg-brand-gold/20 transition-colors"
                       >
-                        Coming Soon
+                        🔔 Join Waitlist — Notify Me
                       </button>
                     )}
                 </div>
