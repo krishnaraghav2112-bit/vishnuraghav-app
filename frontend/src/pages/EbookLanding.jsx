@@ -59,22 +59,6 @@ export default function EbookLanding() {
         <p className="text-xs text-white/50 mt-3">Secure Razorpay · Instant PDF Download</p>
       </section>
 
-      {/* 5 — Book preview grid */}
-      <section className="px-5 lg:px-10 py-14 bg-ink-900 border-y border-white/[0.05]">
-        <div className="max-w-5xl mx-auto text-center mb-8">
-          <h2 className="font-serif font-black text-2xl lg:text-3xl mb-2">किताब के अंदर एक नज़र</h2>
-          <p className="text-sm text-muted-foreground">Real pages. Real practice. 21 दिन का रोडमैप।</p>
-        </div>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 max-w-5xl mx-auto">
-          {[1, 2, 3, 4].map((n) => (
-            <div key={n} className="aspect-[3/4] rounded-xl bg-ink-800 border border-white/[0.07] flex items-center justify-center text-white/30 text-xs">
-              [Book Page {n}]
-            </div>
-          ))}
-        </div>
-        <p className="text-center text-[11px] text-white/40 mt-4">Placeholders — I'll swap in real photos in Step 4</p>
-      </section>
-
 
       {/* 8 — Day 2 preview */}
       <section className="px-5 lg:px-10 py-14 bg-ink-900 border-y border-white/[0.05]">
