@@ -149,7 +149,7 @@ const submitWaitlist = async (email) => {
               Bestselling Hindi author, life coach & educator helping thousands master time, silence overthinking, and build a life of clarity — through books, YouTube & premium courses.
             </p>
             <blockquote className="text-sm italic text-brand-gold/70 border-l-2 border-brand-gold pl-3.5 mb-8 leading-relaxed">
-              "Dagmagate Pair" · "Jo Mai Kah Na Saka" · "Uljha Jeevan" · vishnuraghav.in
+              "Dagmagate Pair" · "Jo Mai Kah Na Saka" · "Uljha Jeevan" · authorvishnuraghav.in
             </blockquote>
 
             <div className="flex gap-3 flex-wrap mb-10">
@@ -823,7 +823,7 @@ const submitWaitlist = async (email) => {
                 [Mail, "Email", "vishnuraghav955@gmail.com"],
                 [Youtube, "YouTube", "@vishnuraghav"],
                 [Instagram, "Instagram", "@vishnuraghav21"],
-                [Globe, "Website", "vishnuraghav.in"],
+                [Globe, "Website", "authorvishnuraghav.in"],
               ].map(([Icon, l, v]) => (
                 <div key={l} className="flex items-center gap-3 mb-4">
                   <div className="w-10 h-10 rounded-xl bg-brand-goldSoft flex items-center justify-center text-brand-gold"><Icon className="w-4 h-4" /></div>
@@ -871,7 +871,7 @@ const submitWaitlist = async (email) => {
             ]} />
           </div>
           <div className="border-t border-white/[0.07] pt-5 flex justify-between flex-wrap gap-2 text-[11px] text-muted-foreground">
-            <span>© 2026 Vishnu Raghav. All rights reserved · vishnuraghav.in</span>
+            <span>© 2026 Vishnu Raghav. All rights reserved · authorvishnuraghav.in</span>
             <span>Built for India's next generation of learners 🇮🇳</span>
           </div>
         </div>
