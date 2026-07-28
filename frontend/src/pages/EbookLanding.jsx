@@ -8,43 +8,27 @@ export default function EbookLanding() {
 
   return (
     <main className="min-h-screen bg-ink-950 text-foreground pb-24 lg:pb-0">
-
-      {/* 1 — 30 din pain check */}
+  
+     {/* 1 — Merged pain check */}
       <section className="px-5 lg:px-10 pt-14 pb-10 max-w-3xl mx-auto text-center">
         <div className="inline-block px-3 py-1 rounded-full bg-brand-gold/10 border border-brand-gold/30 text-brand-gold text-[11px] font-bold uppercase tracking-widest mb-6">
           उलझा जीवन — 21 दिनों का माइंड रीसेट
         </div>
-        <h1 className="font-serif font-black text-3xl lg:text-5xl leading-tight mb-8">
-          अगर पिछले <span className="text-brand-gold">30 दिनों</span> में…
+        <h1 className="font-serif font-black text-3xl lg:text-5xl leading-tight mb-4">
+          क्या आपका मन भी…
         </h1>
-        <ul className="text-left space-y-3.5 text-base lg:text-lg text-foreground/85 max-w-xl mx-auto">
+        <p className="text-sm lg:text-base text-muted-foreground mb-8">
+          पिछले 30 दिनों में — क्या आपने ये अनुभव किया है?
+        </p>
+        <ul className="text-left space-y-4 text-base lg:text-lg text-foreground/85 max-w-xl mx-auto">
           {[
-            "आपका मन एक ही बात बार-बार सोचता रहा है",
-            "रात को नींद आने में दिक्कत होती है",
-            "आप छोटी-छोटी बातों को दिल पर ले लेते हैं",
+            "एक ही बात बार-बार सोचता रहता है",
+            "छोटी-सी बात कई दिनों तक परेशान करती है",
+            "रात को शरीर थक जाता है… लेकिन मन नहीं रुकता",
             "भविष्य की चिंता आपको थका देती है",
             "आपको लगता है कि आपका मन आपके नियंत्रण में नहीं है",
-          ].map((line, i) => (
-            <li key={i} className="flex items-start gap-3">
-              <span className="mt-1.5 w-4 h-4 border-2 border-brand-gold/60 rounded-sm flex-shrink-0" />
-              <span>{line}</span>
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      {/* 2 — Emotional amplifier */}
-      <section className="px-5 lg:px-10 py-10 max-w-3xl mx-auto">
-        <h2 className="font-serif font-extrabold text-2xl lg:text-3xl text-center mb-8 text-brand-gold">
-          क्या आपका मन भी…
-        </h2>
-        <ul className="text-left space-y-4 text-base lg:text-lg text-foreground/85">
-          {[
-            "एक ही बात बार-बार सोचता रहता है?",
-            "छोटी-सी बात कई दिनों तक परेशान करती है?",
-            "रात को शरीर थक जाता है… लेकिन मन नहीं रुकता?",
-            "आपको लगता है कि आपकी सबसे बड़ी लड़ाई… दुनिया से नहीं, अपने ही मन से है?",
-            "आपने बहुत Motivational Videos देखीं… लेकिन भीतर कुछ नहीं बदला?",
+            "आपकी सबसे बड़ी लड़ाई… दुनिया से नहीं, अपने ही मन से है",
+            "आपने बहुत Motivational Videos देखीं… लेकिन भीतर कुछ नहीं बदला",
           ].map((line, i) => (
             <li key={i} className="flex items-start gap-3">
               <span className="mt-1.5 w-4 h-4 border-2 border-brand-gold/60 rounded-sm flex-shrink-0" />
@@ -91,39 +75,6 @@ export default function EbookLanding() {
         <p className="text-center text-[11px] text-white/40 mt-4">Placeholders — I'll swap in real photos in Step 4</p>
       </section>
 
-      {/* 6 — Social proof */}
-      <section className="px-5 lg:px-10 py-14 max-w-4xl mx-auto">
-        <div className="text-center mb-10">
-          <div className="flex items-center justify-center gap-1 mb-2">
-            {[1,2,3,4,5].map(s => <Star key={s} className="w-5 h-5 fill-brand-gold text-brand-gold" />)}
-          </div>
-          <div className="text-2xl font-black text-brand-gold">4.9 / 5</div>
-          <div className="text-sm text-muted-foreground">340+ readers · Verified</div>
-        </div>
-        <div className="grid md:grid-cols-2 gap-4">
-          {[
-            ["इस किताब ने मेरी सोचने की तरह ही बदल दी। पहली बार ऐसा लगा कि कोई मेरी बात समझ रहा है।", "P.S. · Delhi"],
-            ["Overthinking से जो escape चाहिए था वो यहाँ मिला। हर page अपनी सी लगती है।", "R.K. · Lucknow"],
-            ["Practical exercises बहुत helpful हैं। सिर्फ पढ़ने की किताब नहीं — करने की किताब है।", "A.M. · Mumbai"],
-            ["21 दिन का structure बहुत clean है। रोज़ 20 min और life बदल रही है।", "S.T. · Pune"],
-          ].map(([quote, name], i) => (
-            <div key={i} className="bg-ink-800 border border-white/[0.07] rounded-xl p-5">
-              <div className="flex gap-0.5 mb-2">
-                {[1,2,3,4,5].map(s => <Star key={s} className="w-3 h-3 fill-brand-gold text-brand-gold" />)}
-              </div>
-              <p className="text-sm text-foreground/85 leading-relaxed mb-3">"{quote}"</p>
-              <p className="text-xs text-muted-foreground font-semibold">— {name}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* CTA 2 */}
-      <section className="px-5 lg:px-10 pb-12 text-center">
-        <button onClick={goBuy} className="inline-flex items-center gap-2 bg-gold-gradient text-ink-950 px-7 py-4 rounded-xl font-extrabold text-base btn-shimmer">
-          अभी ₹199 में पाएँ →
-        </button>
-      </section>
 
       {/* 8 — Day 2 preview */}
       <section className="px-5 lg:px-10 py-14 bg-ink-900 border-y border-white/[0.05]">
@@ -153,14 +104,6 @@ export default function EbookLanding() {
             <p className="text-[11px] text-white/40 mt-2">Opens in a new tab · No email required</p>
           </div>
         </div>
-      </section>
-
-      {/* CTA 3 */}
-      <section className="px-5 lg:px-10 py-12 text-center">
-        <p className="text-lg mb-4">👇 आगे पढ़ने के लिए…</p>
-        <button onClick={goBuy} className="inline-flex items-center gap-2 bg-gold-gradient text-ink-950 px-7 py-4 rounded-xl font-extrabold text-base btn-shimmer">
-          🟢 मैं पूरी Workbook पढ़ना चाहता हूँ →
-        </button>
       </section>
 
       {/* 10 — Chapter features */}
