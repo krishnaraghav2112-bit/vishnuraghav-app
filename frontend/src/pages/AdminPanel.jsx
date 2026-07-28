@@ -330,6 +330,15 @@ function CoursesPanel() {
   const [creating, setCreating] = useState(false);
   const refresh = () => api.get("/courses").then((r) => setCourses(r.data)).catch(() => {});
   useEffect(() => { refresh(); }, []);
+  const toggleAvailability = async (slug, next) => {
+    try {
+      await api.patch(`/admin/courses/${encodeURIComponent(slug)}/availability`, { is_available: next });
+      setCourses((prev) => prev.map((c) => c.slug === slug ? { ...c, is_available: next } : c));
+      toast.success(next ? "Course is now Live" : "Course set to Coming Soon");
+    } catch (e) {
+      toast.error(formatApiError(e));
+    }
+  };
 
   return (
     <>
@@ -353,6 +362,17 @@ function CoursesPanel() {
             </div>
             <button onClick={() => setEditing(c)} data-testid={`admin-course-edit-${c.slug}`}
               className="p-2 rounded-md hover:bg-white/[0.04] text-brand-gold"><Edit2 className="w-4 h-4" /></button>
+            <button
+              onClick={() => toggleAvailability(c.slug, !c.is_available)}
+              data-testid={`admin-course-toggle-${c.slug}`}
+              className={`px-3 py-1 rounded-full text-[11px] font-bold ${
+                c.is_available
+                  ? "bg-green-500/20 text-green-400 border border-green-500/30"
+                  : "bg-gray-500/20 text-gray-300 border border-gray-500/30"
+              }`}
+            >
+              {c.is_available ? "● Live" : "○ Coming Soon"}
+            </button>
             <button onClick={async () => { if (!window.confirm(`Delete "${c.title}"?`)) return; try { await api.delete(`/admin/courses/${encodeURIComponent(c.slug)}`); toast.success("Deleted"); refresh(); } catch (e) { toast.error(formatApiError(e)); } }} className="p-2 rounded-md hover:bg-red-500/10 text-red-400"><Trash2 className="w-4 h-4" /></button>
           </div>
         ))}
