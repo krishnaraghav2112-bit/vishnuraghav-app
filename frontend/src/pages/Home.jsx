@@ -73,7 +73,6 @@ export default function Home({ onOpenAuth, onOpenPay }) {
     if (!user) { onOpenAuth("login"); return; }
     onOpenPay(course);
   };
-
   const joinWaitlist = async (course) => {
   let email = user?.email;
   if (!email) {
@@ -272,6 +271,7 @@ export default function Home({ onOpenAuth, onOpenPay }) {
                     {[c.duration, `${c.lessons} Lessons`, `${c.modules} Modules`, c.level].map((t) => (
                       <span key={t} className="bg-ink-900 border border-white/[0.07] rounded-full text-[10px] px-2 py-0.5 text-muted-foreground">{t}</span>
                     ))}
+                  {c.is_available && (<>
                   </div>
                   <div className="flex items-center gap-3 mb-2">
                     <div className="flex items-center gap-1">
@@ -290,6 +290,12 @@ export default function Home({ onOpenAuth, onOpenPay }) {
                     </div>
                     <span className="text-[10px] text-green-400 font-bold">{disc}% OFF</span>
                   </div>
+                   </>)}
+                   {!c.is_available && (
+                     <div className="mb-3 text-xs text-white/60">
+                       Launching soon · <span className="text-brand-gold font-semibold">September 2026</span>
+                     </div>
+                    )}
                   {c.is_available ? (
                       <button
                         data-testid={`enroll-${c.slug}`}
@@ -302,7 +308,7 @@ export default function Home({ onOpenAuth, onOpenPay }) {
                       </button>
                     ) : (
                       <button
-                        onClick={() => toast.success("🔔 You're on the waitlist! We'll email you at launch.")}
+                        onClick={() => joinWaitlist(c)}
                         data-testid={`course-waitlist-${c.slug || i}`}
                         className="mt-auto w-full py-2.5 rounded-lg font-extrabold text-sm bg-brand-gold/10 border border-brand-gold/30 text-brand-gold hover:bg-brand-gold/20 transition-colors"
                       >
