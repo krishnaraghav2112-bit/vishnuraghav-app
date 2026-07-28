@@ -367,30 +367,6 @@ const benefits = [
         </div>
       </section>
 
-      {/* TESTIMONIALS */}
-      <section className="border-y border-white/5 bg-white/[0.015]">
-        <div className="max-w-6xl mx-auto px-5 md:px-8 py-16">
-          <div className="text-center mb-12">
-            <div className="text-xs uppercase tracking-widest text-brand-gold font-bold mb-2">Reader Stories</div>
-            <h2 className="font-serif text-3xl md:text-4xl font-black">Words that moved <span className="text-brand-gold italic">people.</span></h2>
-          </div>
-          <div className="grid md:grid-cols-3 gap-5">
-            {testimonials.map((t, i) => (
-              <div key={i} className="bg-ink-900 border border-white/[0.07] rounded-2xl p-6">
-                <div className="flex gap-0.5 mb-4">
-                  {Array.from({length: t.stars}).map((_, j) => <Star key={j} className="w-4 h-4 fill-brand-gold text-brand-gold" />)}
-                </div>
-                <p className="text-sm text-foreground/90 mb-5 leading-relaxed italic">"{t.text}"</p>
-                <div className="pt-4 border-t border-white/5">
-                  <div className="font-bold text-sm">{t.name}</div>
-                  <div className="text-xs text-muted-foreground">{t.role}</div>
-                  <div className="text-[10px] text-green-400 mt-1">✓ Verified Reader</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* FAQ */}
       <section className="max-w-3xl mx-auto px-5 md:px-8 py-16">
