@@ -390,11 +390,17 @@ export default function Home({ onOpenAuth, onOpenPay }) {
                 <div className="text-lg text-muted-foreground line-through">₹{originalPrice}</div>
                 <div className="text-xs font-bold text-green-400 bg-green-500/10 px-2 py-1 rounded">{discountPct}% OFF</div>
               </div>
-              <Link to="/buy-ebook"
-                data-testid="home-buy-ebook"
-                className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-gold-gradient text-ink-950 font-black text-base hover:opacity-90 shadow-lg shadow-brand-gold/20">
-                🔥 Get the eBook Now
-              </Link>
+              <div className="flex flex-wrap items-center gap-4">
+                <Link to="/buy-ebook"
+                  data-testid="home-buy-ebook"
+                  className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-gold-gradient text-ink-950 font-black text-base hover:opacity-90 shadow-lg shadow-brand-gold/20">
+                  🔥 Get the eBook Now
+                </Link>
+                <a href="/Uljha-Jeevan-FREE-Sample.pdf" target="_blank" rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-6 py-4 rounded-xl border border-brand-gold/40 text-brand-gold font-bold text-sm hover:bg-brand-gold/10">
+                  📖 Read Free Sample
+                </a>
+              </div>
               <div className="flex flex-wrap items-center gap-4 mt-5 text-xs text-muted-foreground">
                 <div className="inline-flex items-center gap-1.5"><Lock className="w-3.5 h-3.5 text-brand-gold" /> Secure Razorpay</div>
                 <div className="inline-flex items-center gap-1.5"><Zap className="w-3.5 h-3.5 text-brand-gold" /> Instant delivery</div>
