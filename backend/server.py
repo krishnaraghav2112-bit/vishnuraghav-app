@@ -1019,6 +1019,32 @@ async def newsletter_subscribe(body: NewsletterIn):
     await db.newsletter.insert_one({"email": email, "created_at": datetime.now(timezone.utc)})
     return {"ok": True, "message": "Subscribed successfully"}
 
+# ─── Course Waitlist ─────────────────────────────────
+class WaitlistJoin(BaseModel):
+    email: EmailStr
+    course_slug: str
+    name: Optional[str] = None
+
+@api_router.post("/waitlist/join")
+async def join_waitlist(payload: WaitlistJoin):
+    await db.waitlist.update_one(
+        {"email": payload.email.lower(), "course_slug": payload.course_slug},
+        {"$set": {
+            "email": payload.email.lower(),
+            "course_slug": payload.course_slug,
+            "name": payload.name or "",
+            "created_at": datetime.utcnow(),
+        }},
+        upsert=True,
+    )
+    return {"ok": True, "message": "Added to waitlist"}
+
+@api_router.get("/waitlist")
+async def list_waitlist(course_slug: Optional[str] = None):
+    query = {"course_slug": course_slug} if course_slug else {}
+    items = await db.waitlist.find(query, {"_id": 0}).sort("created_at", -1).to_list(1000)
+    return items
+
 @api.post("/contact")
 async def contact(body: ContactIn):
     doc = body.model_dump()
