@@ -271,8 +271,8 @@ export default function Home({ onOpenAuth, onOpenPay }) {
                     {[c.duration, `${c.lessons} Lessons`, `${c.modules} Modules`, c.level].map((t) => (
                       <span key={t} className="bg-ink-900 border border-white/[0.07] rounded-full text-[10px] px-2 py-0.5 text-muted-foreground">{t}</span>
                     ))}
-                  {c.is_available && (<>
                   </div>
+                  {c.is_available && (<>
                   <div className="flex items-center gap-3 mb-2">
                     <div className="flex items-center gap-1">
                       {[1, 2, 3, 4, 5].map((s) => <Star key={s} className={`w-3 h-3 ${s <= Math.round(c.rating) ? "fill-brand-gold text-brand-gold" : "text-muted-foreground"}`} />)}
