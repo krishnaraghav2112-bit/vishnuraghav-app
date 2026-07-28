@@ -7,6 +7,7 @@ import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
 import { makeBookCover, makeAuthorPortrait } from "../lib/bookCover";
 import SuccessLottie from "../components/SuccessLottie";
+import WaitlistModal from "../components/WaitlistModal";
 
 const iconMap = { Clock, Brain, Sparkles, Heart, BookOpen, Zap, Flame, Briefcase };
 
@@ -73,11 +74,13 @@ export default function Home({ onOpenAuth, onOpenPay }) {
     if (!user) { onOpenAuth("login"); return; }
     onOpenPay(course);
   };
-  const joinWaitlist = async (course) => {
-  let email = user?.email;
-  if (!email) {
-    email = window.prompt("Enter your email to join the waitlist:");
-  }
+  const [waitlistCourse, setWaitlistCourse] = useState(null);
+
+const joinWaitlist = (course) => {
+  setWaitlistCourse(course);
+};
+
+const submitWaitlist = async (email) => {
   if (!email || !email.includes("@")) {
     toast.error("Please enter a valid email");
     return;
@@ -85,10 +88,11 @@ export default function Home({ onOpenAuth, onOpenPay }) {
   try {
     await api.post("/waitlist/join", {
       email,
-      course_slug: course.slug || course.title,
+      course_slug: waitlistCourse?.slug || waitlistCourse?.title || "unknown",
       name: user?.name || "",
     });
     toast.success("🔔 You're on the waitlist! We'll email you at launch.");
+    setWaitlistCourse(null);
   } catch (e) {
     toast.error(formatApiError(e));
   }
@@ -872,6 +876,15 @@ export default function Home({ onOpenAuth, onOpenPay }) {
           </div>
         </div>
       </footer>
+
+      <WaitlistModal
+        open={!!waitlistCourse}
+        course={waitlistCourse}
+        defaultEmail={user?.email || ""}
+        onClose={() => setWaitlistCourse(null)}
+        onSubmit={submitWaitlist}
+      />
+      
     </main>
   );
 }
