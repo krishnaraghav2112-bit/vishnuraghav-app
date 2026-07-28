@@ -74,6 +74,27 @@ export default function Home({ onOpenAuth, onOpenPay }) {
     onOpenPay(course);
   };
 
+  const joinWaitlist = async (course) => {
+  let email = user?.email;
+  if (!email) {
+    email = window.prompt("Enter your email to join the waitlist:");
+  }
+  if (!email || !email.includes("@")) {
+    toast.error("Please enter a valid email");
+    return;
+  }
+  try {
+    await api.post("/waitlist/join", {
+      email,
+      course_slug: course.slug || course.title,
+      name: user?.name || "",
+    });
+    toast.success("🔔 You're on the waitlist! We'll email you at launch.");
+  } catch (e) {
+    toast.error(formatApiError(e));
+  }
+};
+
   const subscribeNl = async () => {
     if (!nlEmail.includes("@")) { toast.error("Please enter a valid email"); return; }
     setNlBusy(true);
