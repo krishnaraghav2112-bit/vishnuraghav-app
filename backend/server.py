@@ -1025,7 +1025,7 @@ class WaitlistJoin(BaseModel):
     course_slug: str
     name: Optional[str] = None
 
-@api_router.post("/waitlist/join")
+@api.post("/waitlist/join")
 async def join_waitlist(payload: WaitlistJoin):
     await db.waitlist.update_one(
         {"email": payload.email.lower(), "course_slug": payload.course_slug},
@@ -1039,7 +1039,7 @@ async def join_waitlist(payload: WaitlistJoin):
     )
     return {"ok": True, "message": "Added to waitlist"}
 
-@api_router.get("/waitlist")
+@api.get("/waitlist")
 async def list_waitlist(course_slug: Optional[str] = None):
     query = {"course_slug": course_slug} if course_slug else {}
     items = await db.waitlist.find(query, {"_id": 0}).sort("created_at", -1).to_list(1000)
