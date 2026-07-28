@@ -714,11 +714,12 @@ async def checkout(body: EnrollIn, user: dict = Depends(get_current_user)):
     course = next((c for c in COURSES if c["slug"] == body.course_slug), None)
     if not course:
         raise HTTPException(status_code=404, detail="Course not found")
-        db_course = await db.courses.find_one({"slug": body.course_slug}, {"_id": 0})
+
+    db_course = await db.courses.find_one({"slug": body.course_slug}, {"_id": 0})
     effective = db_course or course
     if not effective.get("is_available", False):
         raise HTTPException(status_code=403, detail="This course is coming soon and is not available for purchase yet.")
-
+        
     # Check if already enrolled
     existing = await db.enrollments.find_one({"user_id": str(user["_id"]), "course_slug": body.course_slug, "status": "paid"})
     if existing:
@@ -2375,7 +2376,7 @@ async def seed_content():
         for i, c in enumerate(COURSES):
             doc = {**c, "order": i}
             await db.courses.insert_one(doc)
-            await db.courses.update_many(
+    await db.courses.update_many(
         {"is_available": {"$exists": False}},
         {"$set": {"is_available": False}},
     )
