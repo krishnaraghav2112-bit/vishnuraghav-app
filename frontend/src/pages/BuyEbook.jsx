@@ -131,12 +131,6 @@ const benefits = [
     "Lifetime access — download once, keep forever",
   ];
 
-  const testimonials = [
-    { name: "Riya Patel", role: "Reader · Mumbai", text: "This workbook felt like Vishnu wrote every page just for me. The overthinking exercises actually work — I sleep better now.", stars: 5 },
-    { name: "Aditya Kumar", role: "Student · Lucknow", text: "The most honest self-help book I've read in Hindi. Cheap in price, priceless in value. Worth 10× the cost.", stars: 5 },
-    { name: "Meera Verma", role: "MBA Student · Pune", text: "Downloaded, printed, and now it sits on my desk. Every morning 5 minutes with it changes my whole day.", stars: 5 },
-  ];
-
   const faqs = [
     { q: "How do I get the eBook after paying?", a: "Instantly. As soon as your payment succeeds, a download button appears on this page. You'll also see it in your dashboard forever." },
     { q: "Is this a physical book or PDF?", a: "It's a beautifully-designed 141-page PDF eBook. Read it on your phone, laptop, tablet, or print it — it's yours forever." },
@@ -363,7 +357,7 @@ const benefits = [
           "I write what you feel but cannot say — because those words deserve to exist in the world."
         </blockquote>
         <p className="text-muted-foreground max-w-2xl mx-auto leading-relaxed mb-8">
-          Vishnu Raghav is a bestselling Hindi author, life coach, and educator. His books <em>Dagmagate Pair</em>, <em>Jo Mai Kah Na Saka</em>, and the upcoming <em>Uljha Jeevan</em> have reached thousands of readers across India. Published by BlueRose ONE (New Delhi · London).
+          Vishnu Raghav is a bestselling Hindi author, life coach, and educator. His books <em>Dagmagate Pair</em>, <em>Jo Mai Kah Na Saka</em>, and the upcoming <em>Uljha Jeevan</em> have reached thousands of readers across India.
         </p>
         <div className="flex flex-wrap justify-center gap-6 md:gap-10 text-center">
           <div><div className="text-2xl md:text-3xl font-black text-brand-gold">3+</div><div className="text-xs text-muted-foreground uppercase tracking-widest mt-1">Books Published</div></div>
