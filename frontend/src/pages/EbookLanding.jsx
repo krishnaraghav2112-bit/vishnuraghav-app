@@ -90,55 +90,15 @@ export default function EbookLanding() {
         </div>
       </section>
 
-      {/* 10 — Chapter features */}
-      <section className="px-5 lg:px-10 py-14 max-w-5xl mx-auto">
-        <h2 className="font-serif font-black text-2xl lg:text-3xl text-center mb-10">हर अध्याय में आपको मिलेगा</h2>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          {[
-            ["🧠", "Brain Science", "आपका दिमाग कैसे काम करता है"],
-            ["❤️", "Psychology", "भावनाओं की जड़ें"],
-            ["🔍", "Self Discovery", "खुद को गहराई से जानना"],
-            ["✍️", "Journaling", "लिखकर विचारों को साफ़ करना"],
-            ["🎯", "Practical Exercise", "रोज़ का 10 min अभ्यास"],
-            ["🚨", "Emergency Tool", "जब मन घबरा जाए — तुरंत काम आने वाला"],
-          ].map(([icon, title, desc], i) => (
-            <div key={i} className="bg-ink-800 border border-white/[0.07] rounded-xl p-5">
-              <div className="text-3xl mb-2">{icon}</div>
-              <h3 className="font-bold text-base mb-1">{title}</h3>
-              <p className="text-xs text-muted-foreground leading-relaxed">{desc}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* 11 — Final buy */}
-      <section className="px-5 lg:px-10 py-16 bg-gradient-to-b from-ink-900 to-ink-950 border-t border-white/[0.05]">
-        <div className="max-w-2xl mx-auto text-center">
-          <div className="inline-block px-3 py-1 rounded-full bg-red-500/15 border border-red-500/40 text-red-400 text-[11px] font-bold uppercase tracking-widest mb-6">
-            67% OFF · Limited Launch Price
-          </div>
-          <h2 className="font-serif font-black text-3xl lg:text-4xl mb-3">
-            उलझा जीवन — पूरी Workbook
-          </h2>
-          <p className="text-sm text-muted-foreground mb-8">21 दिनों का माइंड रीसेट सिस्टम · PDF · Yours Forever</p>
-
-          <div className="flex items-baseline justify-center gap-3 mb-6">
-            <span className="text-5xl font-black text-brand-gold">₹199</span>
-            <span className="text-xl text-muted-foreground line-through">₹597</span>
-          </div>
-
-          <button onClick={goBuy} className="w-full max-w-md mx-auto flex items-center justify-center gap-2 bg-gold-gradient text-ink-950 px-8 py-4 rounded-xl font-extrabold text-lg hover:-translate-y-0.5 hover:shadow-2xl hover:shadow-brand-gold/40 transition-all animate-gold-pulse btn-shimmer">
-            🔥 Get the Workbook — ₹199
-          </button>
-
-          <div className="flex flex-wrap justify-center gap-4 mt-6 text-xs text-muted-foreground">
-            <span className="flex items-center gap-1.5"><Lock className="w-3.5 h-3.5" /> Secure Razorpay</span>
-            <span className="flex items-center gap-1.5"><Zap className="w-3.5 h-3.5" /> Instant Delivery</span>
-            <span className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5" /> Yours Forever</span>
-          </div>
-
-          <p className="text-sm text-muted-foreground mt-10 italic">— विष्णु राघव</p>
-        </div>
+       {/* Closing CTA — hooks scrollers to /buy-ebook where all price info lives */}
+      <section className="px-5 lg:px-10 py-14 text-center">
+        <button
+          onClick={goBuy}
+          className="inline-flex items-center gap-2 bg-gold-gradient text-ink-950 px-8 py-4 rounded-xl font-extrabold text-lg hover:-translate-y-0.5 hover:shadow-2xl hover:shadow-brand-gold/40 transition-all animate-gold-pulse btn-shimmer"
+        >
+          🔥 पूरी Workbook पाएँ →
+        </button>
+        <p className="text-xs text-muted-foreground mt-4 italic">— विष्णु राघव</p>
       </section>
 
       {/* Sticky mobile buy bar */}
