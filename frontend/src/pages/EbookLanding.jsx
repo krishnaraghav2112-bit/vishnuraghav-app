@@ -90,17 +90,6 @@ export default function EbookLanding() {
         </div>
       </section>
 
-       {/* Closing CTA — hooks scrollers to /buy-ebook where all price info lives */}
-      <section className="px-5 lg:px-10 py-14 text-center">
-        <button
-          onClick={goBuy}
-          className="inline-flex items-center gap-2 bg-gold-gradient text-ink-950 px-8 py-4 rounded-xl font-extrabold text-lg hover:-translate-y-0.5 hover:shadow-2xl hover:shadow-brand-gold/40 transition-all animate-gold-pulse btn-shimmer"
-        >
-          🔥 पूरी Workbook पाएँ →
-        </button>
-        <p className="text-xs text-muted-foreground mt-4 italic">— विष्णु राघव</p>
-      </section>
-
       {/* Sticky mobile buy bar */}
       <div className="fixed bottom-0 left-0 right-0 lg:hidden z-40 bg-ink-900/95 backdrop-blur border-t border-brand-gold/30 px-4 py-3 flex items-center gap-3">
         <div className="flex-1">
