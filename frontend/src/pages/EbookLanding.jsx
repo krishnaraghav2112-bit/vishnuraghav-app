@@ -140,6 +140,18 @@ export default function EbookLanding() {
               उस बात के बारे में हमारी कहानी से आता है।
             </p>
           </div>
+
+          <div className="mt-6 text-center">
+            <a
+              href="/Uljha-Jeevan-FREE-Sample.pdf"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 bg-ink-800 border border-brand-gold/40 text-brand-gold px-6 py-3 rounded-xl font-bold text-sm hover:bg-brand-gold/10 transition-colors"
+            >
+              📖 पूरा Free Sample पढ़ें (12 pages)
+            </a>
+            <p className="text-[11px] text-white/40 mt-2">Opens in a new tab · No email required</p>
+          </div>
         </div>
       </section>
 
