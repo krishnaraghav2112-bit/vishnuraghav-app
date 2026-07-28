@@ -2355,7 +2355,7 @@ async def admin_toggle_course_availability(
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Course not found")
     return {"ok": True, "slug": slug, "is_available": bool(body.is_available)}
-Save the file. Backend done. ✅
+
 @api.api_route("/", methods=["GET", "HEAD"])
 async def root():
     return {
