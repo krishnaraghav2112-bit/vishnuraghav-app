@@ -2340,7 +2340,7 @@ async def admin_book_orders(_: dict = Depends(require_admin)):
         orders.append(_serialize_book_order(o))
     return orders
     class CourseAvailabilityIn(BaseModel):
-    is_available: bool
+        is_available: bool
 
 @api.patch("/admin/courses/{slug}/availability")
 async def admin_toggle_course_availability(
