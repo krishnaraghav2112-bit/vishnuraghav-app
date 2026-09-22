@@ -5,6 +5,43 @@ import { toast } from "sonner";
 import api, { formatApiError } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 
+// ── YouTube URL cleaner (accepts any format, returns embed URL) ──
+function normalizeYoutubeUrl(url) {
+  if (!url) return "";
+  const u = String(url).trim();
+  if (!u) return "";
+
+  // Playlist ID
+  const playlistMatch = u.match(/[?&]list=([a-zA-Z0-9_-]{13,})/);
+  if (playlistMatch) {
+    return `https://www.youtube.com/embed/videoseries?list=${playlistMatch[1]}`;
+  }
+
+  // Single video ID from watch, youtu.be, shorts, embed, live
+  const videoPatterns = [
+    /[?&]v=([a-zA-Z0-9_-]{11})/,
+    /youtu\.be\/([a-zA-Z0-9_-]{11})/,
+    /\/shorts\/([a-zA-Z0-9_-]{11})/,
+    /\/embed\/([a-zA-Z0-9_-]{11})/,
+    /\/live\/([a-zA-Z0-9_-]{11})/,
+  ];
+  for (const pat of videoPatterns) {
+    const m = u.match(pat);
+    if (m) return `https://www.youtube.com/embed/${m[1]}`;
+  }
+
+  // Bare IDs
+  if (/^[a-zA-Z0-9_-]{11}$/.test(u)) return `https://www.youtube.com/embed/${u}`;
+  if (/^(PL|UU|LL|FL|RD|OL)[a-zA-Z0-9_-]{11,}$/.test(u)) {
+    return `https://www.youtube.com/embed/videoseries?list=${u}`;
+  }
+
+  // Already embed
+  if (u.includes("youtube.com/embed/")) return u;
+
+  return "";
+}
+
 export default function CoursePlayer({ onOpenAuth, onOpenPay }) {
   const { slug } = useParams();
   const nav = useNavigate();
@@ -83,7 +120,7 @@ export default function CoursePlayer({ onOpenAuth, onOpenPay }) {
             <div className="aspect-video bg-ink-950 relative">
               <iframe
                 data-testid="course-video"
-                src={c.youtube_playlist}
+                  src={normalizeYoutubeUrl(c.youtube_playlist)}
                 title={c.title}
                 className="absolute inset-0 w-full h-full"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
