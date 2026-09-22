@@ -1027,6 +1027,8 @@ async def check_access(course_slug: str, user: dict = Depends(get_current_user))
     if not enrollment:
         return {"access": False}
     course = next((c for c in COURSES if c["slug"] == course_slug), None)
+    if course:
+        course["youtube_playlist"] = normalize_youtube_url(course.get("youtube_playlist", ""))
     return {
         "access": True,
         "enrollment_id": str(enrollment["_id"]),
