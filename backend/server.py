@@ -236,6 +236,47 @@ async def require_admin(user: dict = Depends(get_current_user)) -> dict:
         raise HTTPException(status_code=403, detail="Admin only")
     return user
 
+# ───── YouTube URL cleaner ─────
+def normalize_youtube_url(url: str) -> str:
+    """Turn ANY YouTube link (share, watch, playlist, shorts, embed) into a clean embed URL.
+    Returns empty string if no valid ID found."""
+    if not url:
+        return ""
+    u = str(url).strip()
+    if not u:
+        return ""
+
+    # 1. Try to find a playlist ID (starts with PL, UU, LL, FL, RD, OL — 13+ chars)
+    playlist_match = re.search(r"[?&]list=([a-zA-Z0-9_-]{13,})", u)
+    if playlist_match:
+        pid = playlist_match.group(1)
+        return f"https://www.youtube.com/embed/videoseries?list={pid}"
+
+    # 2. Try to find a single video ID (11 chars)
+    video_patterns = [
+        r"[?&]v=([a-zA-Z0-9_-]{11})",           # watch?v=XXX
+        r"youtu\.be/([a-zA-Z0-9_-]{11})",       # youtu.be/XXX
+        r"/shorts/([a-zA-Z0-9_-]{11})",         # /shorts/XXX
+        r"/embed/([a-zA-Z0-9_-]{11})",          # /embed/XXX
+        r"/live/([a-zA-Z0-9_-]{11})",           # /live/XXX
+    ]
+    for pat in video_patterns:
+        m = re.search(pat, u)
+        if m:
+            return f"https://www.youtube.com/embed/{m.group(1)}"
+
+    # 3. Maybe admin pasted just a raw ID
+    if re.fullmatch(r"[a-zA-Z0-9_-]{11}", u):
+        return f"https://www.youtube.com/embed/{u}"
+    if re.fullmatch(r"(PL|UU|LL|FL|RD|OL)[a-zA-Z0-9_-]{11,}", u):
+        return f"https://www.youtube.com/embed/videoseries?list={u}"
+
+    # 4. Already an embed URL — keep as-is
+    if "youtube.com/embed/" in u:
+        return u
+
+    return ""
+
 # ───── App ─────
 app = FastAPI(title="Vishnu Raghav Platform")
 api = APIRouter(prefix="/api")
@@ -579,7 +620,9 @@ async def list_courses():
     cursor = db.courses.find({}, {"_id": 0}).sort("order", 1)
     items = await cursor.to_list(100)
     if not items:
-        return COURSES
+        items = list(COURSES)
+    for c in items:
+        c["youtube_playlist"] = normalize_youtube_url(c.get("youtube_playlist", ""))
     return items
 
 @api.get("/courses/{slug}")
@@ -589,6 +632,7 @@ async def get_course(slug: str):
         course = next((c for c in COURSES if c["slug"] == slug), None)
     if not course:
         raise HTTPException(status_code=404, detail="Course not found")
+    course["youtube_playlist"] = normalize_youtube_url(course.get("youtube_playlist", ""))
     return course
 
 @api.get("/blog")
