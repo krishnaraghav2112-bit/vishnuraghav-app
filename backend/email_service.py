@@ -362,7 +362,11 @@ def pdf_purchase_confirmation_template(name: str, pdf_title: str, pdf_url: str, 
           </ul>
         </div>
         <p style="margin:18px 0 6px;color:{BRAND_TEXT};font-size:14px;">Aap ise apni Dashboard se bhi kabhi bhi dobara download kar sakte hain — lifetime access.</p>
-        <p style="margin:0;color:{BRAND_MUTED};font-size:13px;">Questions? Reply to this email or WhatsApp us at +91 84391 11502.</p>
+        <div style="margin:20px 0;padding:16px;background:#0f0a1a;border:1px solid #2a1f3a;border-radius:10px;text-align:center;">
+          <p style="margin:0 0 12px;color:{BRAND_TEXT};font-size:14px;">Koi bhi sawaal? Vishnu se seedha WhatsApp par baat karo:</p>
+          <a href="https://wa.me/918439111502?text=Namaste%20Vishnu%2C%20maine%20workbook%20liya%20hai" style="display:inline-block;padding:12px 24px;background:#25D366;color:#ffffff;text-decoration:none;font-family:Arial,Helvetica,sans-serif;font-size:14px;font-weight:700;border-radius:8px;">💬 Chat on WhatsApp</a>
+          <p style="margin:12px 0 0;color:{BRAND_MUTED};font-size:12px;">Ya is email ka reply karo — Vishnu khud padhta hai.</p>
+        </div>
     """
     return "Your Mind Health Workbook — Vishnu Raghav 📥", _shell(inner, preheader="Download link inside — your workbook is ready.")
 
@@ -377,4 +381,4 @@ async def send_pdf_purchase_confirmation(
     if not email:
         return None
     subject, html = pdf_purchase_confirmation_template(name, pdf_title, pdf_url, amount)
-    return await send_email(email, subject, html)
+    return await send_email(email, subject, html, reply_to='vishnuraghav955@gmail.com')
