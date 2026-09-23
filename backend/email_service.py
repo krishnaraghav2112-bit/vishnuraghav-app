@@ -321,7 +321,7 @@ async def send_book_order_confirmation(
     subject, html = book_order_confirmation_template(
         name, order_id, items, subtotal, shipping, cod_fee, discount, total, payment_mode, address
     )
-     return await send_email(email, subject, html, reply_to="vishnuraghav955@gmail.com")
+    return await send_email(email, subject, html, reply_to="vishnuraghav955@gmail.com")
 
 async def send_book_order_admin_notify(
     order_id: str,
