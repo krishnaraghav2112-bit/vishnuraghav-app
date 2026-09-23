@@ -262,7 +262,11 @@ def book_order_confirmation_template(
         {_btn("Track Your Order", FRONTEND_URL + "/dashboard")}
 
         <p style="margin:18px 0 6px;color:{BRAND_TEXT};font-size:14px;">Each book carries a personal signature from Vishnu — a small mark of connection between you and the words.</p>
-        <p style="margin:0;color:{BRAND_MUTED};font-size:13px;">Questions? Just reply to this email or WhatsApp us at +91 84391 11502.</p>
+       <div style="margin:20px 0;padding:16px;background:#0f0a1a;border:1px solid #2a1f3a;border-radius:10px;text-align:center;">
+          <p style="margin:0 0 12px;color:{BRAND_TEXT};font-size:14px;">Koi bhi sawaal? Vishnu se seedha WhatsApp par baat karo:</p>
+          <a href="https://wa.me/918439111502?text=Namaste%20Vishnu%2C%20maine%20abhi%20order%20kiya%20hai" style="display:inline-block;padding:12px 24px;background:#25D366;color:#ffffff;text-decoration:none;font-family:Arial,Helvetica,sans-serif;font-size:14px;font-weight:700;border-radius:8px;">💬 Chat on WhatsApp</a>
+          <p style="margin:12px 0 0;color:{BRAND_MUTED};font-size:12px;">Ya is email ka reply karo — Vishnu khud padhta hai.</p>
+        </div>
     """
     return "Order Confirmed — Vishnu Raghav ✍️", _shell(inner, preheader=f"Your signed copies are on the way. Order #{order_id[-8:].upper()}.")
 
