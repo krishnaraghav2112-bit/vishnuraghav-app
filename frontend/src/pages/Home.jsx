@@ -484,10 +484,8 @@ const submitWaitlist = async (email) => {
                 Vishnu Raghav is an author, motivator, and life coach who works on inner beauty, principles, and spiritual thoughts. He believes understanding the roots of our emotions makes everything easier.
               </p>
               <p className="text-muted-foreground mb-5 leading-relaxed">
-                Connect via Instagram <span className="text-brand-gold">@vishnuraghav21</span> and YouTube <span className="text-brand-gold">@vishnuraghav</span>.
-              </p>
               <div className="flex gap-3 flex-wrap">
-                {[["3", "Books"], ["4.9★", "Avg Rating"], ["Hindi", "Literature"], ["Pan India", "Readership"]].map(([n, l]) => (
+                {[["4", "Books"], ["4.9★", "Avg Rating"], ["Hindi", "Literature"], ["Pan India", "Readership"]].map(([n, l]) => (
                   <div key={l} className="glass border border-white/[0.08] rounded-xl px-4 py-2.5 text-center min-w-[88px]">
                     <strong className="block text-xl font-black text-gold-gradient">{n}</strong>
                     <span className="text-[10px] text-muted-foreground uppercase tracking-wider">{l}</span>
@@ -559,7 +557,7 @@ const submitWaitlist = async (email) => {
         </div>
 
         <div className="flex gap-3 flex-wrap justify-center mt-12">
-          {[[BookOpen, "3 Books", "Published"], [Shield, "Secure", "Video Access"], [Award, "Auto Cert", "On Completion"], [Lock, "Razorpay", "Safe Payment"], [Star, "4.9 / 5", "Rating"]].map(([Icon, n, l], i) => (
+          {[[BookOpen, "4 Books", "Published"], [Shield, "Secure", "Video Access"], [Lock, "Razorpay", "Safe Payment"], [Star, "4.9 / 5", "Rating"]].map(([Icon, n, l], i) => (
             <div key={i} className="glass border border-brand-gold/15 rounded-xl px-4 py-2.5 flex items-center gap-2.5 hover:border-brand-gold hover:-translate-y-0.5 transition-all">
               <Icon className="w-4 h-4 text-brand-gold" />
               <div>
