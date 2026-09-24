@@ -35,6 +35,7 @@ import hashlib
 SHIPROCKET_EMAIL = os.environ.get("SHIPROCKET_EMAIL", "").strip()
 SHIPROCKET_PASSWORD = os.environ.get("SHIPROCKET_PASSWORD", "").strip()
 SHIPROCKET_PICKUP_LOCATION = os.environ.get("SHIPROCKET_PICKUP_LOCATION", "Primary").strip()
+CRON_SECRET = os.environ.get("CRON_SECRET", "").strip()
 SHIPROCKET_ENABLED = bool(SHIPROCKET_EMAIL and SHIPROCKET_PASSWORD)
 _shiprocket_token: dict = {"token": None, "expires_at": None}
 
@@ -2408,6 +2409,75 @@ async def track_book_order(order_id: str, user: dict = Depends(get_current_user)
         tracking = await fetch_shiprocket_tracking(order["awb"])
     return {"order": _serialize_book_order(order), "tracking": tracking}
 
+# ═══════════════════════════════════════════════════════════════════════
+# ─── Cart Abandonment Task (called by external cron) ──────────────────
+# ═══════════════════════════════════════════════════════════════════════
+@api.post("/tasks/abandoned-cart-emails")
+async def run_abandoned_cart_task(request: Request):
+    """Cron-triggered. Sends one reminder email per pending book order
+    that is 2-72h old and hasn't been reminded yet.
+    Protected by X-Cron-Secret header matching CRON_SECRET env var."""
+    if not CRON_SECRET:
+        raise HTTPException(status_code=503, detail="Cron secret not configured")
+    if request.headers.get("x-cron-secret", "") != CRON_SECRET:
+        raise HTTPException(status_code=403, detail="Forbidden")
+
+    now = datetime.now(timezone.utc)
+    window_start = now - timedelta(hours=72)
+    window_end = now - timedelta(hours=2)
+
+    cursor = db.book_orders.find({
+        "status": "pending",
+        "payment_mode": {"$ne": "cod"},
+        "reminder_sent": {"$ne": True},
+        "created_at": {"$gte": window_start, "$lte": window_end},
+    })
+
+    scanned = sent = skipped = 0
+    async for order in cursor:
+        scanned += 1
+        try:
+            # Skip if user has any confirmed order created after this pending one
+            user_id = order.get("user_id")
+            if user_id:
+                confirmed = await db.book_orders.find_one({
+                    "user_id": user_id,
+                    "status": {"$in": ["confirmed", "paid", "shipped", "delivered"]},
+                    "created_at": {"$gte": order.get("created_at")},
+                })
+                if confirmed:
+                    await db.book_orders.update_one(
+                        {"_id": order["_id"]},
+                        {"$set": {"reminder_sent": True, "reminder_sent_at": now, "reminder_skipped_reason": "already_purchased"}},
+                    )
+                    skipped += 1
+                    continue
+
+            email = order.get("email", "")
+            if not email:
+                await db.book_orders.update_one(
+                    {"_id": order["_id"]},
+                    {"$set": {"reminder_sent": True, "reminder_sent_at": now, "reminder_skipped_reason": "no_email"}},
+                )
+                skipped += 1
+                continue
+
+            await email_service.send_cart_abandonment_email(
+                name=order.get("name", ""),
+                email=email,
+                order_id=str(order["_id"]),
+                items=order.get("items") or [],
+                total=order.get("amount", 0),
+            )
+            await db.book_orders.update_one(
+                {"_id": order["_id"]},
+                {"$set": {"reminder_sent": True, "reminder_sent_at": now}},
+            )
+            sent += 1
+        except Exception:
+            logger.exception(f"Cart abandonment email failed for order {order.get('_id')}")
+
+    return {"scanned": scanned, "sent": sent, "skipped": skipped}
 @api.get("/admin/book-orders")
 async def admin_book_orders(_: dict = Depends(require_admin)):
     cursor = db.book_orders.find({}).sort("created_at", -1)
