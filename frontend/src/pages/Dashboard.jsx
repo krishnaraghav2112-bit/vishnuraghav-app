@@ -135,27 +135,7 @@ export default function Dashboard({ onOpenAuth }) {
             </>
           )}
 
-          {tab === "bookorders" && (
-            <>
-              <SectionHead>My Book Orders</SectionHead>
-              {bookOrders.length === 0 ? (
-                <div className="text-center py-12">
-                  <Package className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
-                  <p className="text-muted-foreground text-sm">No book orders yet.</p>
-                  <button onClick={() => nav("/")}
-                    className="mt-4 px-5 py-2 rounded-xl text-xs font-bold bg-gold-gradient text-ink-950">
-                    Browse Books
-                  </button>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {bookOrders.map((o) => (
-                    <BookOrderCard key={o.id} order={o} />
-                  ))}
-                </div>
-              )}
-            </>
-          )}
+        
           {tab === "bookorders" && (
             <>
               <SectionHead>My Book Orders</SectionHead>
