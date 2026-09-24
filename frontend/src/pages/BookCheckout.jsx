@@ -32,8 +32,7 @@ const COD_EXTRA = 40;
 export default function BookCheckout({ onOpenAuth }) {
   const { user, loading } = useAuth();
   const nav = useNavigate();
-  const { items, subtotal, shipping, updateQty, removeFromCart, clearCart } = useCart();
-
+  const { items, subtotal, shipping, updateQty, removeFromCart, clearCart, addToCart } = useCart();
   const [step, setStep] = useState(1);
   const [payMode, setPayMode] = useState("prepaid");
   const [busy, setBusy] = useState(false);
@@ -41,6 +40,12 @@ export default function BookCheckout({ onOpenAuth }) {
   const [couponCode, setCouponCode] = useState("");
   const [couponResult, setCouponResult] = useState(null);
   const [couponBusy, setCouponBusy] = useState(false);
+  const [allBooks, setAllBooks] = useState([]);
+useEffect(() => {
+  api.get("/books")
+    .then((r) => setAllBooks(Array.isArray(r.data) ? r.data : []))
+    .catch(() => {});
+}, []);
 
   const discount = couponResult?.valid ? couponResult.discount : 0;
   const baseTotal = subtotal + shipping - discount;
@@ -261,6 +266,47 @@ export default function BookCheckout({ onOpenAuth }) {
               })}
             </div>
           </div>
+          
+           {/* ADD MORE BOOKS — inline picker */}
+        {(() => {
+          const inCartSlugs = new Set(items.map(i => i.book.slug));
+          const otherBooks = allBooks.filter(
+            b => !inCartSlugs.has(b.slug) && b.status !== "upcoming"
+          );
+          if (otherBooks.length === 0) return null;
+          return (
+            <div className="bg-ink-900 border border-white/[0.07] rounded-2xl p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <Plus className="w-4 h-4 text-brand-gold" />
+                <h2 className="font-bold text-sm">Add more books to your order</h2>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {otherBooks.map((b) => {
+                  const price = parseInt(b.price?.replace(/[^\d]/g, "") || "249");
+                  return (
+                    <div key={b.slug} className="flex gap-3 items-center p-3 rounded-xl border border-white/[0.06] bg-ink-800/50 hover:border-brand-gold/30 transition-colors">
+                      {b.cover_image && (
+                        <img src={b.cover_image} alt={b.title} className="w-12 h-16 object-cover rounded-md border border-white/10 flex-shrink-0" />
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <div className="font-serif font-bold text-sm truncate">{b.title}</div>
+                        {b.hindi && <div className="text-xs text-brand-gold italic truncate">{b.hindi}</div>}
+                        <div className="text-xs text-muted-foreground mt-0.5">₹{price}</div>
+                      </div>
+                      <button
+                        onClick={() => addToCart(b)}
+                        className="px-3 py-1.5 rounded-lg text-xs font-bold bg-brand-gold/10 text-brand-gold border border-brand-gold/25 hover:bg-brand-gold/20 transition-colors flex-shrink-0 flex items-center gap-1"
+                      >
+                        <Plus className="w-3 h-3" /> Add
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })()}
+
 
           {/* ADDRESS */}
           <div className="bg-ink-900 border border-white/[0.07] rounded-2xl p-5">
