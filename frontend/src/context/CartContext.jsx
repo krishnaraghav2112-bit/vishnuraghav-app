@@ -1,12 +1,34 @@
 // frontend/src/context/CartContext.jsx
 
-import React, { createContext, useContext, useState, useCallback } from "react";
+import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
 import { toast } from "sonner";
 
 const CartContext = createContext(null);
+const CART_STORAGE_KEY = "vr_cart_v1";
+
+// Load cart from browser storage once, when the app first opens
+function loadInitialCart() {
+  try {
+    const raw = localStorage.getItem(CART_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
 
 export function CartProvider({ children }) {
-  const [items, setItems] = useState([]); // [{book, quantity}]
+  const [items, setItems] = useState(loadInitialCart); // [{book, quantity}]
+
+  // Save to browser storage every time cart changes
+  useEffect(() => {
+    try {
+      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
+    } catch {
+      // storage full or blocked — silently ignore
+    }
+  }, [items]);
 
   const addToCart = useCallback((book, qty = 1) => {
     setItems(prev => {
