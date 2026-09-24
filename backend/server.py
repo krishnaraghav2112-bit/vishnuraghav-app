@@ -19,6 +19,9 @@ from bson import ObjectId
 
 from fastapi import FastAPI, APIRouter, HTTPException, Request, Response, Depends, UploadFile, File
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import JSONResponse
+from collections import defaultdict, deque
+import time
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel, Field, EmailStr, BeforeValidator, ConfigDict
@@ -2520,6 +2523,52 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+# ═══════════════════════════════════════════════════════════════════════
+# ─── Rate limiting (in-memory, per-IP, protects email quota) ──────────
+# ═══════════════════════════════════════════════════════════════════════
+# Max requests per window (seconds) per IP, per exact API path.
+# Only POST requests to these paths are rate-limited.
+RATE_LIMITS = {
+    "/api/auth/register":        (5, 3600),   # 5 signups per hour per IP
+    "/api/auth/login":           (10, 60),    # 10 login attempts per minute (brute-force protection)
+    "/api/newsletter/subscribe": (3, 3600),   # 3 subscriptions per hour
+    "/api/contact":              (3, 3600),   # 3 contact messages per hour
+    "/api/waitlist/join":        (5, 3600),   # 5 waitlist joins per hour
+    "/api/assessment/submit":    (5, 3600),   # 5 assessments per hour
+}
+_rate_buckets: dict = defaultdict(deque)
+
+def _get_client_ip(request: Request) -> str:
+    """Get the true client IP even when behind Render's reverse proxy."""
+    xff = request.headers.get("x-forwarded-for", "")
+    if xff:
+        return xff.split(",")[0].strip()
+    if request.client:
+        return request.client.host
+    return "unknown"
+
+@app.middleware("http")
+async def rate_limit_middleware(request: Request, call_next):
+    if request.method == "POST":
+        path = request.url.path
+        if path in RATE_LIMITS:
+            max_req, window = RATE_LIMITS[path]
+            ip = _get_client_ip(request)
+            key = f"{path}:{ip}"
+            now = time.time()
+            bucket = _rate_buckets[key]
+            # Drop timestamps older than the window
+            while bucket and bucket[0] < now - window:
+                bucket.popleft()
+            if len(bucket) >= max_req:
+                retry_after = max(1, int(window - (now - bucket[0])))
+                return JSONResponse(
+                    status_code=429,
+                    content={"detail": f"Too many requests. Please wait {retry_after} seconds before trying again."},
+                    headers={"Retry-After": str(retry_after)},
+                )
+            bucket.append(now)
+    return await call_next(request)
 
 logging.basicConfig(level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
