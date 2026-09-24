@@ -382,3 +382,55 @@ async def send_pdf_purchase_confirmation(
         return None
     subject, html = pdf_purchase_confirmation_template(name, pdf_title, pdf_url, amount)
     return await send_email(email, subject, html, reply_to='vishnuraghav955@gmail.com')
+
+     # ───────────────────────── Cart Abandonment Email ──────────────────
+def cart_abandonment_template(name: str, order_id: str, items: list, total: int) -> tuple[str, str]:
+    name_clean = escape((name or "friend").strip())
+
+    items_html = ""
+    for it in items:
+        title = escape(str(it.get("book_title", "Signed Book")))
+        qty = int(it.get("quantity", 1))
+        unit_price = int(it.get("unit_price", 0))
+        items_html += (
+            f'<tr>'
+            f'<td style="padding:8px 0;border-bottom:1px solid #2a1f3a;color:{BRAND_TEXT};font-size:14px;">'
+            f'{title} <span style="color:{BRAND_MUTED};font-size:12px;">× {qty}</span>'
+            f'</td>'
+            f'<td style="padding:8px 0;border-bottom:1px solid #2a1f3a;color:{BRAND_TEXT};font-size:14px;text-align:right;">₹{unit_price * qty}</td>'
+            f'</tr>'
+        )
+
+    resume_url = f"{FRONTEND_URL}/book-checkout"
+
+    inner = f"""
+        <h1 style="font-family:Georgia,serif;font-size:24px;color:{BRAND_TEXT};margin:0 0 14px;">You left something behind 📚</h1>
+        <p style="margin:0 0 14px;color:{BRAND_TEXT};">Hi {name_clean}, aapne kuch signed copies apne cart mein rakhi thi lekin order abhi tak complete nahi hua. Koi baat nahi — hum aapke books abhi bhi ready rakhe hain.</p>
+
+        <div style="background:{BRAND_BG};border:1px solid #2a1f3a;border-radius:10px;padding:18px;margin:18px 0;">
+          <div style="color:{BRAND_MUTED};font-size:12px;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">Waiting in your cart</div>
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+            {items_html}
+            <tr><td style="padding:10px 0 0;border-top:1px solid #2a1f3a;color:{BRAND_TEXT};font-size:15px;font-weight:700;">Total</td><td style="padding:10px 0 0;border-top:1px solid #2a1f3a;text-align:right;color:{BRAND_GOLD};font-size:16px;font-weight:700;">₹{total}</td></tr>
+          </table>
+        </div>
+
+        {_btn("Complete Your Order", resume_url)}
+
+        <p style="margin:18px 0 6px;color:{BRAND_TEXT};font-size:14px;">Har book Vishnu ke haath se signed hoti hai — ek personal touch jo shelf se zyada dil ke paas rehta hai.</p>
+        <p style="margin:0;color:{BRAND_MUTED};font-size:13px;">Questions? Just reply to this email or WhatsApp us at +91 84391 11502.</p>
+    """
+    return "Complete your order — Vishnu Raghav 📚", _shell(inner, preheader="Your signed books are still waiting — complete your order.")
+
+
+async def send_cart_abandonment_email(
+    name: str,
+    email: str,
+    order_id: str,
+    items: list,
+    total: int,
+) -> Optional[str]:
+    if not email:
+        return None
+    subject, html = cart_abandonment_template(name, order_id, items, total)
+    return await send_email(email, subject, html)
