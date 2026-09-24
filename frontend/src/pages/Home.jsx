@@ -177,10 +177,9 @@ const submitWaitlist = async (email) => {
 
             <div className="flex gap-8 flex-wrap">
               {[
-                ["3+", "Books Published"],
-                ["2K+", "Students Enrolled"],
+                ["4", "Books Published"],
+                ["1K", "Students Enrolled"],
                 ["Active", "YouTube Channel"],
-                ["4.9★", "Avg Rating"],
               ].map(([n, l]) => (
                 <div key={l}>
                   <span className="block text-2xl font-black text-gold-gradient leading-none">{n}</span>
@@ -485,7 +484,7 @@ const submitWaitlist = async (email) => {
                 Vishnu Raghav is an author, motivator, and life coach who works on inner beauty, principles, and spiritual thoughts. He believes understanding the roots of our emotions makes everything easier.
               </p>
               <p className="text-muted-foreground mb-5 leading-relaxed">
-                Published by BlueRose ONE (New Delhi · London), his books have reached readers across India. Connect via Instagram <span className="text-brand-gold">@vishnuraghav21</span> and YouTube <span className="text-brand-gold">@vishnuraghav</span>.
+                Connect via Instagram <span className="text-brand-gold">@vishnuraghav21</span> and YouTube <span className="text-brand-gold">@vishnuraghav</span>.
               </p>
               <div className="flex gap-3 flex-wrap">
                 {[["3", "Books"], ["4.9★", "Avg Rating"], ["Hindi", "Literature"], ["Pan India", "Readership"]].map(([n, l]) => (
@@ -538,8 +537,7 @@ const submitWaitlist = async (email) => {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           {[
-            ["Jo Mai Kah Na Saka felt like Vishnu wrote every word just for me. I cried reading it — in the best way.", "Riya Patel", "Reader · Mumbai", "RP", "Verified Purchase"],
-            ["The Time Management course completely transformed how I structure my day. I accomplish more in 4 hours than I used to in 8.", "Sunita Mishra", "Professional · Delhi", "SM", "Course Graduate"],
+            ["Jo Mai Kah Na Saka felt like Vishnu wrote every word just for me. I cried reading it.", "Riya Patel", "Reader · Mumbai", "RP", "Verified Purchase"],
             ["Dagmagate Pair is the most honest Hindi book I've ever read. He writes what we all think but never dare to say.", "Aditya Kumar", "Student · Lucknow", "AK", "Verified Purchase"],
             ["His YouTube content on mind control helped me through the hardest phase of my life. Truly life-changing.", "Meera Verma", "MBA Student · Pune", "MV", "Verified Subscriber"],
           ].map(([text, name, loc, av, vtype], i) => (
@@ -702,7 +700,6 @@ const submitWaitlist = async (email) => {
             Join readers getting Vishnu's best ideas on productivity, mindset, and growth every Monday morning.
           </p>
           <div className="inline-flex items-center gap-2 bg-brand-goldSoft border border-brand-gold/30 rounded-xl px-4 py-2.5 mt-5 text-sm font-bold text-brand-gold">
-            🎁 Free: "10 Rules for a Disciplined Mind" PDF on signup
           </div>
           <div className="flex gap-2 mt-6 max-w-md mx-auto min-h-[44px]">
             {nlSuccess ? (
