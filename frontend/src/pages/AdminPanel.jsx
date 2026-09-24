@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { BarChart3, Users, ShoppingBag, BookOpen, GraduationCap, FileText, Mail, MessageSquare, Image, Plus, Edit2, Trash2, Save, X, LogOut, Ticket, Brain, Upload, Loader2 } from "lucide-react";
+import { BarChart3, Users, ShoppingBag, BookOpen, GraduationCap, FileText, Mail, MessageSquare, Image, Plus, Edit2, Trash2, Save, X, LogOut, Ticket, Brain, Upload, Loader2, Package, Truck, Copy } from "lucide-react";
 import api, { formatApiError } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import ImageUpload from "../components/ImageUpload";
@@ -10,6 +10,7 @@ const TABS = [
   { id: "stats", label: "Overview", icon: BarChart3 },
   { id: "users", label: "Users", icon: Users },
   { id: "enrollments", label: "Enrollments", icon: ShoppingBag },
+  { id: "bookorders", label: "Book Orders", icon: Package },
   { id: "books", label: "Books", icon: BookOpen },
   { id: "courses", label: "Courses", icon: GraduationCap },
   { id: "blog", label: "Blog", icon: FileText },
@@ -65,6 +66,7 @@ export default function AdminPanel({ onOpenAuth }) {
           {tab === "stats" && <StatsPanel />}
           {tab === "users" && <UsersPanel />}
           {tab === "enrollments" && <EnrollmentsPanel />}
+          {tab === "bookorders" && <BookOrdersPanel />}
           {tab === "books" && <BooksPanel />}
           {tab === "courses" && <CoursesPanel />}
           {tab === "blog" && <BlogPanel />}
@@ -1062,5 +1064,203 @@ function AssessmentProductPanel() {
         </div>
       </div>
     </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// ─── Book Orders Panel (Shiprocket-powered) ────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════
+function BookOrdersPanel() {
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [search, setSearch] = useState("");
+
+  const refresh = () => {
+    setLoading(true);
+    api.get("/admin/book-orders")
+      .then((r) => setOrders(Array.isArray(r.data) ? r.data : []))
+      .catch(() => toast.error("Could not load book orders"))
+      .finally(() => setLoading(false));
+  };
+  useEffect(() => { refresh(); }, []);
+
+  const copyText = async (text, label) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success(`${label} copied`);
+    } catch {
+      toast.error("Copy failed");
+    }
+  };
+
+  const filtered = orders.filter((o) => {
+    if (statusFilter !== "all" && o.status !== statusFilter) return false;
+    if (search) {
+      const s = search.toLowerCase();
+      const hay = `${o.name || ""} ${o.email || ""} ${o.phone || ""} ${o.book_title || ""} ${o.id || ""} ${o.awb || ""}`.toLowerCase();
+      if (!hay.includes(s)) return false;
+    }
+    return true;
+  });
+
+  const statusCounts = orders.reduce((acc, o) => {
+    acc[o.status] = (acc[o.status] || 0) + 1;
+    return acc;
+  }, {});
+  const revenue = orders
+    .filter((o) => o.status === "confirmed" || o.status === "paid" || o.status === "shipped" || o.status === "delivered")
+    .reduce((s, o) => s + (o.amount || 0), 0);
+
+  const STATUS_COLORS = {
+    pending:   "bg-yellow-500/10 text-yellow-400 border-yellow-500/20",
+    confirmed: "bg-blue-500/10 text-blue-400 border-blue-500/20",
+    paid:      "bg-green-500/10 text-green-400 border-green-500/20",
+    shipped:   "bg-purple-500/10 text-purple-400 border-purple-500/20",
+    delivered: "bg-green-500/10 text-green-400 border-green-500/20",
+  };
+
+  return (
+    <>
+      <div className="flex justify-between items-center mb-3 flex-wrap gap-2">
+        <h2 className="font-serif text-xl font-extrabold">Book Orders ({orders.length})</h2>
+        <button onClick={refresh}
+          className="flex items-center gap-1.5 bg-ink-800 border border-white/10 text-muted-foreground px-3 py-1.5 rounded-lg text-xs hover:text-brand-gold hover:border-brand-gold/30">
+          🔄 Refresh
+        </button>
+      </div>
+
+      {/* Quick stats */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
+        <div className="bg-ink-800 border border-white/[0.07] rounded-lg p-3">
+          <div className="text-lg font-black text-brand-gold">₹{revenue.toLocaleString("en-IN")}</div>
+          <div className="text-[10px] text-muted-foreground uppercase tracking-wider">Revenue</div>
+        </div>
+        <div className="bg-ink-800 border border-white/[0.07] rounded-lg p-3">
+          <div className="text-lg font-black">{statusCounts.pending || 0}</div>
+          <div className="text-[10px] text-muted-foreground uppercase tracking-wider">Pending</div>
+        </div>
+        <div className="bg-ink-800 border border-white/[0.07] rounded-lg p-3">
+          <div className="text-lg font-black text-blue-400">{(statusCounts.confirmed || 0) + (statusCounts.paid || 0)}</div>
+          <div className="text-[10px] text-muted-foreground uppercase tracking-wider">To Ship</div>
+        </div>
+        <div className="bg-ink-800 border border-white/[0.07] rounded-lg p-3">
+          <div className="text-lg font-black text-purple-400">{(statusCounts.shipped || 0) + (statusCounts.delivered || 0)}</div>
+          <div className="text-[10px] text-muted-foreground uppercase tracking-wider">Shipped</div>
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="flex gap-2 mb-4 flex-wrap">
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search name, email, phone, AWB, order ID..."
+          className="flex-1 min-w-[200px] bg-ink-800 border border-white/[0.07] rounded-lg px-3 py-2 text-xs focus:border-brand-gold outline-none"
+        />
+        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}
+          className="bg-ink-800 border border-white/[0.07] rounded-lg px-3 py-2 text-xs focus:border-brand-gold outline-none">
+          <option value="all">All statuses</option>
+          <option value="pending">Pending</option>
+          <option value="confirmed">Confirmed</option>
+          <option value="paid">Paid</option>
+          <option value="shipped">Shipped</option>
+          <option value="delivered">Delivered</option>
+        </select>
+      </div>
+
+      {loading ? (
+        <p className="text-sm text-muted-foreground">Loading orders...</p>
+      ) : filtered.length === 0 ? (
+        <p className="text-sm text-muted-foreground">No orders match this filter.</p>
+      ) : (
+        <div className="space-y-3">
+          {filtered.map((o) => {
+            const addr = o.address || {};
+            const date = o.created_at ? new Date(o.created_at).toLocaleString("en-IN", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "";
+            const statusColor = STATUS_COLORS[o.status] || STATUS_COLORS.pending;
+            const fullAddress = `${o.name}\n${o.phone}\n${addr.line1 || ""}${addr.line2 ? ", " + addr.line2 : ""}\n${addr.city || ""}, ${addr.state || ""} - ${addr.pincode || ""}`;
+            return (
+              <div key={o.id} className="bg-ink-800 border border-white/[0.07] rounded-xl p-4">
+                {/* Header row */}
+                <div className="flex items-start justify-between gap-3 mb-3 flex-wrap">
+                  <div>
+                    <div className="text-xs font-mono text-muted-foreground">#{o.id.slice(-8).toUpperCase()}</div>
+                    <div className="font-bold text-sm mt-0.5">{o.name} <span className="text-muted-foreground font-normal">· {o.phone}</span></div>
+                    <div className="text-[11px] text-muted-foreground">{o.email} · {date}</div>
+                  </div>
+                  <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border capitalize ${statusColor}`}>
+                    {o.status}
+                  </span>
+                </div>
+
+                {/* Items */}
+                <div className="bg-ink-900 rounded-lg p-2.5 mb-2">
+                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Items</div>
+                  <div className="text-xs">{o.book_title}</div>
+                </div>
+
+                {/* Amount + Payment */}
+                <div className="grid grid-cols-3 gap-2 mb-2 text-xs">
+                  <div className="bg-ink-900 rounded-lg p-2">
+                    <div className="text-[10px] uppercase text-muted-foreground">Amount</div>
+                    <div className="font-bold text-brand-gold">₹{o.amount}</div>
+                  </div>
+                  <div className="bg-ink-900 rounded-lg p-2">
+                    <div className="text-[10px] uppercase text-muted-foreground">Payment</div>
+                    <div className="font-bold capitalize">{o.payment_mode === "cod" ? "COD" : "Prepaid"}</div>
+                  </div>
+                  <div className="bg-ink-900 rounded-lg p-2">
+                    <div className="text-[10px] uppercase text-muted-foreground">Qty</div>
+                    <div className="font-bold">{o.quantity}</div>
+                  </div>
+                </div>
+
+                {/* Delivery Address (copyable) */}
+                <div className="bg-ink-900 rounded-lg p-2.5 mb-2">
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Delivery Address</div>
+                    <button onClick={() => copyText(fullAddress, "Address")}
+                      className="flex items-center gap-1 text-[10px] text-brand-gold hover:underline">
+                      <Copy className="w-3 h-3" /> Copy
+                    </button>
+                  </div>
+                  <div className="text-xs whitespace-pre-line leading-relaxed">{fullAddress}</div>
+                </div>
+
+                {/* Shiprocket / Tracking */}
+                {o.awb ? (
+                  <div className="bg-purple-500/5 border border-purple-500/20 rounded-lg p-2.5 flex items-center gap-2 flex-wrap">
+                    <Truck className="w-4 h-4 text-purple-400 flex-none" />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-[10px] uppercase text-muted-foreground">Shiprocket AWB</div>
+                      <div className="text-xs font-mono font-bold">{o.awb}</div>
+                    </div>
+                    <button onClick={() => copyText(o.awb, "AWB")}
+                      className="text-[10px] text-brand-gold hover:underline flex items-center gap-1">
+                      <Copy className="w-3 h-3" /> Copy AWB
+                    </button>
+                    {o.tracking_url && (
+                      <a href={o.tracking_url} target="_blank" rel="noopener noreferrer"
+                        className="text-[10px] text-blue-400 hover:underline">
+                        Open Tracking ↗
+                      </a>
+                    )}
+                  </div>
+                ) : (
+                  <div className="bg-yellow-500/5 border border-yellow-500/20 rounded-lg p-2.5 text-xs text-yellow-400">
+                    ⚠ No AWB assigned yet. Go to Shiprocket dashboard → Orders → find this order → assign courier.
+                  </div>
+                )}
+
+                {o.coupon_code && (
+                  <div className="mt-2 text-[10px] text-green-400">🎟 Coupon: <span className="font-mono font-bold">{o.coupon_code}</span> (−₹{o.discount || 0})</div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </>
   );
 }
