@@ -296,7 +296,7 @@ const submitWaitlist = async (email) => {
                    </>)}
                    {!c.is_available && (
                      <div className="mb-3 text-xs text-white/60">
-                       Launching soon · <span className="text-brand-gold font-semibold">September 2026</span>
+                       Launching soon
                      </div>
                     )}
                   {c.is_available ? (
