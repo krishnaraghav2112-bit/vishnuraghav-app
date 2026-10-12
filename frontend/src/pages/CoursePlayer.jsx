@@ -42,6 +42,16 @@ function formatTime(sec) {
 }
 
 const SPEEDS = [1, 1.25, 1.5, 2, 0.75];
+// Remember where the student stopped (saved in this browser)
+function readResume(key) {
+  try { return Number(window.localStorage.getItem(key)) || 0; } catch { return 0; }
+}
+function writeResume(key, sec) {
+  try {
+    if (sec > 0) window.localStorage.setItem(key, String(Math.floor(sec)));
+    else window.localStorage.removeItem(key);
+  } catch { /* ignore */ }
+}
 const BASE_W = 1920;
 const BASE_H = 1080;
 const CROP = 120;// px of YouTube frame hidden at top and bottom
@@ -54,7 +64,12 @@ const WATERMARK_SPOTS = [
   { top: "22%", left: "60%" },
 ];
 
-function SecurePlayer({ videoId, watermark }) {
+function SecurePlayer({ videoId, watermark, autoPlay, onEnded }) {
+  const resumeKey = `vr-resume-${watermark || "guest"}-${videoId}`;
+  const [resumeFrom, setResumeFrom] = useState(0);
+  const autoPlayRef = useRef(autoPlay);
+  const onEndedRef = useRef(onEnded);
+  useEffect(() => { onEndedRef.current = onEnded; }, [onEnded]);
   const wrapRef = useRef(null);
   const hostRef = useRef(null);
   const playerRef = useRef(null);
@@ -80,6 +95,9 @@ function SecurePlayer({ videoId, watermark }) {
     let cancelled = false;
     loadYouTubeApi().then((YT) => {
       if (cancelled || !hostRef.current) return;
+      const saved = readResume(resumeKey);
+      const startAt = saved > 5 ? saved : 0;
+      setResumeFrom(startAt);
       const el = document.createElement("div");
       hostRef.current.innerHTML = "";
       hostRef.current.appendChild(el);
@@ -92,11 +110,14 @@ function SecurePlayer({ videoId, watermark }) {
           controls: 0, rel: 0, modestbranding: 1, playsinline: 1,
           iv_load_policy: 3, disablekb: 1, fs: 0, cc_load_policy: 0,
           origin: window.location.origin,
+          start: startAt,
         },
         events: {
           onReady: (e) => {
             if (cancelled) return;
             setReady(true);
+            if (startAt) setTime(startAt);
+            if (autoPlayRef.current) e.target.playVideo();
             setDuration(e.target.getDuration() || 0);
           },
           onStateChange: (e) => {
@@ -112,6 +133,8 @@ function SecurePlayer({ videoId, watermark }) {
             } else if (e.data === S.ENDED) {
               setPlaying(false);
               setEnded(true);
+              writeResume(resumeKey, 0);
+              if (onEndedRef.current) onEndedRef.current();
             }
           },
         },
@@ -122,17 +145,21 @@ function SecurePlayer({ videoId, watermark }) {
       try { if (playerRef.current) playerRef.current.destroy(); } catch (e) { /* ignore */ }
       playerRef.current = null;
     };
-  }, [videoId]);
+   }, [videoId, resumeKey]);
 
   // Update the time / seek bar while playing
   useEffect(() => {
     if (!playing) return undefined;
     const t = setInterval(() => {
       const p = playerRef.current;
-      if (p && p.getCurrentTime) setTime(p.getCurrentTime() || 0);
+       if (p && p.getCurrentTime) {
+        const now = p.getCurrentTime() || 0;
+        setTime(now);
+        writeResume(resumeKey, now);
+      }
     }, 500);
     return () => clearInterval(t);
-  }, [playing]);
+ }, [playing, resumeKey]);
 
   // Measure the player box (to fit the Full-HD frame)
   useEffect(() => {
@@ -304,6 +331,17 @@ const changeVolume = (v) => {
         </button>
       )}
 
+       {/* "Resume from" label */}
+      {!started && resumeFrom > 0 && (
+        <div
+          data-testid="player-resume-label"
+          className="absolute z-20 left-1/2 -translate-x-1/2 bg-black/70 text-white text-xs font-semibold px-3 py-1 rounded-full pointer-events-none"
+          style={{ top: "calc(50% + 52px)" }}
+        >
+          Resume from {formatTime(resumeFrom)}
+        </div>
+      )}
+      
       {/* Moving email watermark */}
       {watermark && (
         <div
@@ -384,6 +422,7 @@ export default function CoursePlayer({ onOpenAuth, onOpenPay }) {
   const [access, setAccess] = useState(null);
   const [activeLesson, setActiveLesson] = useState({ moduleIdx: 0, lessonIdx: 0 });
   const [course, setCourse] = useState(null);
+  const [autoStart, setAutoStart] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) { onOpenAuth("login"); nav("/"); return; }
@@ -443,6 +482,26 @@ export default function CoursePlayer({ onOpenAuth, onOpenPay }) {
   const completedSet = new Set((access.completed_lessons || []).filter((id) => allLessonIds.includes(id)));
   const progressPct = Math.round((completedSet.size / totalLessons) * 100);
 
+  // Jump to a day number (1..21)
+  const goToDay = (day) => {
+    let d = day - 1;
+    for (let mi = 0; mi < modules.length; mi++) {
+      if (d < modules[mi].lessons) { setActiveLesson({ moduleIdx: mi, lessonIdx: d }); return; }
+      d -= modules[mi].lessons;
+    }
+  };
+
+  // When a video ends: start the next day automatically
+  const handleEnded = () => {
+    if (currentDay < allLessonIds.length) {
+      setAutoStart(true);
+      goToDay(currentDay + 1);
+      toast.success(`Starting Day ${currentDay + 1}`);
+    } else {
+      toast.success("You finished the last day of the course!");
+    }
+  };
+
   const markComplete = async () => {
     const next = new Set(completedSet);
     next.add(lessonId);
@@ -468,7 +527,7 @@ export default function CoursePlayer({ onOpenAuth, onOpenPay }) {
         <div>
           <div className="bg-ink-900 border border-white/[0.07] rounded-2xl overflow-hidden mb-4">
             {currentVideoId ? (
-              <SecurePlayer key={currentVideoId} videoId={currentVideoId} watermark={user?.email} />
+              <SecurePlayer key={currentVideoId} videoId={currentVideoId} watermark={user?.email} autoPlay={autoStart} onEnded={handleEnded} />
             ) : (
               <div className="aspect-video bg-ink-950 flex items-center justify-center text-sm text-muted-foreground">
                 Video coming soon
@@ -517,7 +576,7 @@ export default function CoursePlayer({ onOpenAuth, onOpenPay }) {
                   return (
                     <button
                       key={li}
-                      onClick={() => setActiveLesson({ moduleIdx: mi, lessonIdx: li })}
+                      onClick={() => { setAutoStart(false); setActiveLesson({ moduleIdx: mi, lessonIdx: li }); }}
                       data-testid={`lesson-${lid}`}
                       className={`w-full text-left flex items-center gap-2 px-2.5 py-2 rounded-md text-xs mb-0.5 transition-colors ${
                         isActive ? "bg-brand-goldSoft text-brand-gold" : "text-muted-foreground hover:bg-white/[0.04]"
