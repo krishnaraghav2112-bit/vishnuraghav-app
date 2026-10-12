@@ -154,7 +154,7 @@ const submitWaitlist = async (email) => {
             </h1>
 
             <p className="text-muted-foreground text-base lg:text-lg leading-relaxed max-w-[500px] mb-3">
-              Bestselling Hindi author, life coach & educator helping thousands master time, silence overthinking, and build a life of clarity — through books, YouTube & premium courses.
+             Hindi author, life coach & educator helping thousands master time, silence overthinking, and build a life of clarity — through books, YouTube & premium courses.
             </p>
             <blockquote className="text-sm italic text-brand-gold/70 border-l-2 border-brand-gold pl-3.5 mb-8 leading-relaxed">
               "Dagmagate Pair" · "Jo Mai Kah Na Saka" · "Uljha Jeevan" · authorvishnuraghav.in
