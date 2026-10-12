@@ -41,6 +41,13 @@ export default function Home({ onOpenAuth, onOpenPay }) {
   const nav = useNavigate();
   const [books, setBooks] = useState([]);
   const [courses, setCourses] = useState([]);
+    const [paidSlugs, setPaidSlugs] = useState([]);
+  useEffect(() => {
+    if (!user) { setPaidSlugs([]); return; }
+    api.get("/enrollments/me")
+      .then((r) => setPaidSlugs(r.data.filter((e) => e.status === "paid").map((e) => e.course_slug)))
+      .catch(() => {});
+  }, [user]);
   const [blogs, setBlogs] = useState([]);
   const [product, setProduct] = useState({ price: 199, is_active: false, has_pdf: false });
   const originalPrice = Math.round((product.price || 199) * 3);
@@ -70,8 +77,9 @@ export default function Home({ onOpenAuth, onOpenPay }) {
     api.get(`/blog?${params}`).then((r) => setBlogs(r.data)).catch(() => {});
   }, [blogCat, blogQ]);
 
-  const enrollClick = (course) => {
+    const enrollClick = (course) => {
     if (!user) { onOpenAuth("login"); return; }
+    if (paidSlugs.includes(course.slug)) { nav(`/learn/${course.slug}`); return; }
     onOpenPay(course);
   };
   const [waitlistCourse, setWaitlistCourse] = useState(null);
@@ -307,7 +315,7 @@ const submitWaitlist = async (email) => {
                           c.color === "gold" ? "bg-gold-gradient text-ink-950" : "bg-purple-gradient text-white"
                         }`}
                       >
-                        Buy Now — ₹{c.price.toLocaleString("en-IN")} →
+                                                {paidSlugs.includes(c.slug) ? "✅ Enrolled — Go to Course →" : `Buy Now — ₹${c.price.toLocaleString("en-IN")} →`}
                       </button>
                     ) : (
                       <button
