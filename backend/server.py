@@ -668,7 +668,7 @@ async def get_course(slug: str):
         course = next((c for c in COURSES if c["slug"] == slug), None)
     if not course:
         raise HTTPException(status_code=404, detail="Course not found")
-        return prepare_course(course)
+    return prepare_course(course)
 
 @api.get("/blog")
 async def list_blog(category: Optional[str] = None, q: Optional[str] = None):
@@ -721,7 +721,7 @@ async def _evaluate_coupon(code: str, course_slug: str) -> dict:
     allowed_slugs = coupon.get("course_slugs") or []
     if allowed_slugs and course_slug not in allowed_slugs:
         return {"valid": False, "message": "This coupon is not valid for this course"}
-    course = await db.courses.find_one({"slug": course_slug}, {"_id": 0}) \
+        course = await db.courses.find_one({"slug": course_slug}, {"_id": 0}) \
         or next((c for c in COURSES if c["slug"] == course_slug), None)
     if not course:
         return {"valid": False, "message": "Course not found"}
