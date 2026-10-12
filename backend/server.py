@@ -718,7 +718,7 @@ async def _evaluate_coupon(code: str, course_slug: str) -> dict:
     max_uses = coupon.get("max_uses")
     if max_uses is not None and coupon.get("used_count", 0) >= max_uses:
         return {"valid": False, "message": "This coupon has reached its usage limit"}
-       allowed_slugs = coupon.get("course_slugs") or []
+    allowed_slugs = coupon.get("course_slugs") or []
     if allowed_slugs and course_slug not in allowed_slugs:
         return {"valid": False, "message": "This coupon is not valid for this course"}
     course = await db.courses.find_one({"slug": course_slug}, {"_id": 0}) \
