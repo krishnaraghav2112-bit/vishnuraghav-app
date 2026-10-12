@@ -1505,6 +1505,35 @@ async def admin_delete_course(slug: str, _: dict = Depends(require_admin)):
     await db.courses.delete_one({"slug": slug})
     return {"ok": True}
 
+# ── Admin: per-day lesson title + description (shown on the course page) ──
+class LessonInfo(BaseModel):
+    title: str = ""
+    description: str = ""
+
+class LessonsIn(BaseModel):
+    lessons: List[LessonInfo]
+
+@api.get("/admin/courses/{slug}/lessons")
+async def admin_get_lessons(slug: str, _: dict = Depends(require_admin)):
+    course = await db.courses.find_one({"slug": slug}, {"_id": 0})
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found")
+    count = len(COURSE_VIDEOS.get(slug, [])) or int(course.get("lessons") or 0)
+    saved = course.get("lesson_details") or []
+    lessons = []
+    for i in range(count):
+        item = saved[i] if i < len(saved) and isinstance(saved[i], dict) else {}
+        lessons.append({"title": item.get("title", ""), "description": item.get("description", "")})
+    return {"slug": slug, "count": count, "lessons": lessons}
+
+@api.put("/admin/courses/{slug}/lessons")
+async def admin_save_lessons(slug: str, body: LessonsIn, _: dict = Depends(require_admin)):
+    details = [{"title": l.title.strip(), "description": l.description.strip()} for l in body.lessons]
+    result = await db.courses.update_one({"slug": slug}, {"$set": {"lesson_details": details}})
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Course not found")
+    return {"ok": True, "count": len(details)}
+
 # ── Admin: File upload ──
 # ── Admin: Coupons CRUD ──
 def _serialize_coupon(c: dict) -> dict:
