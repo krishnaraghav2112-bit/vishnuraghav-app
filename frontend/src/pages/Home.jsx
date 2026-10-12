@@ -59,7 +59,7 @@ export default function Home({ onOpenAuth, onOpenPay }) {
 
   useEffect(() => {
     api.get("/books").then((r) => setBooks(r.data)).catch(() => {});
-    api.get("/courses").then((r) => setCourses(r.data)).catch(() => {});
+    api.get("/courses").then((r) => setCourses([...r.data].sort((a, b) => Number(!!b.is_available) - Number(!!a.is_available)))).catch(() => {});
     api.get("/site/assets").then((r) => setAssets(r.data)).catch(() => {});
     api.get("/assessment/product").then(({ data }) => setProduct(data)).catch(() => {});
   }, []);
