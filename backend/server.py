@@ -1708,6 +1708,20 @@ async def check_pdf_access(user: dict = Depends(get_current_user)):
         "user_id": str(user["_id"]),
         "status": "paid",
     })
+        # Course bonus: buyers of "Overcoming Overthinking" get the eBook free
+    if not purchase:
+        bonus_enrol = await db.enrollments.find_one({
+            "user_id": str(user["_id"]),
+            "course_slug": "overcoming-overthinking",
+            "status": "paid",
+        })
+        if bonus_enrol:
+            return {
+                "has_access": True,
+                "pdf_url": prod.get("pdf_url"),
+                "title": prod.get("title", "Mind Health Workbook"),
+                "purchased_at": None,
+            }
     if purchase:
         return {
             "has_access": True,
@@ -2546,6 +2560,69 @@ async def admin_book_orders(_: dict = Depends(require_admin)):
         orders.append(_serialize_book_order(o))
     return orders
     
+# ───── COURSE BONUS: FREE HARD COPY BOOKS ─────
+BONUS_COURSE_SLUG = "overcoming-overthinking"
+
+class CourseBonusIn(BaseModel):
+    name: str
+    phone: str
+    address: BookOrderAddress
+
+@api.get("/bonus/hardcopy")
+async def bonus_hardcopy_status(user: dict = Depends(get_current_user)):
+    paid = await db.enrollments.find_one({
+        "user_id": str(user["_id"]), "course_slug": BONUS_COURSE_SLUG, "status": "paid",
+    })
+    if not paid:
+        return {"eligible": False}
+    existing = await db.book_orders.find_one({"user_id": str(user["_id"]), "payment_mode": "course_bonus"})
+    if existing:
+        return {
+            "eligible": True, "submitted": True, "locked": bool(existing.get("awb")),
+            "name": existing.get("name", ""), "phone": existing.get("phone", ""),
+            "address": existing.get("address", {}),
+        }
+    return {"eligible": True, "submitted": False, "locked": False}
+
+@api.post("/bonus/hardcopy")
+async def bonus_hardcopy_save(body: CourseBonusIn, user: dict = Depends(get_current_user)):
+    paid = await db.enrollments.find_one({
+        "user_id": str(user["_id"]), "course_slug": BONUS_COURSE_SLUG, "status": "paid",
+    })
+    if not paid:
+        raise HTTPException(status_code=403, detail="Please purchase the course first")
+    a = body.address
+    name, phone = body.name.strip(), re.sub(r"\D", "", body.phone or "")
+    pincode = re.sub(r"\D", "", a.pincode or "")
+    if not name or len(phone) < 10:
+        raise HTTPException(status_code=400, detail="Please enter a valid name and 10-digit phone number")
+    if not a.line1.strip() or not a.city.strip() or not a.state.strip() or len(pincode) != 6:
+        raise HTTPException(status_code=400, detail="Please fill the full address with a 6-digit pincode")
+    addr = {"line1": a.line1.strip(), "line2": (a.line2 or "").strip(),
+            "city": a.city.strip(), "state": a.state.strip(), "pincode": pincode}
+    existing = await db.book_orders.find_one({"user_id": str(user["_id"]), "payment_mode": "course_bonus"})
+    if existing:
+        if existing.get("awb"):
+            raise HTTPException(status_code=400, detail="Your books are already shipped. Contact support to change the address.")
+        await db.book_orders.update_one(
+            {"_id": existing["_id"]},
+            {"$set": {"name": name, "phone": phone, "address": addr}},
+        )
+        return {"ok": True, "updated": True}
+    now = datetime.now(timezone.utc)
+    title = "Course Bonus - Author's 5 Books (Hard Copy)"
+    await db.book_orders.insert_one({
+        "user_id": str(user["_id"]), "email": user.get("email", ""),
+        "items": [{"book_slug": "course-bonus-5-books", "book_title": title, "quantity": 5, "unit_price": 0}],
+        "book_slug": "course-bonus-5-books", "book_title": title, "quantity": 5,
+        "subtotal": 0, "shipping": 0, "cod_fee": 0, "amount": 0,
+        "payment_mode": "course_bonus", "name": name, "phone": phone, "address": addr,
+        "status": "paid", "coupon_code": None, "discount": 0,
+        "razorpay_order_id": None, "razorpay_payment_id": None,
+        "shiprocket_order_id": None, "shipment_id": None, "awb": None, "tracking_url": None,
+        "created_at": now, "paid_at": now,
+    })
+    return {"ok": True, "updated": False}
 class CourseAvailabilityIn(BaseModel):
     is_available: bool
 
