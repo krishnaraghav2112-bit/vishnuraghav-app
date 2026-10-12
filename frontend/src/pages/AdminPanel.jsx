@@ -5,6 +5,7 @@ import { BarChart3, Users, ShoppingBag, BookOpen, GraduationCap, FileText, Mail,
 import api, { formatApiError } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import ImageUpload from "../components/ImageUpload";
+import LessonEditor from "../components/LessonEditor";
 
 const TABS = [
   { id: "stats", label: "Overview", icon: BarChart3 },
@@ -327,6 +328,7 @@ function BookForm({ book, onCancel, onSaved }) {
 }
 
 function CoursesPanel() {
+  const [lessonsFor, setLessonsFor] = useState(null);
   const [courses, setCourses] = useState([]);
   const [editing, setEditing] = useState(null);
   const [creating, setCreating] = useState(false);
@@ -349,6 +351,7 @@ function CoursesPanel() {
       <p className="text-xs text-muted-foreground mb-5">Edit course basics. Lessons/modules structure is fixed in v1.</p>
 
      {(editing || creating) && <CourseForm course={editing} onCancel={() => { setEditing(null); setCreating(false); }} onSaved={() => { setEditing(null); setCreating(false); refresh(); }} />}
+     {lessonsFor && <LessonEditor course={lessonsFor} onClose={() => setLessonsFor(null)} />}
 
       <div className="space-y-2 mt-4">
         {courses.map((c) => (
@@ -364,6 +367,8 @@ function CoursesPanel() {
             </div>
             <button onClick={() => setEditing(c)} data-testid={`admin-course-edit-${c.slug}`}
               className="p-2 rounded-md hover:bg-white/[0.04] text-brand-gold"><Edit2 className="w-4 h-4" /></button>
+             <button onClick={() => setLessonsFor(c)} data-testid={`admin-course-lessons-${c.slug}`}
+              className="px-3 py-1 rounded-full text-[11px] font-bold bg-brand-goldSoft text-brand-gold border border-brand-gold/30">Lessons</button>
             <button
               onClick={() => toggleAvailability(c.slug, !c.is_available)}
               data-testid={`admin-course-toggle-${c.slug}`}
