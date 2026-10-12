@@ -143,18 +143,26 @@ export default function CoursePlayer({ onOpenAuth, onOpenPay }) {
                 </div>
               )}
 
-              {/* Cover over YouTube's top bar (title, share, watch later) */}
+             {/* ── CLICK BLOCKERS (invisible) ── */}
+              {/* 1. Top-left: video title + channel photo (volume / CC / settings on the right stay clickable) */}
               <div
                 data-testid="video-top-shield"
-                className="absolute top-0 left-0 right-0 h-[64px] z-10"
-                style={{ background: "transparent" }}
+                className="absolute top-0 left-0 z-10"
+                style={{ width: "calc(100% - 180px)", height: "80px", background: "transparent" }}
                 onContextMenu={(e) => e.preventDefault()}
               />
-              {/* Cover over the "YouTube" logo in the bottom bar (fullscreen button stays clickable) */}
+              {/* 2. Bottom-left: the "copy link" button */}
+              <div
+                data-testid="video-link-shield"
+                className="absolute bottom-0 left-0 z-10"
+                style={{ width: "120px", height: "50px", background: "transparent" }}
+                onContextMenu={(e) => e.preventDefault()}
+              />
+              {/* 3. Bottom-right: the "YouTube" logo and "Watch on YouTube" (fullscreen button above it stays clickable) */}
               <div
                 data-testid="video-logo-shield"
-                className="absolute bottom-0 right-[52px] w-[100px] h-[46px] z-10"
-                style={{ background: "transparent" }}
+                className="absolute bottom-0 z-10"
+                style={{ right: "30px", width: "200px", height: "50px", background: "transparent" }}
                 onContextMenu={(e) => e.preventDefault()}
               />
 
