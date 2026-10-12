@@ -437,6 +437,8 @@ export default function CoursePlayer({ onOpenAuth, onOpenPay }) {
   const lessonId = `m${activeLesson.moduleIdx}-l${activeLesson.lessonIdx}`;
   const currentDay = dayNumber(activeLesson.moduleIdx, activeLesson.lessonIdx);
   const currentVideoId = videos[currentDay - 1];
+  const lessonDetails = c.lesson_details || [];
+  const lessonInfo = lessonDetails[currentDay - 1] || {};
 
   const completedSet = new Set((access.completed_lessons || []).filter((id) => allLessonIds.includes(id)));
   const progressPct = Math.round((completedSet.size / totalLessons) * 100);
@@ -474,8 +476,8 @@ export default function CoursePlayer({ onOpenAuth, onOpenPay }) {
             )}
             <div className="p-5">
               <div className="text-xs font-bold text-brand-gold mb-1" data-testid="current-day-label">Day {currentDay}</div>
-              <h1 className="font-serif text-2xl font-black mb-1">{c.title}</h1>
-              <p className="text-sm text-muted-foreground mb-4">{c.tagline}</p>
+               <h1 className="font-serif text-2xl font-black mb-1" data-testid="lesson-title">{lessonInfo.title || c.title}</h1>
+              <p className="text-sm text-muted-foreground mb-4 whitespace-pre-line" data-testid="lesson-description">{lessonInfo.description || c.tagline}</p>
               <div className="flex items-center gap-3 flex-wrap">
                 <button onClick={markComplete} data-testid="mark-complete"
                   className="bg-gold-gradient text-ink-950 px-4 py-2 rounded-lg text-sm font-extrabold">
@@ -524,7 +526,10 @@ export default function CoursePlayer({ onOpenAuth, onOpenPay }) {
                       {isDone ? <CheckCircle2 className="w-3.5 h-3.5 text-green-400 flex-shrink-0" /> :
                         isActive ? <Play className="w-3.5 h-3.5 text-brand-gold flex-shrink-0" /> :
                         <Circle className="w-3.5 h-3.5 flex-shrink-0" />}
-                      <span className="truncate">Day {dayNumber(mi, li)}</span>
+                       <span className="truncate">
+                        Day {dayNumber(mi, li)}
+                        {lessonDetails[dayNumber(mi, li) - 1]?.title ? ` · ${lessonDetails[dayNumber(mi, li) - 1].title}` : ""}
+                      </span>
                     </button>
                   );
                 })}
