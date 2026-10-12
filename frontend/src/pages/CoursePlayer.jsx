@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft, Lock, CheckCircle2, Circle, Play, Pause,
-  Volume2, VolumeX, Maximize, Minimize, RotateCcw, RotateCw,
+  Volume2, VolumeX, Volume1, Maximize, Minimize, RotateCcw, RotateCw,
 } from "lucide-react";
 import { toast } from "sonner";
 import api, { formatApiError } from "../lib/api";
@@ -42,7 +42,9 @@ function formatTime(sec) {
 }
 
 const SPEEDS = [1, 1.25, 1.5, 2, 0.75];
-const CROP = 70; // px of YouTube frame hidden at top and bottom
+const BASE_W = 1920;
+const BASE_H = 1080;
+const CROP = 120;// px of YouTube frame hidden at top and bottom
 
 const WATERMARK_SPOTS = [
   { top: "18%", left: "8%" },
@@ -132,6 +134,24 @@ function SecurePlayer({ videoId, watermark }) {
     return () => clearInterval(t);
   }, [playing]);
 
+  // Measure the player box (to fit the Full-HD frame)
+  useEffect(() => {
+    const el = wrapRef.current;
+    if (!el) return undefined;
+    const measure = () => setBox({ w: el.clientWidth, h: el.clientHeight });
+    measure();
+    let ro = null;
+    if (window.ResizeObserver) {
+      ro = new ResizeObserver(measure);
+      ro.observe(el);
+    }
+    window.addEventListener("resize", measure);
+    return () => {
+      if (ro) ro.disconnect();
+      window.removeEventListener("resize", measure);
+    };
+  }, []);
+  
   // Move the watermark every 8 seconds
   useEffect(() => {
     const t = setInterval(() => setSpot((s) => (s + 1) % WATERMARK_SPOTS.length), 8000);
@@ -177,9 +197,14 @@ function SecurePlayer({ videoId, watermark }) {
   const toggleMute = () => {
     const p = playerRef.current;
     if (!p || !ready) return;
-    if (muted) p.unMute();
-    else p.mute();
-    setMuted(!muted);
+     if (muted || volume === 0) {
+      p.unMute();
+      if (volume === 0) { p.setVolume(50); setVolume(50); }
+      setMuted(false);
+    } else {
+      p.mute();
+      setMuted(true);
+    }
   };
 
   const changeSpeed = () => {
@@ -189,17 +214,16 @@ function SecurePlayer({ videoId, watermark }) {
     p.setPlaybackRate(next);
     setSpeed(next);
   };
-
-  const toggleCc = () => {
+const changeVolume = (v) => {
     const p = playerRef.current;
+    setVolume(v);
     if (!p || !ready) return;
-    try {
-      if (cc) p.unloadModule("captions");
-      else p.loadModule("captions");
-    } catch (e) { /* ignore */ }
-    setCc(!cc);
+    p.setVolume(v);
+    if (v === 0) { p.mute(); setMuted(true); }
+    else if (muted) { p.unMute(); setMuted(false); }
+    wakeUi();
   };
-
+  
   const toggleFull = () => {
     const el = wrapRef.current;
     if (document.fullscreenElement || document.webkitFullscreenElement) {
@@ -221,6 +245,10 @@ function SecurePlayer({ videoId, watermark }) {
   const uiVisible = showUi || !playing;
   const pct = duration ? (time / duration) * 100 : 0;
   const block = (e) => e.preventDefault();
+  const shownVolume = muted ? 0 : volume;
+  const scale = box.w && box.h ? Math.min(box.w / BASE_W, box.h / BASE_H) : 0;
+  const frameLeft = (box.w - BASE_W * scale) / 2;
+  const frameTop = (box.h - BASE_H * scale) / 2 - CROP * scale;
 
   return (
     <div
@@ -235,8 +263,15 @@ function SecurePlayer({ videoId, watermark }) {
       {/* YouTube frame: cropped top & bottom, cannot be clicked at all */}
       <div
         ref={hostRef}
-        className="absolute left-0 w-full"
-        style={{ top: `-${CROP}px`, height: `calc(100% + ${CROP * 2}px)`, pointerEvents: "none" }}
+         className="absolute top-0 left-0"
+        style={{
+          width: `${BASE_W}px`,
+          height: `${BASE_H + CROP * 2}px`,
+          transformOrigin: "0 0",
+          transform: `translate(${frameLeft}px, ${frameTop}px) scale(${scale})`,
+          visibility: scale ? "visible" : "hidden",
+          pointerEvents: "none",
+        }}
       />
 
       {/* Cover image before start / after end, dark layer when paused */}
@@ -311,17 +346,25 @@ function SecurePlayer({ videoId, watermark }) {
             <RotateCw className="w-4 h-4" />
           </button>
           <button type="button" data-testid="player-mute" onClick={toggleMute} className="p-2 rounded hover:bg-white/10">
-            {muted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+          {shownVolume === 0 ? <VolumeX className="w-5 h-5" /> : shownVolume < 50 ? <Volume1 className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
           </button>
+           <input
+            type="range"
+            min={0}
+            max={100}
+            step={1}
+            value={shownVolume}
+            onChange={(e) => changeVolume(Number(e.target.value))}
+            className="w-16 sm:w-24 h-1 cursor-pointer"
+            style={{ accentColor: "#C9A84C" }}
+            aria-label="Volume"
+          />
           <span className="text-[11px] sm:text-xs tabular-nums ml-1" data-testid="player-time">
             {formatTime(time)} / {formatTime(duration)}
           </span>
           <div className="flex-1" />
           <button type="button" data-testid="player-speed" onClick={changeSpeed} className="px-2 py-1 rounded hover:bg-white/10 text-xs font-bold">
             {speed}x
-          </button>
-          <button type="button" data-testid="player-cc" onClick={toggleCc} className={`p-2 rounded hover:bg-white/10 ${cc ? "text-brand-gold" : ""}`}>
-            <Captions className="w-5 h-5" />
           </button>
           <button type="button" data-testid="player-fullscreen" onClick={toggleFull} className="p-2 rounded hover:bg-white/10">
             {isFull ? <Minimize className="w-5 h-5" /> : <Maximize className="w-5 h-5" />}
