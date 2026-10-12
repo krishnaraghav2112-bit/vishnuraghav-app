@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { BookOpen, TrendingUp, Award, CreditCard, User, Brain, LogOut, Clock, Sparkles, Heart, Flame, Package, MapPin, Truck } from "lucide-react";
 import api, { formatApiError } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
+import CourseBonusCard from "../components/CourseBonusCard";
 
 const iconMap = { Clock, Brain, Sparkles, Heart, BookOpen };
 
@@ -107,6 +108,7 @@ export default function Dashboard({ onOpenAuth }) {
                 <Stat label="Avg Progress" value={`${avgProgress}%`} />
                 <Stat label="Completed" value={completed} />
               </div>
+              <CourseBonusCard />
               <SectionHead>Continue Learning</SectionHead>
               {paidEnrollments.length === 0 ? (
                 <EmptyState text="You haven't enrolled in any courses yet." onClick={() => nav("/")} />
