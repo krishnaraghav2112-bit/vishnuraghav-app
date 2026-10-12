@@ -554,6 +554,40 @@ COURSES = [
     },
 ]
 
+# ── Overthinking course: 21 private YouTube videos, Day 1 → Day 21 ──
+# These IDs are sent ONLY to students who have paid (see /enrollments/access).
+OVERTHINKING_VIDEO_IDS = [
+    "Hapvwo01jl4", "ZKO8bzKOTJA", "nFMRaf56iZo", "eUd4oV4jEF8", "l5cydgkO17k", "Ocj5te_XBUw", "26qet4FiOGM",
+    "dDpo_aAgo3Q", "ipOcqKbNkBg", "CMfiVhUwb1k", "joioDZM9lwc", "51tjKBlyflk", "ooDo13ItNbk", "3ZeUSEeorP4",
+    "EURcw38WAO4", "ZGJHSIXEbaQ", "O_-a9H_hYkI", "ovRXyIZTto0", "vlessW-8iSw", "cG0Bf9MbX8I", "8uMb3YSTBIg",
+]
+COURSE_VIDEOS = {"overcoming-overthinking": OVERTHINKING_VIDEO_IDS}
+COURSE_STRUCTURE = {
+    "overcoming-overthinking": {
+        "duration": "3 Weeks", "lessons": 21, "modules": 3,
+        "modules_detail": [
+            {"title": "Week 1", "lessons": 7},
+            {"title": "Week 2", "lessons": 7},
+            {"title": "Week 3", "lessons": 7},
+        ],
+    },
+}
+
+def prepare_course(course, include_videos=False):
+    """Public pages: hide all video links. Paid students: add the video list."""
+    if not course:
+        return course
+    course = dict(course)
+    course.pop("_id", None)
+    slug = course.get("slug")
+    course.update(COURSE_STRUCTURE.get(slug, {}))
+    playlist = normalize_youtube_url(course.pop("youtube_playlist", "") or "")
+    course.pop("videos", None)
+    if include_videos:
+        course["videos"] = COURSE_VIDEOS.get(slug, [])
+        course["youtube_playlist"] = playlist
+    return course
+
 BLOG_POSTS = [
     {
         "slug": "5-productivity-habits", "category": "productivity",
@@ -625,9 +659,7 @@ async def list_courses():
     items = await cursor.to_list(100)
     if not items:
         items = list(COURSES)
-    for c in items:
-        c["youtube_playlist"] = normalize_youtube_url(c.get("youtube_playlist", ""))
-    return items
+    return [prepare_course(c) for c in items]
 
 @api.get("/courses/{slug}")
 async def get_course(slug: str):
@@ -636,8 +668,7 @@ async def get_course(slug: str):
         course = next((c for c in COURSES if c["slug"] == slug), None)
     if not course:
         raise HTTPException(status_code=404, detail="Course not found")
-    course["youtube_playlist"] = normalize_youtube_url(course.get("youtube_playlist", ""))
-    return course
+        return prepare_course(course)
 
 @api.get("/blog")
 async def list_blog(category: Optional[str] = None, q: Optional[str] = None):
@@ -1030,9 +1061,9 @@ async def check_access(course_slug: str, user: dict = Depends(get_current_user))
     })
     if not enrollment:
         return {"access": False}
-    course = next((c for c in COURSES if c["slug"] == course_slug), None)
-    if course:
-        course["youtube_playlist"] = normalize_youtube_url(course.get("youtube_playlist", ""))
+       course = await db.courses.find_one({"slug": course_slug}, {"_id": 0}) \
+        or next((c for c in COURSES if c["slug"] == course_slug), None)
+    course = prepare_course(course, include_videos=True)
     return {
         "access": True,
         "enrollment_id": str(enrollment["_id"]),
