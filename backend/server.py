@@ -1061,7 +1061,7 @@ async def check_access(course_slug: str, user: dict = Depends(get_current_user))
     })
     if not enrollment:
         return {"access": False}
-       course = await db.courses.find_one({"slug": course_slug}, {"_id": 0}) \
+    course = await db.courses.find_one({"slug": course_slug}, {"_id": 0}) \
         or next((c for c in COURSES if c["slug"] == course_slug), None)
     course = prepare_course(course, include_videos=True)
     return {
