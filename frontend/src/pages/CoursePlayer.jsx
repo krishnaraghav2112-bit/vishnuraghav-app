@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft, Lock, CheckCircle2, Circle, Play, Pause,
-  Volume2, VolumeX, Maximize, Minimize, Captions, RotateCcw, RotateCw,
+  Volume2, VolumeX, Maximize, Minimize, RotateCcw, RotateCw,
 } from "lucide-react";
 import { toast } from "sonner";
 import api, { formatApiError } from "../lib/api";
@@ -66,7 +66,8 @@ function SecurePlayer({ videoId, watermark }) {
   const [duration, setDuration] = useState(0);
   const [muted, setMuted] = useState(false);
   const [speed, setSpeed] = useState(1);
-  const [cc, setCc] = useState(false);
+  const [volume, setVolume] = useState(100);
+  const [box, setBox] = useState({ w: 0, h: 0 });
   const [realFull, setRealFull] = useState(false);
   const [fakeFull, setFakeFull] = useState(false);
   const [showUi, setShowUi] = useState(true);
