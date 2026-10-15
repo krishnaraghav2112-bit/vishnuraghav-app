@@ -434,3 +434,47 @@ async def send_cart_abandonment_email(
         return None
     subject, html = cart_abandonment_template(name, order_id, items, total)
     return await send_email(email, subject, html)
+
+    # ───────────────────────── One-to-one session request ─────────────────────────
+def session_request_admin_template(name: str, email: str, phone: str, date: str, slot: str, topic: str, message: str) -> tuple[str, str]:
+    import re as _re
+    wa = _re.sub(r"\D", "", phone or "")
+    if len(wa) == 10:
+        wa = "91" + wa
+    wa_btn = _btn("Reply on WhatsApp", f"https://wa.me/{wa}") if wa else ""
+    inner = f"""
+        <h1 style="font-family:Georgia,serif;font-size:22px;color:{BRAND_TEXT};margin:0 0 14px;">New one-to-one session request</h1>
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="font-size:14px;color:{BRAND_TEXT};">
+          <tr><td style="padding:6px 0;color:{BRAND_MUTED};width:130px;">Name</td><td style="padding:6px 0;">{escape(name)}</td></tr>
+          <tr><td style="padding:6px 0;color:{BRAND_MUTED};">Email</td><td style="padding:6px 0;"><a href="mailto:{escape(email)}" style="color:{BRAND_GOLD};">{escape(email)}</a></td></tr>
+          <tr><td style="padding:6px 0;color:{BRAND_MUTED};">Phone / WhatsApp</td><td style="padding:6px 0;">{escape(phone or "—")}</td></tr>
+          <tr><td style="padding:6px 0;color:{BRAND_MUTED};">Preferred date</td><td style="padding:6px 0;">{escape(date or "—")}</td></tr>
+          <tr><td style="padding:6px 0;color:{BRAND_MUTED};">Preferred time</td><td style="padding:6px 0;">{escape(slot or "—")}</td></tr>
+          <tr><td style="padding:6px 0;color:{BRAND_MUTED};">Topic</td><td style="padding:6px 0;">{escape(topic or "—")}</td></tr>
+        </table>
+        <div style="margin-top:18px;padding:16px;background:#0f0a1a;border:1px solid #2a1f3a;border-radius:8px;color:{BRAND_TEXT};white-space:pre-wrap;font-size:14px;line-height:1.6;">{escape(message or "(no extra message)")}</div>
+        {wa_btn}
+        <p style="margin:18px 0 0;color:{BRAND_MUTED};font-size:13px;">You can also reply to this email to reach {escape(name)} directly.</p>
+    """
+    return f"🤝 One-to-one request: {name}", _shell(inner, preheader=f"Session request from {name}")
+
+
+def session_request_user_template(name: str) -> tuple[str, str]:
+    inner = f"""
+        <h1 style="font-family:Georgia,serif;font-size:22px;color:{BRAND_TEXT};margin:0 0 14px;">We received your request, {escape((name or "friend").strip())}.</h1>
+        <p style="margin:0 0 14px;color:{BRAND_TEXT};">Your one-to-one session request has been sent to Vishnu. He will contact you on your email or WhatsApp to confirm the date and time.</p>
+        <p style="margin:18px 0 0;color:{BRAND_MUTED};font-size:13px;">— Team Vishnu Raghav</p>
+    """
+    return "Your one-to-one session request — Vishnu Raghav", _shell(inner, preheader="Your request has been sent to the author.")
+
+
+async def send_session_request(name: str, email: str, phone: str, date: str, slot: str, topic: str, message: str) -> Optional[str]:
+    if ADMIN_NOTIFY_EMAIL:
+        subject, html = session_request_admin_template(name, email, phone, date, slot, topic, message)
+        await send_email(ADMIN_NOTIFY_EMAIL, subject, html, reply_to=email)
+    else:
+        logger.warning("ADMIN_NOTIFY_EMAIL not set — skipping one-to-one request notification.")
+    if email:
+        subject, html = session_request_user_template(name)
+        return await send_email(email, subject, html)
+    return None
