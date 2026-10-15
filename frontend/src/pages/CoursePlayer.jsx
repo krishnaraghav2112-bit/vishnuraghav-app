@@ -7,6 +7,7 @@ import {
 import { toast } from "sonner";
 import api, { formatApiError } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
+import CourseHub from "../components/CourseHub";
 
 /* ───────────────────────── SECURE VIDEO PLAYER ─────────────────────────
    - YouTube's own buttons are switched OFF (controls=0): no settings menu,
@@ -423,6 +424,7 @@ export default function CoursePlayer({ onOpenAuth, onOpenPay }) {
   const [activeLesson, setActiveLesson] = useState({ moduleIdx: 0, lessonIdx: 0 });
   const [course, setCourse] = useState(null);
   const [autoStart, setAutoStart] = useState(false);
+    const [view, setView] = useState("hub");
 
   useEffect(() => {
     if (!loading && !user) { onOpenAuth("login"); nav("/"); return; }
@@ -481,6 +483,11 @@ export default function CoursePlayer({ onOpenAuth, onOpenPay }) {
 
   const completedSet = new Set((access.completed_lessons || []).filter((id) => allLessonIds.includes(id)));
   const progressPct = Math.round((completedSet.size / totalLessons) * 100);
+  
+  // Overcoming Overthinking: show the 4 options first
+  if (slug === "overcoming-overthinking" && view === "hub") {
+    return <CourseHub course={c} progressPct={progressPct} onWatch={() => setView("videos")} onBack={() => nav("/dashboard")} />;
+  }
 
   // Jump to a day number (1..21)
   const goToDay = (day) => {
@@ -519,8 +526,8 @@ export default function CoursePlayer({ onOpenAuth, onOpenPay }) {
 
   return (
     <div className="max-w-7xl mx-auto px-5 lg:px-10 py-8" data-testid="course-player">
-      <button onClick={() => nav("/dashboard")} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6">
-        <ArrowLeft className="w-4 h-4" /> Back to Dashboard
+            <button onClick={() => (slug === "overcoming-overthinking" ? setView("hub") : nav("/dashboard"))} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6">
+        <ArrowLeft className="w-4 h-4" /> {slug === "overcoming-overthinking" ? "Back to Course Options" : "Back to Dashboard"}
       </button>
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr,320px] gap-6">
