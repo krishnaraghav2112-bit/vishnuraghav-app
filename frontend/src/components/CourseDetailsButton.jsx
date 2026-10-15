@@ -9,7 +9,7 @@ const SUBTITLE = "21 Days to Understand Your Mind.";
 const ITEMS = [
   ["21 Days of Video Lessons", "Deep teachings to understand your mind, thoughts, emotions, and inner conflicts.", ""],
   ["5 Books by Vishnu Raghav (Hard Copy)", "Explore self-understanding, overthinking, life, and human psychology through reading. The 5 printed books are delivered to your home.", "Worth ₹1,500+"],
-  ["Practical Workbook (eBook - Soft Copy)", "Reflection questions and journaling exercises to apply each lesson in your daily life. Download it as a PDF.", "Worth ₹649
+  ["Practical Workbook (eBook - Soft Copy)", "Reflection questions and journaling exercises to apply each lesson in your daily life. Download it as a PDF.", "Worth ₹649"],
   ["1-to-1 Personal Session", "An individual session to discuss your concerns and gain personal clarity.", "Worth ₹999"],
   ["Daily Action Plan", "Simple practices to help you turn understanding into action.", ""],
   ["Philosophical Teachings", "Insights inspired by Buddha, Shri Krishna, Osho, J. Krishnamurti, Ramana Maharshi, and Kabir.", ""],
