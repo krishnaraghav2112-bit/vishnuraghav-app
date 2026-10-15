@@ -2623,6 +2623,65 @@ async def bonus_hardcopy_save(body: CourseBonusIn, user: dict = Depends(get_curr
         "created_at": now, "paid_at": now,
     })
     return {"ok": True, "updated": False}
+class SessionRequestIn(BaseModel):
+    phone: str
+    preferred_date: str = ""
+    preferred_time: str = ""
+    topic: str
+    message: str = ""
+
+@api.get("/bonus/session")
+async def bonus_session_status(user: dict = Depends(get_current_user)):
+    paid = await db.enrollments.find_one({
+        "user_id": str(user["_id"]), "course_slug": BONUS_COURSE_SLUG, "status": "paid",
+    })
+    if not paid:
+        return {"eligible": False}
+    last = await db.session_requests.find_one({"user_id": str(user["_id"])}, sort=[("created_at", -1)])
+    return {
+        "eligible": True,
+        "last": {
+            "preferred_date": last.get("preferred_date", ""),
+            "preferred_time": last.get("preferred_time", ""),
+            "topic": last.get("topic", ""),
+            "created_at": last["created_at"].isoformat() if last.get("created_at") else None,
+        } if last else None,
+    }
+
+@api.post("/bonus/session")
+async def bonus_session_request(body: SessionRequestIn, user: dict = Depends(get_current_user)):
+    paid = await db.enrollments.find_one({
+        "user_id": str(user["_id"]), "course_slug": BONUS_COURSE_SLUG, "status": "paid",
+    })
+    if not paid:
+        raise HTTPException(status_code=403, detail="Please purchase the course first")
+    phone = re.sub(r"\D", "", body.phone or "")
+    if len(phone) < 10:
+        raise HTTPException(status_code=400, detail="Please enter a valid 10-digit phone / WhatsApp number")
+    if not body.topic.strip():
+        raise HTTPException(status_code=400, detail="Please tell us what you want to discuss")
+    now = datetime.now(timezone.utc)
+    recent = await db.session_requests.find_one({
+        "user_id": str(user["_id"]), "created_at": {"$gte": now - timedelta(hours=24)},
+    })
+    if recent:
+        raise HTTPException(status_code=400, detail="You have already sent a request in the last 24 hours. Vishnu will contact you soon.")
+    doc = {
+        "user_id": str(user["_id"]), "name": user.get("name", ""), "email": user.get("email", ""),
+        "phone": phone, "preferred_date": body.preferred_date.strip()[:30],
+        "preferred_time": body.preferred_time.strip()[:60], "topic": body.topic.strip()[:200],
+        "message": body.message.strip()[:2000], "status": "new", "created_at": now,
+    }
+    await db.session_requests.insert_one(doc)
+    try:
+        await email_service.send_session_request(
+            doc["name"], doc["email"], phone, doc["preferred_date"],
+            doc["preferred_time"], doc["topic"], doc["message"],
+        )
+    except Exception as e:
+        logger.error(f"Session request email failed: {e}")
+    return {"ok": True}
+
 class CourseAvailabilityIn(BaseModel):
     is_available: bool
 
