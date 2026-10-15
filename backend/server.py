@@ -2530,27 +2530,20 @@ async def track_book_order(order_id: str, user: dict = Depends(get_current_user)
 # ═══════════════════════════════════════════════════════════════════════
 # ─── Cart Abandonment Task (called by external cron) ──────────────────
 # ═══════════════════════════════════════════════════════════════════════
-@api.post("/tasks/abandoned-cart-emails")
-async def run_abandoned_cart_task(request: Request):
-    """Cron-triggered. Sends one reminder email per pending book order
-    that is 2-72h old and hasn't been reminded yet.
-    Protected by X-Cron-Secret header matching CRON_SECRET env var."""
-    if not CRON_SECRET:
-        raise HTTPException(status_code=503, detail="Cron secret not configured")
-    if request.headers.get("x-cron-secret", "") != CRON_SECRET:
-        raise HTTPException(status_code=403, detail="Forbidden")
+# Course landing pages used in reminder links (other courses fall back to /learn/<slug>)
+COURSE_LANDING_PATHS = {"overcoming-overthinking": "/overthinking"}
+REMINDER_UTM = "utm_source=email&utm_medium=reminder&utm_campaign=checkout_reminder"
 
-    now = datetime.now(timezone.utc)
-    window_start = now - timedelta(hours=72)
-    window_end = now - timedelta(hours=2)
+def _reminder_window(now):
+    return {"$gte": now - timedelta(hours=72), "$lte": now - timedelta(hours=2)}
 
+async def _remind_book_orders(now) -> dict:
     cursor = db.book_orders.find({
         "status": "pending",
         "payment_mode": {"$ne": "cod"},
         "reminder_sent": {"$ne": True},
-        "created_at": {"$gte": window_start, "$lte": window_end},
+        "created_at": _reminder_window(now),
     })
-
     scanned = sent = skipped = 0
     async for order in cursor:
         scanned += 1
@@ -2594,9 +2587,116 @@ async def run_abandoned_cart_task(request: Request):
             sent += 1
         except Exception:
             logger.exception(f"Cart abandonment email failed for order {order.get('_id')}")
-
     return {"scanned": scanned, "sent": sent, "skipped": skipped}
-@api.get("/admin/book-orders")
+
+async def _remind_course_checkouts(now) -> dict:
+    """One reminder per user+course for checkouts started 2-72h ago and never paid."""
+    scanned = sent = skipped = 0
+    seen = set()
+    cursor = db.enrollments.find({"status": "pending", "reminder_sent": {"$ne": True}, "created_at": _reminder_window(now)})
+    async for e in cursor:
+        scanned += 1
+        key = (e.get("user_id"), e.get("course_slug"))
+        if key in seen:
+            continue
+        seen.add(key)
+        match = {"user_id": key[0], "course_slug": key[1], "status": "pending"}
+        try:
+            async def mark(reason=None):
+                fields = {"reminder_sent": True, "reminder_sent_at": now}
+                if reason:
+                    fields["reminder_skipped_reason"] = reason
+                await db.enrollments.update_many(match, {"$set": fields})
+
+            if await db.enrollments.find_one({"user_id": key[0], "course_slug": key[1], "status": "paid"}):
+                await mark("already_purchased"); skipped += 1; continue
+            buyer = await db.users.find_one({"_id": ObjectId(key[0])}) if ObjectId.is_valid(key[0] or "") else None
+            if not buyer or not buyer.get("email"):
+                await mark("no_email"); skipped += 1; continue
+            path = COURSE_LANDING_PATHS.get(key[1], f"/learn/{key[1]}")
+            url = f"{email_service.FRONTEND_URL}{path}?buy=1&{REMINDER_UTM}"
+            await email_service.send_checkout_reminder(
+                buyer.get("name", ""), buyer["email"], e.get("course_title") or "your course", e.get("amount", 0), url,
+            )
+            await mark(); sent += 1
+        except Exception:
+            logger.exception(f"Course checkout reminder failed for enrollment {e.get('_id')}")
+    return {"scanned": scanned, "sent": sent, "skipped": skipped}
+
+async def _remind_ebook_checkouts(now) -> dict:
+    """One reminder per user for eBook / workbook checkouts started 2-72h ago and never paid."""
+    scanned = sent = skipped = 0
+    seen = set()
+    prod = await db.settings.find_one({"_id": "assessment_product"}) or {}
+    title = prod.get("title") or "Mind Health Workbook"
+    cursor = db.pdf_purchases.find({"status": "pending", "reminder_sent": {"$ne": True}, "created_at": _reminder_window(now)})
+    async for p in cursor:
+        scanned += 1
+        uid = p.get("user_id")
+        if uid in seen:
+            continue
+        seen.add(uid)
+        match = {"user_id": uid, "status": "pending"}
+        try:
+            async def mark(reason=None):
+                fields = {"reminder_sent": True, "reminder_sent_at": now}
+                if reason:
+                    fields["reminder_skipped_reason"] = reason
+                await db.pdf_purchases.update_many(match, {"$set": fields})
+
+            if await db.pdf_purchases.find_one({"user_id": uid, "status": "paid"}):
+                await mark("already_purchased"); skipped += 1; continue
+            if not p.get("email"):
+                await mark("no_email"); skipped += 1; continue
+            url = f"{email_service.FRONTEND_URL}/buy-ebook?{REMINDER_UTM}"
+            await email_service.send_checkout_reminder(p.get("name", ""), p["email"], title, p.get("amount", 0), url)
+            await mark(); sent += 1
+        except Exception:
+            logger.exception(f"eBook checkout reminder failed for purchase {p.get('_id')}")
+    return {"scanned": scanned, "sent": sent, "skipped": skipped}
+
+async def _send_review_requests(now) -> dict:
+    """Asks paid students for a review 7-14 days after purchase (once)."""
+    scanned = sent = skipped = 0
+    cursor = db.enrollments.find({
+        "status": "paid", "review_request_sent": {"$ne": True},
+        "paid_at": {"$gte": now - timedelta(days=14), "$lte": now - timedelta(days=REVIEW_MIN_DAYS)},
+    })
+    async for e in cursor:
+        scanned += 1
+        try:
+            done = {"$set": {"review_request_sent": True, "review_request_sent_at": now}}
+            already = await db.reviews.find_one({"user_id": e.get("user_id"), "course_slug": e.get("course_slug")})
+            buyer = await db.users.find_one({"_id": ObjectId(e["user_id"])}) if ObjectId.is_valid(e.get("user_id") or "") else None
+            if already or not buyer or not buyer.get("email"):
+                await db.enrollments.update_one({"_id": e["_id"]}, done); skipped += 1; continue
+            url = f"{email_service.FRONTEND_URL}/learn/{e['course_slug']}?review=1"
+            await email_service.send_review_request(buyer.get("name", ""), buyer["email"], e.get("course_title") or "the course", url)
+            await db.enrollments.update_one({"_id": e["_id"]}, done); sent += 1
+        except Exception:
+            logger.exception(f"Review request email failed for enrollment {e.get('_id')}")
+    return {"scanned": scanned, "sent": sent, "skipped": skipped}
+
+@api.post("/tasks/abandoned-cart-emails")
+async def run_abandoned_cart_task(request: Request):
+    """Cron-triggered. Sends one reminder per unpaid checkout (books, courses, eBooks)
+    that is 2-72h old, plus week-one review requests for course students.
+    Protected by X-Cron-Secret header matching CRON_SECRET env var."""
+    if not CRON_SECRET:
+        raise HTTPException(status_code=503, detail="Cron secret not configured")
+    if request.headers.get("x-cron-secret", "") != CRON_SECRET:
+        raise HTTPException(status_code=403, detail="Forbidden")
+
+    now = datetime.now(timezone.utc)
+    results = {
+        "books": await _remind_book_orders(now),
+        "courses": await _remind_course_checkouts(now),
+        "ebooks": await _remind_ebook_checkouts(now),
+        "review_requests": await _send_review_requests(now),
+    }
+    totals = {k: sum(r[k] for r in results.values()) for k in ("scanned", "sent", "skipped")}
+    return {**totals, **results}
+
 async def admin_book_orders(_: dict = Depends(require_admin)):
     cursor = db.book_orders.find({}).sort("created_at", -1)
     orders = []
@@ -2841,7 +2941,7 @@ app.add_middleware(
 # Max requests per window (seconds) per IP, per exact API path.
 # Only POST requests to these paths are rate-limited.
 RATE_LIMITS = {
-    "/api/auth/register":        (5, 3600),   # 5 signups per hour per IP
+   "/api/auth/register":        (40, 3600),  # 40 signups per hour per IP (mobile carriers share IPs)
     "/api/auth/login":           (10, 60),    # 10 login attempts per minute (brute-force protection)
     "/api/newsletter/subscribe": (3, 3600),   # 3 subscriptions per hour
     "/api/contact":              (3, 3600),   # 3 contact messages per hour
