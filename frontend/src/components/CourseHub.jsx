@@ -70,6 +70,10 @@ export default function CourseHub({ course, progressPct, onWatch, onBack }) {
   };
 
   const sendSession = async () => {
+        if (sess.message.trim().split(/\s+/).filter(Boolean).length > 200) {
+      toast.error("Please keep your message within 200 words.");
+      return;
+    }
     setBusy(true);
     try {
       await api.post("/bonus/session", sess);
@@ -179,9 +183,8 @@ export default function CourseHub({ course, progressPct, onWatch, onBack }) {
               <option>Afternoon (12 PM - 4 PM)</option>
               <option>Evening (4 PM - 8 PM)</option>
             </select>
-            <input className={`${inputCls} sm:col-span-2`} placeholder="What do you want to discuss? (e.g. overthinking, anxiety)" value={sess.topic} onChange={setS("topic")} />
-            <textarea className={`${inputCls} sm:col-span-2`} rows={3} placeholder="Anything else you want to share (optional)" value={sess.message} onChange={setS("message")} />
-          </div>
+                                <textarea className={`${inputCls} sm:col-span-2`} rows={4} placeholder="Anything else you want to share (optional, max 200 words)" value={sess.message} onChange={setS("message")} />
+            <div className={`sm:col-span-2 text-[11px] text-right ${sess.message.trim().split(/\s+/).filter(Boolean).length > 200 ? "text-red-400" : "text-muted-foreground"}`}>{sess.message.trim().split(/\s+/).filter(Boolean).length}/200 words</div>
           <button onClick={sendSession} disabled={busy}
             className="mt-4 bg-gold-gradient text-ink-950 font-extrabold text-sm px-5 py-2.5 rounded-lg disabled:opacity-60">
             {busy ? "Sending..." : "Send Request"}
