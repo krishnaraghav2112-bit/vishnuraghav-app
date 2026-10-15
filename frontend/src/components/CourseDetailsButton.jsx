@@ -14,7 +14,7 @@ const ITEMS = [
   ["Daily Action Plan", "Simple practices to help you turn understanding into action.", ""],
   ["Philosophical Teachings", "Insights inspired by Buddha, Shri Krishna, Osho, J. Krishnamurti, Ramana Maharshi, and Kabir.", ""],
   ["Practical Self-Understanding", "Learn to observe your thoughts, understand your fears, question old patterns, and respond more consciously.", ""],
-];
+   ];
 const CLOSING = "More than information. A journey towards understanding yourself.";
 
 export default function CourseDetailsButton() {
