@@ -4,9 +4,9 @@ import { X } from "lucide-react";
 
 /* ✏️ EDIT THE TEXT BELOW TO CHANGE THE COURSE DETAILS.
    Each line inside ITEMS is:  ["Heading", "Description", "Worth badge (or leave empty "")"]  */
-const TITLE = "ULJHA JEEVAN MASTERY";
-const SUBTITLE = "21 Days to Understand Your Mind.";
-const ITEMS = [
+export const TITLE = "ULJHA JEEVAN MASTERY";
+export const SUBTITLE = "21 Days to Understand Your Mind.";
+export const ITEMS = [
   ["21 Days of Video Lessons", "Deep teachings to understand your mind, thoughts, emotions, and inner conflicts.", ""],
   ["5 Books by Vishnu Raghav (Hard Copy)", "Explore self-understanding, overthinking, life, and human psychology through reading. The 5 printed books are delivered to your home.", "Worth ₹1,500+"],
   ["Practical Workbook (eBook - Soft Copy)", "Reflection questions and journaling exercises to apply each lesson in your daily life. Download it as a PDF.", "Worth ₹649"],
@@ -15,7 +15,7 @@ const ITEMS = [
   ["Philosophical Teachings", "Insights inspired by Buddha, Shri Krishna, Osho, J. Krishnamurti, Ramana Maharshi, and Kabir.", ""],
   ["Practical Self-Understanding", "Learn to observe your thoughts, understand your fears, question old patterns, and respond more consciously.", ""],
    ];
-const CLOSING = "More than information. A journey towards understanding yourself.";
+export const CLOSING = "More than information. A journey towards understanding yourself.";
 
 export default function CourseDetailsButton() {
   const [open, setOpen] = useState(false);
