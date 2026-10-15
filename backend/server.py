@@ -1064,6 +1064,7 @@ async def _mark_paid_from_webhook(order_id: str, payment_id: str):
         _run_bg(_send_course_receipt(enrollment, payment_id))
     logger.info(f"Webhook marked enrollment {enrollment['_id']} paid (order={order_id})")
     return True
+@api.post("/razorpay/webhook")
 async def razorpay_webhook(request: Request):
     webhook_secret = RAZORPAY_WEBHOOK_SECRET
     if not webhook_secret:
@@ -2852,6 +2853,7 @@ async def run_abandoned_cart_task(request: Request):
     totals = {k: sum(r[k] for r in results.values()) for k in ("scanned", "sent", "skipped")}
     return {**totals, **results}
 
+@api.get("/admin/book-orders")
 async def admin_book_orders(_: dict = Depends(require_admin)):
     cursor = db.book_orders.find({}).sort("created_at", -1)
     orders = []
