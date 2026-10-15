@@ -44,7 +44,6 @@ export default function GoogleSignInButton({ onSuccess }) {
       setReady(true);
     }).catch(() => {});
     return () => { cancelled = true; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (!CLIENT_ID) return null;
