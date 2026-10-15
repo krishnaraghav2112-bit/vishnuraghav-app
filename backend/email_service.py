@@ -478,3 +478,76 @@ async def send_session_request(name: str, email: str, phone: str, date: str, slo
         subject, html = session_request_user_template(name)
         return await send_email(email, subject, html)
     return None
+
+    # ───────────────────────── Course Purchase Email ──────────────────
+def course_purchase_template(name: str, course_title: str, course_slug: str, amount, payment_id: str) -> tuple[str, str]:
+    name_clean = escape((name or "friend").strip())
+    title_clean = escape(course_title or "your course")
+    course_url = f"{FRONTEND_URL}/learn/{course_slug}"
+    inner = f"""
+        <h1 style="font-family:Georgia,serif;font-size:24px;color:{BRAND_TEXT};margin:0 0 8px;">Your course is unlocked 🎉</h1>
+        <p style="margin:0 0 18px;color:{BRAND_TEXT};">Hi {name_clean}, thank you for enrolling in <strong>{title_clean}</strong>. You can start your first lesson right away.</p>
+        {_btn("Start Course", course_url)}
+        <div style="background:{BRAND_BG};border:1px solid #2a1f3a;border-radius:10px;padding:16px;margin:18px 0;">
+          <div style="color:{BRAND_GOLD};font-size:12px;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Payment receipt</div>
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="font-size:14px;color:{BRAND_TEXT};">
+            <tr><td style="padding:3px 0;color:{BRAND_MUTED};">Course</td><td align="right">{title_clean}</td></tr>
+            <tr><td style="padding:3px 0;color:{BRAND_MUTED};">Amount paid</td><td align="right"><strong>₹{escape(str(amount))}</strong></td></tr>
+            <tr><td style="padding:3px 0;color:{BRAND_MUTED};">Payment ID</td><td align="right" style="font-family:monospace;font-size:12px;">{escape(payment_id or "")}</td></tr>
+          </table>
+        </div>
+        <p style="margin:0 0 6px;color:{BRAND_TEXT};font-size:14px;">How to access: log in at <a href="{FRONTEND_URL}" style="color:{BRAND_GOLD};">authorvishnuraghav.in</a> with this email and your password, then open your Dashboard.</p>
+        <p style="margin:0 0 6px;color:{BRAND_MUTED};font-size:13px;">Forgot your password? Use "Forgot password" on the login screen.</p>
+        <p style="margin:18px 0 0;color:{BRAND_MUTED};font-size:13px;">Questions? Just reply to this email, or message us on WhatsApp: <a href="https://wa.me/918439111502" style="color:{BRAND_GOLD};">+91 84391 11502</a></p>
+    """
+    return f"Course unlocked: {course_title} — Vishnu Raghav", _shell(inner, preheader="Payment receipt + course access link inside.")
+
+
+async def send_course_purchase_confirmation(name: str, email: str, course_title: str, course_slug: str, amount, payment_id: str) -> Optional[str]:
+    if not email:
+        return None
+    subject, html = course_purchase_template(name, course_title, course_slug, amount, payment_id)
+    return await send_email(email, subject, html, reply_to='vishnuraghav955@gmail.com')
+
+
+# ───────────────────────── Checkout Reminder (courses / eBooks) ──────────────────
+def checkout_reminder_template(name: str, product_title: str, amount, url: str) -> tuple[str, str]:
+    name_clean = escape((name or "there").strip())
+    title_clean = escape(product_title or "your order")
+    inner = f"""
+        <h1 style="font-family:Georgia,serif;font-size:24px;color:{BRAND_TEXT};margin:0 0 12px;">You were almost there</h1>
+        <p style="margin:0 0 14px;color:{BRAND_TEXT};">Hi {name_clean}, you started checking out <strong>{title_clean}</strong> but the payment wasn't completed.</p>
+        <p style="margin:0 0 14px;color:{BRAND_TEXT};">If something went wrong with the payment, or you just got busy, you can pick up right where you left off. It takes less than a minute.</p>
+        <p style="margin:0 0 4px;color:{BRAND_MUTED};font-size:14px;">Amount: <strong style="color:{BRAND_TEXT};">₹{escape(str(amount))}</strong></p>
+        {_btn("Complete my purchase", url)}
+        <p style="margin:18px 0 0;color:{BRAND_MUTED};font-size:13px;">Have a question before you buy? Just reply to this email, or message us on WhatsApp: <a href="https://wa.me/918439111502" style="color:{BRAND_GOLD};">+91 84391 11502</a></p>
+    """
+    return f"{product_title or 'Your order'} is waiting for you", _shell(inner, preheader="Finish your checkout in under a minute.")
+
+
+async def send_checkout_reminder(name: str, email: str, product_title: str, amount, url: str) -> Optional[str]:
+    if not email:
+        return None
+    subject, html = checkout_reminder_template(name, product_title, amount, url)
+    return await send_email(email, subject, html, reply_to='vishnuraghav955@gmail.com')
+
+
+# ───────────────────────── Week-one Review Request ──────────────────
+def review_request_template(name: str, course_title: str, url: str) -> tuple[str, str]:
+    name_clean = escape((name or "there").strip())
+    title_clean = escape(course_title or "the course")
+    inner = f"""
+        <h1 style="font-family:Georgia,serif;font-size:24px;color:{BRAND_TEXT};margin:0 0 12px;">How was your first week?</h1>
+        <p style="margin:0 0 14px;color:{BRAND_TEXT};">Hi {name_clean}, it's been a week since you joined <strong>{title_clean}</strong>. We'd love to hear how it's going.</p>
+        <p style="margin:0 0 14px;color:{BRAND_TEXT};">A short, honest review (even two lines) helps other people decide if the course is right for them.</p>
+        {_btn("Write a quick review", url)}
+        <p style="margin:18px 0 0;color:{BRAND_MUTED};font-size:13px;">Stuck or have feedback you'd rather share privately? Just reply to this email.</p>
+    """
+    return "How's your first week going?", _shell(inner, preheader="Share a quick review of your first week.")
+
+
+async def send_review_request(name: str, email: str, course_title: str, url: str) -> Optional[str]:
+    if not email:
+        return None
+    subject, html = review_request_template(name, course_title, url)
+    return await send_email(email, subject, html, reply_to='vishnuraghav955@gmail.com')
