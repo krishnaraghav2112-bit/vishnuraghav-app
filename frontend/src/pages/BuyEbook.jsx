@@ -8,6 +8,7 @@ import {
 import { toast } from "sonner";
 import { Helmet } from "react-helmet-async";
 import api, { formatApiError } from "../lib/api";
+import { getAttribution } from "../lib/attribution";
 import { useAuth } from "../context/AuthContext";
 
 function loadRazorpay() {
@@ -47,7 +48,7 @@ export default function BuyEbook({ onOpenAuth }) {
     if (paying) return;
     setPaying(true);
     try {
-      const { data } = await api.post("/assessment/product/checkout");
+     const { data } = await api.post("/assessment/product/checkout", { attribution: getAttribution() });
       const loaded = await loadRazorpay();
       if (!loaded) { toast.error("Payment gateway failed to load. Please try again."); setPaying(false); return; }
       const rzp = new window.Razorpay({
