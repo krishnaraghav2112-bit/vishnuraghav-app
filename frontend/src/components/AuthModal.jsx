@@ -3,6 +3,7 @@ import { X, ArrowLeft, CheckCircle2, MailCheck } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "../context/AuthContext";
 import api, { formatApiError } from "../lib/api";
+import GoogleSignInButton from "./GoogleSignInButton";
 
 export default function AuthModal({ open, mode = "login", onClose, onSwitch }) {
   const { login, register } = useAuth();
@@ -203,6 +204,7 @@ export default function AuthModal({ open, mode = "login", onClose, onSwitch }) {
                   </>
                 )}
 
+                                <GoogleSignInButton onSuccess={(u) => { toast.success(`Welcome, ${(u.name || "").split(" ")[0]}! 👋`); handleClose(); }} />
                 {tab === "register" && (
                   <div className="mb-3">
                     <label className="text-xs text-muted-foreground mb-1.5 block">Full Name</label>
