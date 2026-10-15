@@ -49,6 +49,16 @@ export function AuthProvider({ children }) {
     }
   };
 
+    const googleLogin = async (credential) => {
+    try {
+      const { data } = await api.post("/auth/google", { credential });
+      localStorage.setItem("vr_token", data.token);
+      setUser(data.user);
+      return { ok: true, user: data.user, newUser: data.new_user };
+    } catch (e) {
+      return { ok: false, error: formatApiError(e) };
+    }
+  };
   const logout = async () => {
     try { await api.post("/auth/logout"); } catch {}
     localStorage.removeItem("vr_token");
@@ -66,7 +76,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthCtx.Provider value={{ user, loading, login, register, logout, updateProfile, refreshMe }}>
+    <AuthCtx.Provider value={{ user, loading, login, register, googleLogin, logout, updateProfile, refreshMe }}>
       {children}
     </AuthCtx.Provider>
   );
