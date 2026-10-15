@@ -294,7 +294,6 @@ export default function OverthinkingLanding({ onOpenPay }) {
             </ul>
             <BuyButton onClick={buy} testId="lp-price-buy" className="w-full sm:w-auto" />
             <p className="text-[11px] text-muted-foreground mt-3">UPI · Cards · Net Banking — secured by Razorpay</p>
-            </div>
           </div>
         </div>
       </section>
