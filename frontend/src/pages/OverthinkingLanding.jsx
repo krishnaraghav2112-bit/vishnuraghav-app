@@ -296,10 +296,6 @@ export default function OverthinkingLanding({ onOpenPay }) {
             <p className="text-[11px] text-muted-foreground mt-3">UPI · Cards · Net Banking — secured by Razorpay</p>
             <div data-testid="lp-refund-note" className="mt-6 flex items-start gap-2.5 text-left bg-ink-950/60 border border-white/[0.07] rounded-xl p-4 text-xs text-muted-foreground">
               <ShieldCheck className="w-5 h-5 text-green-400 flex-shrink-0" />
-              <span>
-                If a payment fails and money is deducted, it is returned automatically within 5–7 business days. Any technical issue, we'll fix it.{" "}
-                <Link to="/refund-policy" data-testid="lp-refund-link" className="text-brand-gold underline">Read refund policy</Link>
-              </span>
             </div>
           </div>
         </div>
