@@ -369,7 +369,7 @@ async def register(body: RegisterIn, response: Response):
 async def login(body: LoginIn, response: Response):
     email = body.email.lower().strip()
     user = await db.users.find_one({"email": email})
-    if not user or not verify_password(body.password, user.get("password_hash", ""))
+    if not user or not verify_password(body.password, user.get("password_hash", "")):
         raise HTTPException(status_code=401, detail="Invalid email or password")
     token = create_access_token(str(user["_id"]), email)
     response.set_cookie("access_token", token, httponly=True, samesite="lax", max_age=604800, path="/")
