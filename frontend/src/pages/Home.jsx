@@ -4,6 +4,7 @@ import { Clock, Brain, Sparkles, Heart, Youtube, Instagram, Facebook, Linkedin, 
 import { toast } from "sonner";
 import api, { formatApiError } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
+import BooksShowcase from "../components/BooksShowcase";
 import { useCart } from "../context/CartContext";
 import { makeBookCover, makeAuthorPortrait } from "../lib/bookCover";
 import SuccessLottie from "../components/SuccessLottie";
@@ -342,73 +343,11 @@ const submitWaitlist = async (email) => {
             <p className="text-muted-foreground max-w-xl mb-10 text-sm lg:text-base leading-relaxed">Real emotions. Honest words. Each book a mirror for the feelings you carry but rarely express.</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7">
-            {books.map((b, i) => {
-              const cover = b.cover_image || makeBookCover({ title: b.title, hindi: b.hindi, emoji: bookEmojis[b.slug] || "✦", palette: b.cover_palette });
-              return (
-                <div key={b.slug} className={`reveal delay${(i % 3) + 1} premium-card bg-ink-800 border border-white/[0.07] rounded-2xl overflow-hidden hover:shadow-2xl`}>
-                  <div className="h-72 relative overflow-hidden bg-ink-700">
-                    <img src={cover} alt={b.title} className="w-full h-full object-cover object-top transition-transform duration-500 hover:scale-105" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-ink-950/90 to-transparent" />
-                    {b.badge && (
-                      <div className={`absolute top-3 left-3 text-[10px] font-extrabold px-2.5 py-1 rounded-full ${
-                        b.status === "upcoming" ? "bg-gradient-to-r from-red-700 to-red-900 text-white" : "bg-gold-gradient text-ink-950"
-                      }`}>{b.badge}</div>
-                    )}
-                    {b.price && b.price !== "Coming Soon" && (
-                      <div className="absolute top-3 right-3 bg-ink-950/80 border border-brand-gold/30 text-brand-gold text-xs font-bold px-2.5 py-1 rounded-md backdrop-blur">{b.price}</div>
-                    )}
-                  </div>
-                  <div className="p-5">
-                    <h3 className="font-serif font-extrabold text-base mb-0.5">{b.title}</h3>
-                    <div className="text-sm text-brand-gold italic mb-1">{b.hindi}</div>
-                    <p className="text-[11px] text-muted-foreground mb-3 leading-relaxed">{b.publisher} · {b.tagline}</p>
-                    <p className="text-xs text-muted-foreground mb-3 leading-relaxed">{b.description}</p>
-                    <div className="bg-brand-gold/5 border border-brand-gold/15 border-l-2 border-l-brand-gold rounded-r-lg p-3 mb-4">
-                      <p className="text-xs italic text-foreground/70 leading-relaxed">{b.excerpt}</p>
-                    </div>
-                    <h4 className="text-[10px] uppercase tracking-wider font-bold text-brand-gold mb-2">Key Takeaways</h4>
-                    <ul className="space-y-1 mb-4">
-                      {b.takeaways.map((t) => (
-                        <li key={t} className="text-xs text-muted-foreground pl-3.5 relative leading-relaxed">
-                          <span className="absolute left-0 text-brand-gold text-[9px] top-1">✦</span>{t}
-                        </li>
-                      ))}
-                    </ul>
-                   <div className="flex gap-2 flex-wrap">
-                      {b.amazon ? (
-                <a href={b.amazon} target="_blank" rel="noopener noreferrer" data-testid={`book-amazon-${b.slug}`}
-                          className="flex-1 py-2 rounded-md text-xs font-bold bg-orange-500/10 text-orange-400 border border-orange-500/25 hover:bg-orange-500/20 transition-colors text-center flex items-center justify-center gap-1">
-                          <ShoppingCart className="w-3 h-3" /> Amazon
-                        </a>
-                      ) : null}
-                      {b.flipkart ? (
-                        <a href={b.flipkart} target="_blank" rel="noopener noreferrer" data-testid={`book-flipkart-${b.slug}`}
-                          className="flex-1 py-2 rounded-md text-xs font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20 transition-colors text-center">
-                          🛍️ Flipkart
-                        </a>
-                      ) : null}
-                      {b.status !== "upcoming" && (
-                        <button
-                          onClick={() => { if (!user) { onOpenAuth("login"); } else { addToCart(b); nav("/book-checkout"); } }}
-                          data-testid={`book-signed-${b.slug}`}
-                          className="w-full mt-1 py-2 rounded-md text-xs font-bold bg-gold-gradient text-ink-950 hover:opacity-90 transition-opacity text-center flex items-center justify-center gap-1">
-                          ✍️ Buy Author Signed Copy
-                        </button>
-                      )}
-                     {b.status === "upcoming" && (
-                        <button onClick={() => toast.success("🔔 You'll be notified at launch!")}
-                          data-testid={`book-notify-${b.slug}`}
-                          className="flex-1 py-2 rounded-md text-xs font-bold bg-red-500/10 text-red-400 border border-red-500/25 hover:bg-red-500/20 transition-colors">
-                          🔔 Notify Me
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+                    <BooksShowcase
+            books={books}
+            getCover={(b) => b.cover_image || makeBookCover({ title: b.title, hindi: b.hindi, emoji: bookEmojis[b.slug] || "✦", palette: b.cover_palette })}
+            onBuySigned={(b) => { if (!user) { onOpenAuth("login"); } else { addToCart(b); nav("/book-checkout"); } }}
+          />       
         </div>
       </section>
 
