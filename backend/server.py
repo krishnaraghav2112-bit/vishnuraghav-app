@@ -2660,6 +2660,8 @@ async def bonus_session_request(body: SessionRequestIn, user: dict = Depends(get
         raise HTTPException(status_code=400, detail="Please enter a valid 10-digit phone / WhatsApp number")
     if not body.topic.strip():
         raise HTTPException(status_code=400, detail="Please tell us what you want to discuss")
+    if len(body.message.split()) > 200:
+        raise HTTPException(status_code=400, detail="Please keep your message within 200 words")
     now = datetime.now(timezone.utc)
     recent = await db.session_requests.find_one({
         "user_id": str(user["_id"]), "created_at": {"$gte": now - timedelta(hours=24)},
