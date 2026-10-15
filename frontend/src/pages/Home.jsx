@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import api, { formatApiError } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import BooksShowcase from "../components/BooksShowcase";
+import CourseDetailsButton from "../components/CourseDetailsButton";
 import { useCart } from "../context/CartContext";
 import { makeBookCover, makeAuthorPortrait } from "../lib/bookCover";
 import SuccessLottie from "../components/SuccessLottie";
@@ -284,6 +285,7 @@ const submitWaitlist = async (email) => {
                       <span key={t} className="bg-ink-900 border border-white/[0.07] rounded-full text-[10px] px-2 py-0.5 text-muted-foreground">{t}</span>
                     ))}
                   </div>
+                  {c.slug === "overcoming-overthinking" && <CourseDetailsButton />}
                   {c.is_available && (<>
                   <div className="flex items-center gap-3 mb-2">
                     <div className="flex items-center gap-1">
