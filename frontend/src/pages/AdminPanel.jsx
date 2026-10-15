@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { BarChart3, Users, ShoppingBag, BookOpen, GraduationCap, FileText, Mail, MessageSquare, Image, Plus, Edit2, Trash2, Save, X, LogOut, Ticket, Brain, Upload, Loader2, Package, Truck, Copy } from "lucide-react";
+import { BarChart3, Users, ShoppingBag, BookOpen, GraduationCap, FileText, Mail, MessageSquare, Image, Plus, Edit2, Trash2, Save, X, LogOut, Ticket, Brain, Upload, Loader2, Package, Truck, Copy, TrendingUp, Star } from "lucide-react";
 import api, { formatApiError } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import ImageUpload from "../components/ImageUpload";
@@ -11,6 +11,8 @@ const TABS = [
   { id: "stats", label: "Overview", icon: BarChart3 },
   { id: "users", label: "Users", icon: Users },
   { id: "enrollments", label: "Enrollments", icon: ShoppingBag },
+  { id: "adsales", label: "Ad Sales", icon: TrendingUp },
+  { id: "reviews", label: "Reviews", icon: Star },
   { id: "bookorders", label: "Book Orders", icon: Package },
   { id: "books", label: "Books", icon: BookOpen },
   { id: "courses", label: "Courses", icon: GraduationCap },
@@ -67,6 +69,8 @@ export default function AdminPanel({ onOpenAuth }) {
           {tab === "stats" && <StatsPanel />}
           {tab === "users" && <UsersPanel />}
           {tab === "enrollments" && <EnrollmentsPanel />}
+          {tab === "adsales" && <AdSalesPanel />}
+          {tab === "reviews" && <ReviewsPanel />}
           {tab === "bookorders" && <BookOrdersPanel />}
           {tab === "books" && <BooksPanel />}
           {tab === "courses" && <CoursesPanel />}
