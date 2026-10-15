@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { HelmetProvider } from 'react-helmet-async';
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { Toaster } from "sonner";
@@ -10,6 +10,8 @@ import Navbar from "./components/Navbar";
 import AuthModal from "./components/AuthModal";
 import PayModal from "./components/PayModal";
 import WhatsAppButton from "./components/WhatsAppButton";
+import { track } from "./lib/pixel";
+import { captureAttribution } from "./lib/attribution";
 
 import Home from "./pages/Home";
 import Dashboard from "./pages/Dashboard";
@@ -24,6 +26,11 @@ import BookCheckout from "./pages/BookCheckout";
 import SelfAssessment from "./pages/SelfAssessment";
 import BuyEbook from "./pages/BuyEbook";
 import EbookLanding from "./pages/EbookLanding";
+import OverthinkingLanding from "./pages/OverthinkingLanding";
+import ThankYou from "./pages/ThankYou";
+
+// Ad landing pages: no top menu, no global WhatsApp bubble
+const BARE_PAGES = ["/overthinking", "/thank-you"];
 
 function useReveal() {
   useEffect(() => {
@@ -44,21 +51,32 @@ function useReveal() {
   }, []);
 }
 
+// First PageView is sent by index.html; this sends one on every later page change
+function usePixelPageViews(pathname) {
+  const first = useRef(true);
+  useEffect(() => {
+    if (first.current) { first.current = false; return; }
+    track("PageView");
+  }, [pathname]);
+}
+
 function AppShell() {
   useReveal();
   const location = useLocation();
+  usePixelPageViews(location.pathname);
+  useEffect(() => { captureAttribution(); }, [location.search]);
   const [authOpen, setAuthOpen] = useState(false);
   const [authMode, setAuthMode] = useState("login");
   const [payCourse, setPayCourse] = useState(null);
+  const bare = BARE_PAGES.includes(location.pathname);
 
   const openAuth = (mode) => { setAuthMode(mode); setAuthOpen(true); };
   const openPay = (course) => setPayCourse(course);
 
   return (
     <div className="App bg-ink-950 text-foreground min-h-screen">
-      <Navbar onOpenAuth={openAuth} />
-      <div className="pt-16">
-        {/* Re-mount route subtree on path change to trigger page-enter animation */}
+      {!bare && <Navbar onOpenAuth={openAuth} />}
+      <div className={bare ? "" : "pt-16"}>
         <div key={location.pathname} className="page-enter">
           <Routes location={location}>
             <Route path="/" element={<Home onOpenAuth={openAuth} onOpenPay={openPay} />} />
@@ -68,6 +86,8 @@ function AppShell() {
             <Route path="/self-assessment" element={<SelfAssessment onOpenAuth={openAuth} />} />
             <Route path="/buy-ebook" element={<BuyEbook onOpenAuth={openAuth} />} />
             <Route path="/uljha-jeevan" element={<EbookLanding />} />
+            <Route path="/overthinking" element={<OverthinkingLanding onOpenPay={openPay} />} />
+            <Route path="/thank-you" element={<ThankYou />} />
             <Route path="/blog/:slug" element={<BlogPostPage />} />
             <Route path="/admin" element={<AdminPanel onOpenAuth={openAuth} />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
@@ -78,8 +98,8 @@ function AppShell() {
         </div>
       </div>
       <AuthModal open={authOpen} mode={authMode} onClose={() => setAuthOpen(false)} />
-      <PayModal open={!!payCourse} course={payCourse} onClose={() => setPayCourse(null)} onOpenAuth={openAuth} />
-      <WhatsAppButton hidden={!!payCourse} />
+      <PayModal key={payCourse?.slug || "closed"} open={!!payCourse} course={payCourse} onClose={() => setPayCourse(null)} onOpenAuth={openAuth} />
+      <WhatsAppButton hidden={!!payCourse || bare} />
       <Toaster
         position="top-center"
         theme="dark"
