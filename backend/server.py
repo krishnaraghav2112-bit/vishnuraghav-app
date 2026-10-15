@@ -369,12 +369,56 @@ async def register(body: RegisterIn, response: Response):
 async def login(body: LoginIn, response: Response):
     email = body.email.lower().strip()
     user = await db.users.find_one({"email": email})
-    if not user or not verify_password(body.password, user["password_hash"]):
+    if not user or not verify_password(body.password, user.get("password_hash", ""))
         raise HTTPException(status_code=401, detail="Invalid email or password")
     token = create_access_token(str(user["_id"]), email)
     response.set_cookie("access_token", token, httponly=True, samesite="lax", max_age=604800, path="/")
     return {"user": serialize_user(user), "token": token}
 
+GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "").strip()
+
+class GoogleLoginIn(BaseModel):
+    credential: str
+
+@api.post("/auth/google")
+async def google_login(body: GoogleLoginIn, response: Response):
+    if not GOOGLE_CLIENT_ID:
+        raise HTTPException(status_code=503, detail="Google sign-in is not configured")
+    try:
+        async with httpx.AsyncClient(timeout=10) as hc:
+            r = await hc.get("https://oauth2.googleapis.com/tokeninfo", params={"id_token": body.credential})
+    except Exception:
+        raise HTTPException(status_code=502, detail="Could not reach Google. Please try again.")
+    if r.status_code != 200:
+        raise HTTPException(status_code=401, detail="Google sign-in failed. Please try again.")
+    info = r.json()
+    if info.get("aud") != GOOGLE_CLIENT_ID or info.get("iss") not in ("accounts.google.com", "https://accounts.google.com"):
+        raise HTTPException(status_code=401, detail="Google sign-in failed. Please try again.")
+    if str(info.get("email_verified", "")).lower() != "true" or not info.get("email"):
+        raise HTTPException(status_code=401, detail="Your Google email is not verified.")
+    email = info["email"].lower().strip()
+    user = await db.users.find_one({"email": email})
+    new_user = False
+    if not user:
+        user = {
+            "email": email, "name": (info.get("name") or email.split("@")[0]).strip(),
+            "password_hash": "", "google_id": info.get("sub"),
+            "phone": "", "city": "", "occupation": "", "role": "student",
+            "created_at": datetime.now(timezone.utc),
+        }
+        res = await db.users.insert_one(user)
+        user["_id"] = res.inserted_id
+        new_user = True
+    elif not user.get("google_id"):
+        await db.users.update_one({"_id": user["_id"]}, {"$set": {"google_id": info.get("sub")}})
+    token = create_access_token(str(user["_id"]), email)
+    response.set_cookie("access_token", token, httponly=True, samesite="lax", max_age=604800, path="/")
+    if new_user:
+        try:
+            await email_service.send_welcome(user["name"], email)
+        except Exception:
+            logger.exception("welcome email failed")
+    return {"user": serialize_user(user), "token": token, "new_user": new_user}
 @api.post("/auth/logout")
 async def logout(response: Response):
     response.delete_cookie("access_token", path="/")
