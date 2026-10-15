@@ -204,6 +204,7 @@ export default function OverthinkingLanding({ onOpenPay }) {
         </div>
       </section>
 
+        <WhatYouGet />
       {/* Is this for you */}
       <section className="bg-ink-900/70 border-y border-white/[0.06]">
         <div className="max-w-5xl mx-auto px-5 py-16">
@@ -220,7 +221,6 @@ export default function OverthinkingLanding({ onOpenPay }) {
         </div>
       </section>
 
-       <WhatYouGet />
       {/* What you'll learn */}
       <section className="max-w-5xl mx-auto px-5 py-16">
         <SectionTitle eyebrow="What you'll learn">{course.modules} modules · {course.lessons} lessons · 3 weeks</SectionTitle>
@@ -294,7 +294,6 @@ export default function OverthinkingLanding({ onOpenPay }) {
             </ul>
             <BuyButton onClick={buy} testId="lp-price-buy" className="w-full sm:w-auto" />
             <p className="text-[11px] text-muted-foreground mt-3">UPI · Cards · Net Banking — secured by Razorpay</p>
-            <div data-testid="lp-refund-note" className="mt-6 flex items-start gap-2.5 text-left bg-ink-950/60 border border-white/[0.07] rounded-xl p-4 text-xs text-muted-foreground">
             </div>
           </div>
         </div>
