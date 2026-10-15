@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft, Lock, CheckCircle2, Circle, Play, Pause,
   Volume2, VolumeX, Volume1, Maximize, Minimize, RotateCcw, RotateCw,
@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import api, { formatApiError } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import CourseHub from "../components/CourseHub";
+import CourseReviewCard from "../components/CourseReviewCard";
 
 /* ───────────────────────── SECURE VIDEO PLAYER ─────────────────────────
    - YouTube's own buttons are switched OFF (controls=0): no settings menu,
@@ -424,7 +425,9 @@ export default function CoursePlayer({ onOpenAuth, onOpenPay }) {
   const [activeLesson, setActiveLesson] = useState({ moduleIdx: 0, lessonIdx: 0 });
   const [course, setCourse] = useState(null);
   const [autoStart, setAutoStart] = useState(false);
-    const [view, setView] = useState("hub");
+  const [searchParams] = useSearchParams();
+  const fromReviewEmail = searchParams.get("review") === "1";
+  const [view, setView] = useState(fromReviewEmail ? "videos" : "hub");
 
   useEffect(() => {
     if (!loading && !user) { onOpenAuth("login"); nav("/"); return; }
@@ -568,6 +571,7 @@ export default function CoursePlayer({ onOpenAuth, onOpenPay }) {
               <div><div className="text-xl font-black text-brand-gold">{c.level}</div><div className="text-[10px] text-muted-foreground uppercase">Level</div></div>
             </div>
           </div>
+          <CourseReviewCard slug={slug} autoFocus={fromReviewEmail} />
         </div>
 
         <aside className="bg-ink-900 border border-white/[0.07] rounded-2xl p-4 h-fit lg:sticky lg:top-20">
