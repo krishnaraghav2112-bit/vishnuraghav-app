@@ -94,7 +94,6 @@ function WhatYouGet() {
       </div>
       {BONUS_VALUE > 0 && (
         <p data-testid="lp-bonus-value" className="mt-5 text-sm text-center">
-          Includes bonuses worth <strong className="text-brand-gold">₹{BONUS_VALUE.toLocaleString("en-IN")}+</strong> at no extra cost.
         </p>
       )}
       <p className="font-serif italic text-sm text-brand-gold mt-3 text-center">{PROGRAM_CLOSING}</p>
