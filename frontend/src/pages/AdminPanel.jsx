@@ -152,6 +152,130 @@ function EnrollmentsPanel() {
     </>
   );
 }
+// ─── Ad Sales: which Facebook / Instagram ad each sale came from ───
+function sourceOf(a = {}) {
+  const s = (a.utm_source || "").toLowerCase();
+  if (["ig", "instagram"].includes(s)) return "Instagram";
+  if (["fb", "facebook"].includes(s)) return "Facebook";
+  if (s === "an") return "Audience Network";
+  if (s === "msg" || s === "messenger") return "Messenger";
+  if (s === "email") return "Email";
+  if (s) return a.utm_source;
+  if (a.fbclid) return "Meta ad (no UTM)";
+  return "Direct / organic";
+}
+
+function groupSales(sales, keyFn) {
+  const map = {};
+  sales.forEach((x) => {
+    const k = keyFn(x);
+    map[k] = map[k] || { key: k, sales: 0, revenue: 0 };
+    map[k].sales += 1;
+    map[k].revenue += Number(x.amount) || 0;
+  });
+  return Object.values(map).sort((a, b) => b.revenue - a.revenue);
+}
+
+const inr = (v) => `₹${(Number(v) || 0).toLocaleString("en-IN")}`;
+const TEST_MODES = ["test_mock", "razorpay_test"];
+const RANGES = [["7", "Last 7 days"], ["30", "Last 30 days"], ["all", "All time"]];
+
+function AdSalesPanel() {
+  const [sales, setSales] = useState([]);
+  const [range, setRange] = useState("30");
+  const [hideTest, setHideTest] = useState(true);
+  useEffect(() => { api.get("/admin/sales").then((r) => setSales(r.data)).catch((e) => toast.error(formatApiError(e))); }, []);
+
+  const since = range === "all" ? 0 : Date.now() - Number(range) * 86400000;
+  const rows = sales.filter((x) => (!hideTest || !TEST_MODES.includes(x.payment_mode)) && (!since || new Date(x.paid_at).getTime() >= since));
+  const total = rows.reduce((t, x) => t + (Number(x.amount) || 0), 0);
+  const bySource = groupSales(rows, (x) => sourceOf(x.attribution));
+  const byAd = groupSales(rows.filter((x) => x.attribution?.utm_campaign || x.attribution?.utm_content),
+    (x) => [sourceOf(x.attribution), x.attribution.utm_campaign || "—", x.attribution.utm_term || "—", x.attribution.utm_content || "—"].join(" | "));
+
+  return (
+    <div data-testid="admin-adsales-panel">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
+        <h2 className="font-serif text-xl font-extrabold">Sales by Ad Source</h2>
+        <div className="flex items-center gap-3 text-xs">
+          <select data-testid="adsales-range" value={range} onChange={(e) => setRange(e.target.value)} className="bg-ink-800 border border-white/[0.07] rounded-lg px-3 py-2">
+            {RANGES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+          </select>
+          <label className="flex items-center gap-1.5 text-muted-foreground cursor-pointer">
+            <input type="checkbox" data-testid="adsales-hide-test" checked={hideTest} onChange={(e) => setHideTest(e.target.checked)} /> Hide test sales
+          </label>
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-3 mb-6">
+        <div className="bg-ink-800 border border-white/[0.07] rounded-xl p-4"><div className="text-[10px] uppercase text-muted-foreground">Sales</div><div data-testid="adsales-count" className="text-2xl font-black">{rows.length}</div></div>
+        <div className="bg-ink-800 border border-white/[0.07] rounded-xl p-4"><div className="text-[10px] uppercase text-muted-foreground">Revenue</div><div data-testid="adsales-revenue" className="text-2xl font-black text-brand-gold">{inr(total)}</div></div>
+      </div>
+      <h3 className="text-sm font-bold mb-2">By source</h3>
+      <div className="mb-6"><DataTable rows={bySource} cols={[["Source", "key"], ["Sales", "sales", (v) => v], ["Revenue", "revenue", inr]]} /></div>
+      <h3 className="text-sm font-bold mb-1">By campaign / ad</h3>
+      <p className="text-[11px] text-muted-foreground mb-2">Source | Campaign | Ad set | Ad. Only sales that came through a link with UTM tags appear here.</p>
+      <div className="mb-6"><DataTable rows={byAd} cols={[["Source | Campaign | Ad set | Ad", "key"], ["Sales", "sales", (v) => v], ["Revenue", "revenue", inr]]} /></div>
+      <h3 className="text-sm font-bold mb-2">Every sale</h3>
+      <DataTable
+        rows={rows.map((x) => ({ ...x, source: sourceOf(x.attribution), campaign: x.attribution?.utm_campaign, adset: x.attribution?.utm_term, ad: x.attribution?.utm_content, reminder: x.attribution?.recovered_by ? "Yes" : "" }))}
+        cols={[
+          ["Date", "paid_at", (v) => v ? new Date(v).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" }) : ""],
+          ["Buyer", "email"],
+          ["Product", "product"],
+          ["Amount", "amount", inr],
+          ["Source", "source"],
+          ["Campaign", "campaign"],
+          ["Ad set", "adset"],
+          ["Ad", "ad"],
+          ["Via reminder", "reminder"],
+        ]}
+      />
+    </div>
+  );
+}
+
+// ─── Reviews: approve student reviews before they show on the sales page ───
+const REVIEW_STATUS_CLS = { approved: "text-green-400", hidden: "text-red-400", pending: "text-amber-400" };
+
+function ReviewsPanel() {
+  const [items, setItems] = useState([]);
+  const load = () => api.get("/admin/reviews").then((r) => setItems(r.data)).catch((e) => toast.error(formatApiError(e)));
+  useEffect(() => { load(); }, []);
+
+  const setStatus = async (id, status) => {
+    try { await api.patch(`/admin/reviews/${id}`, { status }); toast.success(status === "approved" ? "Review published" : "Review updated"); load(); }
+    catch (e) { toast.error(formatApiError(e)); }
+  };
+  const remove = async (id) => {
+    if (!window.confirm("Delete this review permanently?")) return;
+    try { await api.delete(`/admin/reviews/${id}`); load(); } catch (e) { toast.error(formatApiError(e)); }
+  };
+
+  return (
+    <div data-testid="admin-reviews-panel">
+      <h2 className="font-serif text-xl font-extrabold mb-1">Student Reviews ({items.length})</h2>
+      <p className="text-xs text-muted-foreground mb-5">Approved reviews appear on the /overthinking sales page (first name + last initial only).</p>
+      {items.length === 0 && <p className="text-sm text-muted-foreground">No reviews yet. Students can write one after their first week.</p>}
+      <div className="space-y-3">
+        {items.map((r) => (
+          <div key={r.id} data-testid={`admin-review-${r.id}`} className="bg-ink-800 border border-white/[0.07] rounded-xl p-4">
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+              <div className="text-sm font-bold">{r.full_name} <span className="text-xs text-muted-foreground font-normal">· {r.email}{r.city ? ` · ${r.city}` : ""}</span></div>
+              <span className={`text-xs font-bold uppercase ${REVIEW_STATUS_CLS[r.status] || ""}`}>{r.status}</span>
+            </div>
+            <div className="flex gap-0.5 mb-2">{[1, 2, 3, 4, 5].map((n) => <Star key={n} className={`w-3.5 h-3.5 ${n <= r.rating ? "fill-brand-gold text-brand-gold" : "text-white/20"}`} />)}</div>
+            <p className="text-sm text-muted-foreground italic mb-3">"{r.text}"</p>
+            <div className="flex gap-2 text-xs">
+              {r.status !== "approved" && <button data-testid={`admin-review-approve-${r.id}`} onClick={() => setStatus(r.id, "approved")} className="px-3 py-1.5 rounded-md bg-green-500/15 text-green-400 font-bold">Approve</button>}
+              {r.status !== "hidden" && <button data-testid={`admin-review-hide-${r.id}`} onClick={() => setStatus(r.id, "hidden")} className="px-3 py-1.5 rounded-md bg-ink-900 border border-white/10 text-muted-foreground font-bold">Hide</button>}
+              <button data-testid={`admin-review-delete-${r.id}`} onClick={() => remove(r.id)} className="px-3 py-1.5 rounded-md text-red-400 hover:bg-red-500/10 font-bold">Delete</button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 function NewsletterPanel() {
   const [items, setItems] = useState([]);
