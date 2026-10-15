@@ -3,17 +3,17 @@ import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 
 /* ✏️ EDIT THE TEXT BELOW TO CHANGE THE COURSE DETAILS.
-   Each line inside ITEMS is:  ["Heading", "Description"]  */
+   Each line inside ITEMS is:  ["Heading", "Description", "Worth badge (or leave empty "")"]  */
 const TITLE = "ULJHA JEEVAN MASTERY";
 const SUBTITLE = "21 Days to Understand Your Mind.";
 const ITEMS = [
-  ["21 Days of Video Lessons", "Deep teachings to understand your mind, thoughts, emotions, and inner conflicts."],
-  ["5 Books by Vishnu Raghav", "Explore self-understanding, overthinking, life, and human psychology through reading."],
-  ["Practical Workbook", "Reflection questions and journaling exercises to apply each lesson in your daily life."],
-  ["Daily Action Plan", "Simple practices to help you turn understanding into action."],
-  ["1-to-1 Personal Session", "An individual session to discuss your concerns and gain personal clarity."],
-  ["Philosophical Teachings", "Insights inspired by Buddha, Shri Krishna, Osho, J. Krishnamurti, Ramana Maharshi, and Kabir."],
-  ["Practical Self-Understanding", "Learn to observe your thoughts, understand your fears, question old patterns, and respond more consciously."],
+  ["21 Days of Video Lessons", "Deep teachings to understand your mind, thoughts, emotions, and inner conflicts.", ""],
+  ["5 Books by Vishnu Raghav (Hard Copy)", "Explore self-understanding, overthinking, life, and human psychology through reading. The 5 printed books are delivered to your home.", "Worth ₹1,500+"],
+  ["Practical Workbook (eBook - Soft Copy)", "Reflection questions and journaling exercises to apply each lesson in your daily life. Download it as a PDF.", "Worth ₹649"],
+  ["Daily Action Plan", "Simple practices to help you turn understanding into action.", ""],
+  ["1-to-1 Personal Session", "An individual session to discuss your concerns and gain personal clarity.", "Worth ₹999"],
+  ["Philosophical Teachings", "Insights inspired by Buddha, Shri Krishna, Osho, J. Krishnamurti, Ramana Maharshi, and Kabir.", ""],
+  ["Practical Self-Understanding", "Learn to observe your thoughts, understand your fears, question old patterns, and respond more consciously.", ""],
 ];
 const CLOSING = "More than information. A journey towards understanding yourself.";
 
@@ -36,9 +36,14 @@ export default function CourseDetailsButton() {
               <button onClick={() => setOpen(false)} className="text-muted-foreground hover:text-foreground ml-3"><X className="w-5 h-5" /></button>
             </div>
             <div className="space-y-3">
-              {ITEMS.map(([h, d]) => (
+              {ITEMS.map(([h, d, worth]) => (
                 <div key={h} className="bg-ink-800 border border-white/[0.06] rounded-xl p-3.5">
-                  <div className="font-bold text-sm mb-0.5">✦ {h}</div>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="font-bold text-sm mb-0.5">✦ {h}</div>
+                    {worth ? (
+                      <span className="flex-shrink-0 text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-gold-gradient text-ink-950 whitespace-nowrap">{worth}</span>
+                    ) : null}
+                  </div>
                   <div className="text-xs text-muted-foreground leading-relaxed">{d}</div>
                 </div>
               ))}
