@@ -39,7 +39,7 @@ const FAQS = [
   ["What language is the course in?", "Simple, easy-to-follow Hindi — the same way Vishnu speaks in his books and YouTube videos."],
   ["Can I watch on my phone?", "Yes. Watch on your phone, tablet or laptop in any browser. No app download needed."],
   ["How long do I keep access?", "Lifetime. Pay once and the course is yours forever."],
-  ["Is there a refund?", "This is a digital course, so refunds are not offered once access is granted. If a payment fails but money is deducted, it is automatically returned within 5–7 business days. For any technical issue, email support@vishnuraghav.in within 7 days and we'll fix it promptly."],
+  ["Is there a refund?", "This is a digital course, so refunds are not offered once access is granted. If a payment fails but money is deducted, it is automatically returned within 5–7 business days. For any technical issue, email vishnuraghav955@gmail.com within 3 days and we'll fix it promptly."],
 ];
 
 function PriceTag({ course, discount, big }) {
