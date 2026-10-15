@@ -5,6 +5,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { Check, Star, ShieldCheck, PlayCircle, Clock, Smartphone, BookOpen, Youtube, ChevronDown, MessageCircle, Lock } from "lucide-react";
 import api from "../lib/api";
 import { track } from "../lib/pixel";
+import { TITLE as PROGRAM_TITLE, SUBTITLE as PROGRAM_SUBTITLE, ITEMS as INCLUDED, CLOSING as PROGRAM_CLOSING } from "../components/CourseDetailsButton";
 
 const SLUG = "overcoming-overthinking";
 const WA_LINK = `https://wa.me/918439111502?text=${encodeURIComponent("Hi Vishnu, I have a question about the Overcoming Overthinking course.")}`;
@@ -33,6 +34,7 @@ const REVIEWS = [
 
 const FAQS = [
   ["When and how do I get access?", "The course unlocks instantly after payment. Log in with the same email and password to watch it from your Dashboard anytime. You'll also receive the course link by email."],
+  ["How do I get the 5 books and my 1-to-1 session?", "After enrolling, open the course from your Dashboard. Enter your delivery address there and the 5 printed books are shipped to your home. You can book your 1-to-1 personal session from the same page."],
   ["How long is the course?", "21 video lessons over 3 weeks — one short lesson a day. You can also go at your own pace; there are no deadlines."],
   ["What language is the course in?", "Simple, easy-to-follow Hindi — the same way Vishnu speaks in his books and YouTube videos."],
   ["Can I watch on my phone?", "Yes. Watch on your phone, tablet or laptop in any browser. No app download needed."],
@@ -69,6 +71,34 @@ function ReviewCard({ testId, rating, text, name, sub }) {
       <div className="text-xs font-bold">{name}</div>
       <div className="text-[11px] text-muted-foreground">{sub}</div>
     </div>
+  );
+}
+
+// Adds up the "Worth ₹…" badges from the course details list
+const BONUS_VALUE = INCLUDED.reduce((t, [, , worth]) => t + (Number((worth || "").replace(/[^0-9]/g, "")) || 0), 0);
+
+function WhatYouGet() {
+  return (
+    <section data-testid="lp-what-you-get" className="max-w-5xl mx-auto px-5 py-16">
+      <SectionTitle eyebrow="Everything you get">{PROGRAM_TITLE} — {PROGRAM_SUBTITLE}</SectionTitle>
+      <div className="grid md:grid-cols-2 gap-3">
+        {INCLUDED.map(([h, d, worth], i) => (
+          <div key={h} data-testid={`lp-included-${i}`} className="reveal bg-ink-900 border border-white/[0.07] rounded-2xl p-5 hover:border-brand-gold/30 transition-colors">
+            <div className="flex items-start justify-between gap-3 mb-1.5">
+              <div className="font-bold text-sm flex gap-2"><Check className="w-4 h-4 text-brand-gold flex-shrink-0 mt-0.5" />{h}</div>
+              {worth && <span className="flex-shrink-0 text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-gold-gradient text-ink-950 whitespace-nowrap">{worth}</span>}
+            </div>
+            <p className="text-xs text-muted-foreground leading-relaxed pl-6">{d}</p>
+          </div>
+        ))}
+      </div>
+      {BONUS_VALUE > 0 && (
+        <p data-testid="lp-bonus-value" className="mt-5 text-sm text-center">
+          Includes bonuses worth <strong className="text-brand-gold">₹{BONUS_VALUE.toLocaleString("en-IN")}+</strong> at no extra cost.
+        </p>
+      )}
+      <p className="font-serif italic text-sm text-brand-gold mt-3 text-center">{PROGRAM_CLOSING}</p>
+    </section>
   );
 }
 
@@ -160,6 +190,7 @@ export default function OverthinkingLanding({ onOpenPay }) {
           <div className="flex flex-wrap gap-x-5 gap-y-2 mt-6 text-xs text-muted-foreground">
             <span className="flex items-center gap-1.5"><PlayCircle className="w-4 h-4 text-brand-gold" /> {course.lessons} video lessons</span>
             <span className="flex items-center gap-1.5"><Clock className="w-4 h-4 text-brand-gold" /> 3 weeks</span>
+            <span className="flex items-center gap-1.5"><BookOpen className="w-4 h-4 text-brand-gold" /> 5 printed books delivered</span>
             <span className="flex items-center gap-1.5"><Smartphone className="w-4 h-4 text-brand-gold" /> Watch on mobile</span>
           </div>
         </div>
@@ -190,6 +221,7 @@ export default function OverthinkingLanding({ onOpenPay }) {
         </div>
       </section>
 
+       <WhatYouGet />
       {/* What you'll learn */}
       <section className="max-w-5xl mx-auto px-5 py-16">
         <SectionTitle eyebrow="What you'll learn">{course.modules} modules · {course.lessons} lessons · 3 weeks</SectionTitle>
@@ -257,7 +289,7 @@ export default function OverthinkingLanding({ onOpenPay }) {
             <p className="text-sm text-muted-foreground mb-6">Overcoming Overthinking — full course</p>
             <div className="flex justify-center mb-6"><PriceTag course={course} discount={discount} /></div>
             <ul className="text-sm text-left max-w-xs mx-auto space-y-2 mb-7">
-              {[`${course.lessons} video lessons`, "3 modules · 3-week plan", "Lifetime access", "Phone, tablet or laptop"].map((f) => (
+                {[`${course.lessons} video lessons · 3-week plan`, "5 printed books delivered home", "Practical workbook (PDF)", "1-to-1 personal session", "Lifetime access on any device"].map((f) => (
                 <li key={f} className="flex gap-2 items-center"><Check className="w-4 h-4 text-green-400 flex-shrink-0" /> {f}</li>
               ))}
             </ul>
