@@ -312,9 +312,32 @@ class ContactIn(BaseModel):
     purpose: Optional[str] = "General"
     message: str
 
+class AttributionIn(BaseModel):
+    utm_source: Optional[str] = None
+    utm_medium: Optional[str] = None
+    utm_campaign: Optional[str] = None
+    utm_content: Optional[str] = None
+    utm_term: Optional[str] = None
+    fbclid: Optional[str] = None
+    landing_page: Optional[str] = None
+    referrer: Optional[str] = None
+    first_seen: Optional[str] = None
+    recovered_by: Optional[str] = None
+
+def clean_attribution(a: Optional[AttributionIn]) -> Optional[dict]:
+    """Keeps only filled-in ad tracking fields, trimmed to a safe length."""
+    if not a:
+        return None
+    out = {k: str(v).strip()[:300] for k, v in a.model_dump().items() if v}
+    return out or None
+
 class EnrollIn(BaseModel):
     course_slug: str
     coupon_code: Optional[str] = None
+    attribution: Optional[AttributionIn] = None
+
+class PdfCheckoutIn(BaseModel):
+    attribution: Optional[AttributionIn] = None
 
 class CouponValidateIn(BaseModel):
     code: str
@@ -358,11 +381,8 @@ async def register(body: RegisterIn, response: Response):
     doc["_id"] = res.inserted_id
     token = create_access_token(str(doc["_id"]), email)
     response.set_cookie("access_token", token, httponly=True, samesite="lax", max_age=604800, path="/")
-    # Fire-and-forget welcome email (fail-soft)
-    try:
-        await email_service.send_welcome(doc["name"], email)
-    except Exception:
-        logger.exception("welcome email failed")
+    # Fire-and-forget welcome email (fail-soft, does not slow down checkout)
+    _run_bg(email_service.send_welcome(doc["name"], email))
     return {"user": serialize_user(doc), "token": token}
 
 @api.post("/auth/login")
@@ -849,7 +869,7 @@ async def checkout(body: EnrollIn, user: dict = Depends(get_current_user)):
         return {"already_enrolled": True, "enrollment_id": str(existing["_id"])}
 
     # Apply coupon if provided
-    original_price = int(course["price"])
+    original_price = int(effective["price"])
     final_price = original_price
     applied_coupon = None
     applied_discount = 0
@@ -877,6 +897,7 @@ async def checkout(body: EnrollIn, user: dict = Depends(get_current_user)):
         "created_at": datetime.now(timezone.utc),
         "progress_pct": 0,
         "completed_lessons": [],
+        "attribution": clean_attribution(body.attribution),
     }
     rzp_key = RAZORPAY_KEY_ID
     rzp_secret = RAZORPAY_KEY_SECRET
@@ -950,6 +971,28 @@ async def checkout(body: EnrollIn, user: dict = Depends(get_current_user)):
             "transaction_id": enrollment["razorpay_payment_id"],
         }
 
+import asyncio
+
+_bg_tasks = set()
+
+def _run_bg(coro):
+    t = asyncio.create_task(coro)
+    _bg_tasks.add(t)
+    t.add_done_callback(_bg_tasks.discard)
+
+async def _send_course_receipt(enrollment: dict, payment_id: str):
+    """Fail-soft: emails the buyer a receipt + course link."""
+    try:
+        buyer = await db.users.find_one({"_id": ObjectId(enrollment["user_id"])})
+        if buyer:
+            await email_service.send_course_purchase_confirmation(
+                buyer.get("name", ""), buyer.get("email", ""),
+                enrollment.get("course_title", ""), enrollment.get("course_slug", ""),
+                enrollment.get("amount", 0), payment_id,
+            )
+    except Exception:
+        logger.exception("course receipt email failed")
+
 class VerifyIn(BaseModel):
     enrollment_id: str
     razorpay_payment_id: str
@@ -958,6 +1001,8 @@ class VerifyIn(BaseModel):
 
 @api.post("/enrollments/verify")
 async def verify_payment(body: VerifyIn, user: dict = Depends(get_current_user)):
+    if not ObjectId.is_valid(body.enrollment_id):
+        raise HTTPException(status_code=404, detail="Enrollment not found")
     enrollment = await db.enrollments.find_one({"_id": ObjectId(body.enrollment_id), "user_id": str(user["_id"])})
     if not enrollment:
         raise HTTPException(status_code=404, detail="Enrollment not found")
@@ -974,25 +1019,25 @@ async def verify_payment(body: VerifyIn, user: dict = Depends(get_current_user))
         expected = hmac.new(rzp_secret.encode(), msg.encode(), hashlib.sha256).hexdigest()
         if expected != body.razorpay_signature:
             raise HTTPException(status_code=400, detail="Invalid payment signature")
-    await db.enrollments.update_one(
-        {"_id": enrollment["_id"]},
+    res = await db.enrollments.update_one(
+        {"_id": enrollment["_id"], "status": {"$ne": "paid"}},
         {"$set": {"status": "paid", "razorpay_payment_id": body.razorpay_payment_id,
                   "paid_at": datetime.now(timezone.utc)}}
     )
-    # Increment coupon usage exactly once on payment success
-    if enrollment.get("coupon_code") and enrollment.get("status") != "paid":
-        await db.coupons.update_one({"code": enrollment["coupon_code"]}, {"$inc": {"used_count": 1}})
+    # Only the first "paid" update counts the coupon and sends the receipt (webhook may have done it already)
+    if res.modified_count:
+        if enrollment.get("coupon_code"):
+            await db.coupons.update_one({"code": enrollment["coupon_code"]}, {"$inc": {"used_count": 1}})
+        _run_bg(_send_course_receipt(enrollment, body.razorpay_payment_id))
     return {"status": "paid", "course_slug": enrollment["course_slug"]}
 
 # ───── RAZORPAY WEBHOOK ─────
 # Server-to-server backstop in case the browser never POSTs to /enrollments/verify
-# (network drop, user closes tab, mobile app crash, etc).
 # Configure in Razorpay Dashboard → Settings → Webhooks:
 #   URL:    https://<your-domain>/api/razorpay/webhook
 #   Events: payment.captured, payment.failed, order.paid
-#   Secret: copy the generated secret into RAZORPAY_WEBHOOK_SECRET in /app/backend/.env
 async def _mark_paid_from_webhook(order_id: str, payment_id: str):
-    """Idempotent: marks the enrollment paid and increments coupon usage exactly once."""
+    """Idempotent: marks the enrollment paid, counts the coupon and sends the receipt exactly once."""
     if not order_id:
         return False
     enrollment = await db.enrollments.find_one({"razorpay_order_id": order_id})
@@ -1000,9 +1045,8 @@ async def _mark_paid_from_webhook(order_id: str, payment_id: str):
         logger.warning(f"Webhook for unknown order_id={order_id}")
         return False
     if enrollment.get("status") == "paid":
-        # Already verified by the client — nothing to do
         return True
-    await db.enrollments.update_one(
+    res = await db.enrollments.update_one(
         {"_id": enrollment["_id"], "status": {"$ne": "paid"}},
         {"$set": {
             "status": "paid",
@@ -1011,15 +1055,15 @@ async def _mark_paid_from_webhook(order_id: str, payment_id: str):
             "paid_via": "webhook",
         }},
     )
-    if enrollment.get("coupon_code"):
-        await db.coupons.update_one(
-            {"code": enrollment["coupon_code"]},
-            {"$inc": {"used_count": 1}},
-        )
+    if res.modified_count:
+        if enrollment.get("coupon_code"):
+            await db.coupons.update_one(
+                {"code": enrollment["coupon_code"]},
+                {"$inc": {"used_count": 1}},
+            )
+        _run_bg(_send_course_receipt(enrollment, payment_id))
     logger.info(f"Webhook marked enrollment {enrollment['_id']} paid (order={order_id})")
     return True
-
-@api.post("/razorpay/webhook")
 async def razorpay_webhook(request: Request):
     webhook_secret = RAZORPAY_WEBHOOK_SECRET
     if not webhook_secret:
@@ -1133,6 +1177,119 @@ async def update_progress(body: ProgressIn, user: dict = Depends(get_current_use
         {"$set": {"completed_lessons": list(completed), "progress_pct": min(100, body.progress_pct)}}
     )
     return {"ok": True}
+
+# ───── COURSE REVIEWS ─────
+# Students can review after finishing 7 lessons, or 7 days after paying. Admin approves before it shows publicly.
+REVIEW_MIN_LESSONS = 7
+REVIEW_MIN_DAYS = 7
+
+class ReviewIn(BaseModel):
+    course_slug: str
+    rating: int = Field(ge=1, le=5)
+    text: str = Field(min_length=10, max_length=1000)
+    city: Optional[str] = Field(default="", max_length=60)
+
+class ReviewStatusIn(BaseModel):
+    status: str
+
+def _public_name(name: str) -> str:
+    parts = (name or "Student").strip().split()
+    return parts[0] if len(parts) == 1 else f"{parts[0]} {parts[-1][0].upper()}."
+
+def _iso(v):
+    return v.isoformat() if isinstance(v, datetime) else v
+
+def _review_out(r: dict, full: bool = False) -> dict:
+    out = {
+        "id": str(r["_id"]), "name": _public_name(r.get("name", "")), "rating": r.get("rating", 5),
+        "text": r.get("text", ""), "city": r.get("city", ""), "course_slug": r.get("course_slug"),
+        "created_at": _iso(r.get("created_at")),
+    }
+    if full:
+        out.update({"full_name": r.get("name", ""), "email": r.get("email", ""), "status": r.get("status", "pending"),
+                    "updated_at": _iso(r.get("updated_at"))})
+    return out
+
+async def _review_eligible(user_id: str, course_slug: str) -> bool:
+    e = await db.enrollments.find_one({"user_id": user_id, "course_slug": course_slug, "status": "paid"})
+    if not e:
+        return False
+    if len(e.get("completed_lessons") or []) >= REVIEW_MIN_LESSONS:
+        return True
+    paid_at = e.get("paid_at") or e.get("created_at")
+    if not isinstance(paid_at, datetime):
+        return False
+    if paid_at.tzinfo is None:
+        paid_at = paid_at.replace(tzinfo=timezone.utc)
+    return datetime.now(timezone.utc) - paid_at >= timedelta(days=REVIEW_MIN_DAYS)
+
+@api.get("/reviews")
+async def list_reviews(course_slug: str):
+    cursor = db.reviews.find({"course_slug": course_slug, "status": "approved"}).sort("created_at", -1).limit(12)
+    return [_review_out(r) async for r in cursor]
+
+@api.get("/reviews/me")
+async def my_review(course_slug: str, user: dict = Depends(get_current_user)):
+    r = await db.reviews.find_one({"user_id": str(user["_id"]), "course_slug": course_slug})
+    return {"eligible": await _review_eligible(str(user["_id"]), course_slug),
+            "review": _review_out(r, full=True) if r else None}
+
+@api.post("/reviews")
+async def submit_review(body: ReviewIn, user: dict = Depends(get_current_user)):
+    if not await _review_eligible(str(user["_id"]), body.course_slug):
+        raise HTTPException(status_code=403, detail="Reviews open after your first week in the course.")
+    now = datetime.now(timezone.utc)
+    await db.reviews.update_one(
+        {"user_id": str(user["_id"]), "course_slug": body.course_slug},
+        {"$set": {"name": user.get("name", ""), "email": user.get("email", ""), "rating": body.rating,
+                  "text": body.text.strip(), "city": (body.city or "").strip(), "status": "pending", "updated_at": now},
+         "$setOnInsert": {"created_at": now}},
+        upsert=True,
+    )
+    return {"ok": True, "status": "pending"}
+
+@api.get("/admin/reviews")
+async def admin_reviews(_: dict = Depends(require_admin)):
+    cursor = db.reviews.find({}).sort("updated_at", -1).limit(500)
+    return [_review_out(r, full=True) async for r in cursor]
+
+@api.patch("/admin/reviews/{review_id}")
+async def admin_review_status(review_id: str, body: ReviewStatusIn, _: dict = Depends(require_admin)):
+    if body.status not in ("approved", "hidden", "pending") or not ObjectId.is_valid(review_id):
+        raise HTTPException(status_code=400, detail="Invalid review or status")
+    res = await db.reviews.update_one({"_id": ObjectId(review_id)}, {"$set": {"status": body.status}})
+    if not res.matched_count:
+        raise HTTPException(status_code=404, detail="Review not found")
+    return {"ok": True}
+
+@api.delete("/admin/reviews/{review_id}")
+async def admin_review_delete(review_id: str, _: dict = Depends(require_admin)):
+    if not ObjectId.is_valid(review_id):
+        raise HTTPException(status_code=400, detail="Invalid review id")
+    await db.reviews.delete_one({"_id": ObjectId(review_id)})
+    return {"ok": True}
+
+# ───── ADMIN: SALES BY AD SOURCE ─────
+@api.get("/admin/sales")
+async def admin_sales(_: dict = Depends(require_admin)):
+    """All paid course + eBook sales with the ad/UTM info captured at checkout."""
+    sales = []
+    async for e in db.enrollments.find({"status": "paid"}).sort("created_at", -1).limit(1000):
+        sales.append({"type": "course", "product": e.get("course_title") or e.get("course_slug"), "user_id": e.get("user_id"),
+                      "amount": e.get("amount", 0), "coupon_code": e.get("coupon_code"), "payment_mode": e.get("payment_mode", ""),
+                      "paid_at": _iso(e.get("paid_at") or e.get("created_at")), "attribution": e.get("attribution") or {}})
+    async for p in db.pdf_purchases.find({"status": "paid"}).sort("created_at", -1).limit(1000):
+        sales.append({"type": "ebook", "product": "eBook / Workbook", "user_id": p.get("user_id"), "email": p.get("email", ""),
+                      "amount": p.get("amount", 0), "coupon_code": None, "payment_mode": p.get("payment_mode", "razorpay"),
+                      "paid_at": _iso(p.get("purchased_at") or p.get("created_at")), "attribution": p.get("attribution") or {}})
+    ids = list({ObjectId(x["user_id"]) for x in sales if x.get("user_id") and ObjectId.is_valid(x["user_id"])})
+    users = {str(u["_id"]): u async for u in db.users.find({"_id": {"$in": ids}}, {"email": 1, "name": 1})}
+    for x in sales:
+        u = users.get(x.pop("user_id", None) or "", {})
+        x["email"] = x.get("email") or u.get("email", "")
+        x["name"] = u.get("name", "")
+    sales.sort(key=lambda x: x.get("paid_at") or "", reverse=True)
+    return sales
 
 # ───── NEWSLETTER & CONTACT ─────
 @api.post("/newsletter/subscribe")
@@ -1777,7 +1934,7 @@ async def check_pdf_access(user: dict = Depends(get_current_user)):
 
 
 @api.post("/assessment/product/checkout")
-async def pdf_checkout(user: dict = Depends(get_current_user)):
+async def pdf_checkout(body: Optional[PdfCheckoutIn] = None, user: dict = Depends(get_current_user)):
     prod = await db.settings.find_one({"_id": "assessment_product"})
     if not prod or not prod.get("is_active") or not prod.get("pdf_url"):
         raise HTTPException(status_code=400, detail="Workbook is not available for purchase")
@@ -1810,6 +1967,8 @@ async def pdf_checkout(user: dict = Depends(get_current_user)):
         "status": "pending",
         "created_at": datetime.now(timezone.utc),
         "purchased_at": None,
+        "attribution": clean_attribution(body.attribution if body else None),
+        "payment_mode": f"razorpay_{RAZORPAY_DETECTED_MODE}",
     }
     result = await db.pdf_purchases.insert_one(doc)
     return {
@@ -1906,13 +2065,9 @@ async def admin_upload(file: UploadFile = File(...), _: dict = Depends(require_a
             "source": "cloudinary",
         }
 
-    # ── Local disk fallback (dev only) ──
-    new_name = f"{secrets.token_hex(10)}{ext}"
-    dest = UPLOAD_DIR / new_name
-    dest.write_bytes(data)
-    return {"url": f"/api/uploads/{new_name}", "filename": new_name, "public_id": "", "size": len(data), "source": "local"}
-
-
+     # No local-disk fallback: files saved on the server are lost on every redeploy
+    raise HTTPException(status_code=503, detail="Image upload is not configured (Cloudinary keys missing)")
+    
 # ── Cloudinary asset cleanup helpers ──
 def _extract_cloudinary_public_id(url: str) -> Optional[str]:
     """Parse a Cloudinary secure URL and return the public_id (folder/name without extension).
