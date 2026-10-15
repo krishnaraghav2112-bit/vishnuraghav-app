@@ -180,7 +180,7 @@ export default function OverthinkingLanding({ onOpenPay }) {
           </h1>
           <p className="text-sm sm:text-base text-muted-foreground leading-relaxed mb-7 max-w-lg">
             Replaying every conversation, lying awake at night, getting stuck on small decisions — it can stop.
-            Vishnu Raghav's <strong className="text-foreground">Overcoming Overthinking</strong> course shows you, step by step,
+            Vishnu Raghav's <strong className="text-foreground">21 Days Uljha Jeevan Mastery</strong> course shows you, step by step,
             how to break out of thought loops and live with a calm, clear mind.
           </p>
           <PriceTag course={course} discount={discount} big />
