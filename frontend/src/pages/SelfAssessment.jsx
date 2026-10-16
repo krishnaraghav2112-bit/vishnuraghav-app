@@ -527,9 +527,11 @@ export default function SelfAssessment({ onOpenAuth }) {
         </p>
 
         {/* SOCIAL PROOF */}
-        <div className="inline-flex items-center gap-2 bg-green-500/10 border border-green-500/20 rounded-full px-4 py-2 mb-10 text-sm font-bold text-green-400">
-          <Users className="w-4 h-4" /> �� {stats.total_completed.toLocaleString("en-IN")}+ people have already taken this test
-        </div>
+        {stats.total_completed >= 100 && (
+          <div className="inline-flex items-center gap-2 bg-green-500/10 border border-green-500/20 rounded-full px-4 py-2 mb-10 text-sm font-bold text-green-400">
+            <Users className="w-4 h-4" /> {stats.total_completed.toLocaleString("en-IN")}+ people have already taken this test
+          </div>
+        )}
 
         <div className="bg-ink-900 border border-white/[0.07] rounded-2xl p-6 mb-8">
           <div className="text-sm font-bold text-brand-gold mb-3">This assessment will tell you —</div>
