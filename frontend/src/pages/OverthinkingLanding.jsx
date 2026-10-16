@@ -307,6 +307,7 @@ export default function OverthinkingLanding({ onOpenPay }) {
         <Link to="/privacy-policy" className="underline">Privacy</Link>
         <Link to="/terms" className="underline">Terms</Link>
         <Link to="/refund-policy" className="underline">Refund</Link>
+        <Link to="/shipping-policy" className="underline">Shipping</Link>
         <span>© Vishnu Raghav</span>
       </footer>
 
