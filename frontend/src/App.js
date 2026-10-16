@@ -10,6 +10,7 @@ import Navbar from "./components/Navbar";
 import AuthModal from "./components/AuthModal";
 import PayModal from "./components/PayModal";
 import WhatsAppButton from "./components/WhatsAppButton";
+import PhoneRequiredModal from "./components/PhoneRequiredModal";
 import { track } from "./lib/pixel";
 import { captureAttribution } from "./lib/attribution";
 
@@ -98,6 +99,7 @@ function AppShell() {
         </div>
       </div>
       <AuthModal open={authOpen} mode={authMode} onClose={() => setAuthOpen(false)} />
+      <PhoneRequiredModal />
       <PayModal key={payCourse?.slug || "closed"} open={!!payCourse} course={payCourse} onClose={() => setPayCourse(null)} onOpenAuth={openAuth} />
       <WhatsAppButton hidden={!!payCourse || bare} />
       <Toaster
