@@ -10,6 +10,7 @@ import { useCart } from "../context/CartContext";
 import { makeBookCover, makeAuthorPortrait } from "../lib/bookCover";
 import SuccessLottie from "../components/SuccessLottie";
 import WaitlistModal from "../components/WaitlistModal";
+import RealReviews from "../components/RealReviews";
 
 const iconMap = { Clock, Brain, Sparkles, Heart, BookOpen, Zap, Flame, Briefcase };
 
@@ -148,7 +149,7 @@ const submitWaitlist = async (email) => {
                   <div key={i} className="w-6 h-6 rounded-full bg-gold-gradient border-2 border-ink-950 flex items-center justify-center text-[8px] font-black text-ink-950">{i}</div>
                 ))}
               </div>
-              <span className="text-xs text-muted-foreground"><strong className="text-brand-gold">2,090+</strong> readers this month</span>
+              <span className="text-xs text-muted-foreground">Hindi author · Life coach · Educator</span>
             </div>
 
             <h1 className="font-serif font-black tracking-tight leading-[1.05] text-[clamp(2.2rem,5.5vw,4.2rem)] mb-5">
@@ -156,7 +157,7 @@ const submitWaitlist = async (email) => {
             </h1>
 
             <p className="text-muted-foreground text-base lg:text-lg leading-relaxed max-w-[500px] mb-3">
-             Hindi author, life coach & educator helping thousands master time, silence overthinking, and build a life of clarity — through books, YouTube & premium courses.
+             Hindi author, life coach & educator helping people master time, silence overthinking, and build a life of clarity — through books, YouTube & premium courses.
             </p>
             <blockquote className="text-sm italic text-brand-gold/70 border-l-2 border-brand-gold pl-3.5 mb-8 leading-relaxed">
               "Dagmagate Pair" · "Jo Mai Kah Na Saka" · "Uljha Jeevan" · authorvishnuraghav.in
@@ -188,7 +189,6 @@ const submitWaitlist = async (email) => {
             <div className="flex gap-8 flex-wrap">
               {[
                 ["4", "Books Published"],
-                ["1K", "Students Enrolled"],
                 ["Active", "YouTube Channel"],
               ].map(([n, l]) => (
                 <div key={l}>
@@ -289,13 +289,7 @@ const submitWaitlist = async (email) => {
                   {c.is_available && (<>
                   <div className="flex items-center gap-3 mb-2">
                     <div className="flex items-center gap-1">
-                      {[1, 2, 3, 4, 5].map((s) => <Star key={s} className={`w-3 h-3 ${s <= Math.round(c.rating) ? "fill-brand-gold text-brand-gold" : "text-muted-foreground"}`} />)}
                     </div>
-                    <span className="text-xs font-bold">{c.rating}</span>
-                    <span className="text-xs text-muted-foreground">👥 {c.students}</span>
-                  </div>
-                  <div className="h-[3px] bg-white/[0.07] rounded-full mb-3 overflow-hidden">
-                    <div className="h-full bg-purple-gradient" style={{ width: `${Math.min(100, c.students / 10)}%` }} />
                   </div>
                   <div className="flex justify-between items-end mb-3">
                     <div>
@@ -369,10 +363,6 @@ const submitWaitlist = async (email) => {
                 A practical, no-fluff workbook — silence overthinking, master your time, and reclaim mental clarity. Read on phone, laptop, or print it. Yours forever.
               </p>
               <div className="flex items-center gap-4 mb-6">
-                <div className="flex items-center gap-1">
-                  {[1,2,3,4,5].map(i => <Star key={i} className="w-4 h-4 fill-brand-gold text-brand-gold" />)}
-                </div>
-                <div className="text-sm text-muted-foreground">4.9★ · 340+ readers</div>
               </div>
               <div className="flex items-baseline gap-3 mb-6">
                 <div className="text-4xl md:text-5xl font-black text-brand-gold">₹199</div>
@@ -475,37 +465,11 @@ const submitWaitlist = async (email) => {
         </div>
       </section>
 
-      {/* TESTIMONIALS */}
+     {/* TESTIMONIALS */}
       <section className="px-5 lg:px-10 py-20 max-w-7xl mx-auto reveal">
-        <SectionLabel>Student Success</SectionLabel>
-        <h2 className="font-serif text-[clamp(1.8rem,4vw,2.7rem)] font-black tracking-tight mb-3">Words That Moved People</h2>
-        <p className="text-muted-foreground max-w-xl mb-10 text-sm">Real students, real transformations, real results.</p>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          {[
-            ["Jo Mai Kah Na Saka felt like Vishnu wrote every word just for me. I cried reading it.", "Riya Patel", "Reader · Mumbai", "RP", "Verified Purchase"],
-            ["Dagmagate Pair is the most honest Hindi book I've ever read. He writes what we all think but never dare to say.", "Aditya Kumar", "Student · Lucknow", "AK", "Verified Purchase"],
-            ["His YouTube content on mind control helped me through the hardest phase of my life. Truly life-changing.", "Meera Verma", "MBA Student · Pune", "MV", "Verified Subscriber"],
-          ].map(([text, name, loc, av, vtype], i) => (
-            <div key={i} className="glass border border-white/[0.07] rounded-2xl p-5 hover:border-brand-gold/20 hover:-translate-y-1 transition-all">
-              <div className="flex gap-0.5 mb-3">
-                {[1, 2, 3, 4, 5].map((s) => <Star key={s} className="w-3.5 h-3.5 fill-brand-gold text-brand-gold" />)}
-              </div>
-              <p className="text-sm italic text-muted-foreground mb-4 leading-relaxed">"{text}"</p>
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-brand-gold to-brand-purple flex items-center justify-center font-black text-[10px] text-ink-950">{av}</div>
-                <div>
-                  <div className="text-xs font-bold">{name}</div>
-                  <div className="text-[10px] text-muted-foreground">{loc}</div>
-                  <div className="text-[10px] text-green-400 flex items-center gap-0.5 mt-0.5">✓ {vtype}</div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
+        <RealReviews />
         <div className="flex gap-3 flex-wrap justify-center mt-12">
-          {[[BookOpen, "4 Books", "Published"], [Shield, "Secure", "Video Access"], [Lock, "Razorpay", "Safe Payment"], [Star, "4.9 / 5", "Rating"]].map(([Icon, n, l], i) => (
+          {[[BookOpen, "4 Books", "Published"], [Shield, "Secure", "Video Access"], [Lock, "Razorpay", "Safe Payment"], [Youtube, "Active", "YouTube Channel"]].map(([Icon, n, l], i) => (
             <div key={i} className="glass border border-brand-gold/15 rounded-xl px-4 py-2.5 flex items-center gap-2.5 hover:border-brand-gold hover:-translate-y-0.5 transition-all">
               <Icon className="w-4 h-4 text-brand-gold" />
               <div>
