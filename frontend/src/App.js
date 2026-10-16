@@ -22,6 +22,7 @@ import AdminPanel from "./pages/AdminPanel";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import Terms from "./pages/Terms";
 import RefundPolicy from "./pages/RefundPolicy";
+import ShippingPolicy from "./pages/ShippingPolicy";
 import ResetPassword from "./pages/ResetPassword";
 import BookCheckout from "./pages/BookCheckout";
 import SelfAssessment from "./pages/SelfAssessment";
@@ -94,6 +95,7 @@ function AppShell() {
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/refund-policy" element={<RefundPolicy />} />
+            <Route path="/shipping-policy" element={<ShippingPolicy />} />
             <Route path="/reset-password" element={<ResetPassword />} />
           </Routes>
         </div>
