@@ -342,14 +342,20 @@ const changeVolume = (v) => {
       />
       
       {/* Big centre play button */}
-      {!playing && (
+      {uiVisible && (
         <button
           type="button"
           data-testid="player-big-play"
           onClick={togglePlay}
           className="absolute z-20 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gold-gradient text-ink-950 flex items-center justify-center shadow-xl"
         >
-          {ready ? <Play className="w-8 h-8 ml-1" fill="currentColor" /> : <span className="text-[10px] font-bold">Loading…</span>}
+          {!ready ? (
+            <span className="text-[10px] font-bold">Loading…</span>
+          ) : playing ? (
+            <Pause className="w-8 h-8" fill="currentColor" />
+          ) : (
+            <Play className="w-8 h-8 ml-1" fill="currentColor" />
+          )}
         </button>
       )}
 
