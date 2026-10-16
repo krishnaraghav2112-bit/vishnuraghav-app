@@ -53,8 +53,10 @@ export default function AuthModal({ open, mode = "login", onClose, onSwitch }) {
     } else if (tab === "register") {
       if (!form.name || !form.email || !form.password) { toast.error("Please fill all required fields"); return; }
       if (form.password.length < 8) { toast.error("Password must be at least 8 characters"); return; }
+      const phone = form.phone.replace(/\D/g, "").slice(-10);
+      if (phone.length < 10) { toast.error("Please enter your 10-digit mobile number"); return; }
       setBusy(true);
-      const r = await register(form);
+      const r = await register({ ...form, phone });
       setBusy(false);
       if (r.ok) { toast.success(`Welcome, ${r.user.name.split(" ")[0]}! Account created 🚀`); handleClose(); }
       else toast.error(r.error);
@@ -264,7 +266,7 @@ export default function AuthModal({ open, mode = "login", onClose, onSwitch }) {
 
                 {tab === "register" && (
                   <div className="mb-3">
-                    <label className="text-xs text-muted-foreground mb-1.5 block">Mobile (optional)</label>
+                    <label className="text-xs text-muted-foreground mb-1.5 block">Mobile number *</label>
                     <input
                       data-testid="auth-phone"
                       type="tel"
