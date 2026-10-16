@@ -358,7 +358,7 @@ const benefits = [
           Vishnu Raghav is a bestselling Hindi author, life coach, and educator. His books <em>Dagmagate Pair</em>, <em>Jo Mai Kah Na Saka</em>, and the upcoming <em>Uljha Jeevan</em> have reached thousands of readers across India.
         </p>
         <div className="flex flex-wrap justify-center gap-6 md:gap-10 text-center">
-          <div><div className="text-2xl md:text-3xl font-black text-brand-gold">3+</div><div className="text-xs text-muted-foreground uppercase tracking-widest mt-1">Books Published</div></div>
+          <div><div className="text-2xl md:text-3xl font-black text-brand-gold">4+</div><div className="text-xs text-muted-foreground uppercase tracking-widest mt-1">Books Published</div></div>
           <div><div className="text-2xl md:text-3xl font-black text-brand-gold">Pan India</div><div className="text-xs text-muted-foreground uppercase tracking-widest mt-1">Readership</div></div>
         </div>
       </section>
