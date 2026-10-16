@@ -772,6 +772,7 @@ const joinWaitlist = (course) => {
               ["Privacy Policy", "/privacy-policy"],
               ["Terms & Conditions", "/terms"],
               ["Refund & Cancellation", "/refund-policy"],
+              ["Shipping & Delivery", "/shipping-policy"],
             ]} />
           </div>
           <div className="border-t border-white/[0.07] pt-5 flex justify-between flex-wrap gap-2 text-[11px] text-muted-foreground">
