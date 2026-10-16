@@ -2439,7 +2439,7 @@ async def my_assessments(user: dict = Depends(get_current_user)):
 @api.get("/assessment/stats")
 async def assessment_stats():
     total = await db.assessments.count_documents({})
-    display = max(total, 1247)
+    display = total
     return {"total_completed": display, "actual": total}
 
 
