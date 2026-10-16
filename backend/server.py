@@ -2985,6 +2985,81 @@ async def bonus_session_request(body: SessionRequestIn, user: dict = Depends(get
         logger.error(f"Session request email failed: {e}")
     return {"ok": True}
 
+# ───── LEADS: free sample on WhatsApp ─────
+class LeadIn(BaseModel):
+    name: str
+    phone: str
+    source: str = "landing"
+    attribution: Optional[dict] = None
+
+@api.post("/leads")
+async def create_lead(body: LeadIn):
+    phone = re.sub(r"\D", "", body.phone or "")
+    if len(phone) == 12 and phone.startswith("91"):
+        phone = phone[2:]
+    if len(phone) == 11 and phone.startswith("0"):
+        phone = phone[1:]
+    if len(phone) != 10:
+        raise HTTPException(status_code=400, detail="Please enter a valid 10-digit WhatsApp number")
+    name = body.name.strip()[:80]
+    if not name:
+        raise HTTPException(status_code=400, detail="Please enter your name")
+    attribution = {}
+    if isinstance(body.attribution, dict):
+        for k, v in list(body.attribution.items())[:12]:
+            attribution[str(k)[:40]] = str(v)[:200]
+    now = datetime.now(timezone.utc)
+    await db.leads.update_one(
+        {"phone": phone},
+        {
+            "$set": {"name": name, "last_seen": now, "source": body.source[:60]},
+            "$setOnInsert": {"status": "new", "created_at": now, "attribution": attribution},
+        },
+        upsert=True,
+    )
+    return {"ok": True}
+
+@api.get("/admin/leads")
+async def admin_leads(_: dict = Depends(require_admin)):
+    paid_ids = await db.enrollments.distinct("user_id", {"status": "paid"})
+    buyer_phones = set()
+    if paid_ids:
+        oids = []
+        for x in paid_ids:
+            try:
+                oids.append(ObjectId(x))
+            except Exception:
+                pass
+        async for u in db.users.find({"_id": {"$in": oids}}, {"phone": 1}):
+            d = re.sub(r"\D", "", u.get("phone", "") or "")
+            if len(d) >= 10:
+                buyer_phones.add(d[-10:])
+    out = []
+    async for l in db.leads.find({}).sort("created_at", -1).limit(3000):
+        out.append({
+            "id": str(l["_id"]), "name": l.get("name", ""), "phone": l.get("phone", ""),
+            "source": l.get("source", ""), "status": l.get("status", "new"),
+            "bought": l.get("phone", "") in buyer_phones,
+            "attribution": l.get("attribution") or {},
+            "created_at": l["created_at"].isoformat() if l.get("created_at") else None,
+        })
+    return out
+
+class LeadStatusIn(BaseModel):
+    status: str
+
+@api.patch("/admin/leads/{lead_id}")
+async def admin_lead_status(lead_id: str, body: LeadStatusIn, _: dict = Depends(require_admin)):
+    if body.status not in ("new", "contacted"):
+        raise HTTPException(status_code=400, detail="Invalid status")
+    try:
+        oid = ObjectId(lead_id)
+    except Exception:
+        raise HTTPException(status_code=404, detail="Lead not found")
+    res = await db.leads.update_one({"_id": oid}, {"$set": {"status": body.status}})
+    if res.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Lead not found")
+    return {"ok": True}
 class CourseAvailabilityIn(BaseModel):
     is_available: bool
 
@@ -3103,6 +3178,7 @@ RATE_LIMITS = {
     "/api/newsletter/subscribe": (3, 3600),   # 3 subscriptions per hour
     "/api/contact":              (3, 3600),   # 3 contact messages per hour
     "/api/waitlist/join":        (5, 3600),   # 5 waitlist joins per hour
+    "/api/leads":                (20, 3600),  # 20 lead forms per hour per IP (shared mobile IPs)
     "/api/assessment/submit":    (5, 3600),   # 5 assessments per hour
 }
 _rate_buckets: dict = defaultdict(deque)
