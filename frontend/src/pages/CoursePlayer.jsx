@@ -312,15 +312,15 @@ const changeVolume = (v) => {
       )}
       {started && !ended && !playing && <div className="absolute inset-0 bg-black/60" />}
 
-      {/* Full cover: click = play/pause, double-click = fullscreen */}
+      {/* Full cover: tap = show controls only, double-click = fullscreen */}
       <div
         data-testid="player-click-layer"
         className="absolute inset-0 z-10"
-        onClick={togglePlay}
+        onClick={wakeUi}
         onDoubleClick={toggleFull}
         onContextMenu={block}
       />
-
+      
       {/* Big centre play button */}
       {!playing && (
         <button
