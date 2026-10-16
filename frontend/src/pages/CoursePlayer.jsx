@@ -253,9 +253,24 @@ const changeVolume = (v) => {
     wakeUi();
   };
   
+  const lockLandscape = () => {
+    try {
+      const o = window.screen && window.screen.orientation;
+      if (o && o.lock) o.lock("landscape").catch(() => {});
+    } catch (e) { /* ignore */ }
+  };
+
+  const unlockOrientation = () => {
+    try {
+      const o = window.screen && window.screen.orientation;
+      if (o && o.unlock) o.unlock();
+    } catch (e) { /* ignore */ }
+  };
+
   const toggleFull = () => {
     const el = wrapRef.current;
     if (document.fullscreenElement || document.webkitFullscreenElement) {
+      unlockOrientation();
       const exit = document.exitFullscreen || document.webkitExitFullscreen;
       if (exit) exit.call(document);
       return;
@@ -264,13 +279,15 @@ const changeVolume = (v) => {
     const req = el && (el.requestFullscreen || el.webkitRequestFullscreen);
     if (req) {
       const r = req.call(el);
-      if (r && r.catch) r.catch(() => setFakeFull(true));
+      if (r && r.then) r.then(lockLandscape).catch(() => setFakeFull(true));
+      else lockLandscape();
     } else {
       setFakeFull(true); // iPhone: full-window mode
     }
   };
 
   const isFull = realFull || fakeFull;
+  const rotateFake = fakeFull && window.innerHeight > window.innerWidth;
   const uiVisible = showUi || !playing;
   const pct = duration ? (time / duration) * 100 : 0;
   const block = (e) => e.preventDefault();
@@ -287,7 +304,10 @@ const changeVolume = (v) => {
       onMouseMove={wakeUi}
       onTouchStart={wakeUi}
       className={`${fakeFull ? "fixed inset-0 z-[100]" : "aspect-video relative"} bg-black overflow-hidden select-none`}
-      style={{ cursor: uiVisible ? "default" : "none" }}
+       style={{
+        cursor: uiVisible ? "default" : "none",
+        ...(rotateFake ? { width: `${window.innerHeight}px`, height: `${window.innerWidth}px`, transformOrigin: "top left", transform: "rotate(90deg) translateY(-100%)" } : {}),
+      }}
     >
       {/* YouTube frame: cropped top & bottom, cannot be clicked at all */}
       <div
