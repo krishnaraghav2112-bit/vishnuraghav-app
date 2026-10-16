@@ -5,6 +5,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { Check, Star, ShieldCheck, PlayCircle, Clock, Smartphone, BookOpen, Youtube, ChevronDown, MessageCircle, Lock } from "lucide-react";
 import api from "../lib/api";
 import { track } from "../lib/pixel";
+import LeadCapture from "../components/LeadCapture";
 import { TITLE as PROGRAM_TITLE, SUBTITLE as PROGRAM_SUBTITLE, ITEMS as INCLUDED, CLOSING as PROGRAM_CLOSING } from "../components/CourseDetailsButton";
 
 const SLUG = "overcoming-overthinking";
@@ -186,6 +187,7 @@ export default function OverthinkingLanding({ onOpenPay }) {
           <PriceTag course={course} discount={discount} big />
           <p className="text-xs text-muted-foreground mt-2 mb-6">One-time payment · Lifetime access</p>
           <BuyButton onClick={buy} testId="lp-hero-buy" className="w-full sm:w-auto" />
+           <a href="#free-sample" data-testid="lp-free-sample-link" className="block mt-3 text-sm text-brand-gold underline underline-offset-4">Not ready yet? Get a free sample →</a>
           <div className="flex flex-wrap gap-x-5 gap-y-2 mt-6 text-xs text-muted-foreground">
             <span className="flex items-center gap-1.5"><PlayCircle className="w-4 h-4 text-brand-gold" /> {course.lessons} video lessons</span>
             <span className="flex items-center gap-1.5"><Clock className="w-4 h-4 text-brand-gold" /> 3 weeks</span>
@@ -298,6 +300,7 @@ export default function OverthinkingLanding({ onOpenPay }) {
         </div>
       </section>
 
+      <LeadCapture />
       {/* FAQ */}
       <section className="max-w-3xl mx-auto px-5 pb-16">
         <SectionTitle eyebrow="FAQ">Frequently asked questions</SectionTitle>
