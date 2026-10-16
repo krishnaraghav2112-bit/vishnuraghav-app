@@ -188,6 +188,7 @@ export default function OverthinkingLanding({ onOpenPay }) {
           <p className="text-xs text-muted-foreground mt-2 mb-6">One-time payment · Lifetime access</p>
           <BuyButton onClick={buy} testId="lp-hero-buy" className="w-full sm:w-auto" />
            <a href="#free-sample" data-testid="lp-free-sample-link" className="block mt-3 text-sm text-brand-gold underline underline-offset-4">Not ready yet? Get a free sample →</a>
+           <a href="#free-sample" data-testid="lp-free-sample-link" className="block mt-3 text-sm text-brand-gold underline underline-offset-4">Not ready yet? Get a free sample →</a>
           <div className="flex flex-wrap gap-x-5 gap-y-2 mt-6 text-xs text-muted-foreground">
             <span className="flex items-center gap-1.5"><PlayCircle className="w-4 h-4 text-brand-gold" /> {course.lessons} video lessons</span>
             <span className="flex items-center gap-1.5"><Clock className="w-4 h-4 text-brand-gold" /> 3 weeks</span>
