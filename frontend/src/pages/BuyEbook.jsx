@@ -207,10 +207,7 @@ const benefits = [
             </p>
 
             <div className="flex items-center gap-4 mb-6">
-              <div className="flex items-center gap-1">
-                {[1,2,3,4,5].map(i => <Star key={i} className="w-4 h-4 fill-brand-gold text-brand-gold" />)}
-              </div>
-              <div className="text-sm text-muted-foreground">4.9★ · 340+ readers</div>
+              <div className="text-sm text-muted-foreground">Hindi eBook · Instant PDF download</div>
             </div>
 
             <div className="flex items-baseline gap-3 mb-1">
@@ -362,8 +359,6 @@ const benefits = [
         </p>
         <div className="flex flex-wrap justify-center gap-6 md:gap-10 text-center">
           <div><div className="text-2xl md:text-3xl font-black text-brand-gold">3+</div><div className="text-xs text-muted-foreground uppercase tracking-widest mt-1">Books Published</div></div>
-          <div><div className="text-2xl md:text-3xl font-black text-brand-gold">2K+</div><div className="text-xs text-muted-foreground uppercase tracking-widest mt-1">Students</div></div>
-          <div><div className="text-2xl md:text-3xl font-black text-brand-gold">4.9★</div><div className="text-xs text-muted-foreground uppercase tracking-widest mt-1">Avg Rating</div></div>
           <div><div className="text-2xl md:text-3xl font-black text-brand-gold">Pan India</div><div className="text-xs text-muted-foreground uppercase tracking-widest mt-1">Readership</div></div>
         </div>
       </section>
