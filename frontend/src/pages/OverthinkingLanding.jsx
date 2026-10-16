@@ -166,7 +166,7 @@ export default function OverthinkingLanding({ onOpenPay }) {
 
       {/* Top bar — brand only, no links away */}
       <div className="max-w-5xl mx-auto px-5 pt-5 flex items-center justify-between">
-        <div className="font-serif text-lg">Vishnu <span className="italic text-brand-gold">Raghav</span></div>
+        <Link to="/" data-testid="lp-brand-home-link" className="font-serif text-lg hover:opacity-80">Vishnu <span className="italic text-brand-gold">Raghav</span></Link>
         <div className="text-[11px] text-muted-foreground flex items-center gap-1.5"><Lock className="w-3 h-3" /> Secure checkout</div>
       </div>
 
