@@ -91,23 +91,20 @@ const joinWaitlist = (course) => {
   setWaitlistCourse(course);
 };
 
-const submitWaitlist = async (email) => {
-  if (!email || !email.includes("@")) {
-    toast.error("Please enter a valid email");
-    return;
-  }
-  try {
-    await api.post("/waitlist/join", {
-      email,
-      course_slug: waitlistCourse?.slug || waitlistCourse?.title || "unknown",
-      name: user?.name || "",
-    });
-    toast.success("🔔 You're on the waitlist! We'll email you at launch.");
-    setWaitlistCourse(null);
-  } catch (e) {
-    toast.error(formatApiError(e));
-  }
-};
+ const submitWaitlist = async (email, phone) => {
+    const digits = (phone || "").replace(/\D/g, "").slice(-10);
+    if (!email || !email.includes("@")) { toast.error("Please enter a valid email"); return; }
+    if (digits.length < 10) { toast.error("Please enter your 10-digit mobile number"); return; }
+    const slug = waitlistCourse?.slug || waitlistCourse?.title || "unknown";
+    try {
+      await api.post("/waitlist/join", { email, course_slug: slug, name: user?.name || "" });
+      await api.post("/leads", { name: user?.name || email.split("@")[0], phone: digits, source: `waitlist-${slug}` }).catch(() => {});
+      toast.success("🔔 You're on the waitlist! We'll contact you at launch.");
+      setWaitlistCourse(null);
+    } catch (e) {
+      toast.error(formatApiError(e));
+    }
+  };
 
   const subscribeNl = async () => {
     if (!nlEmail.includes("@")) { toast.error("Please enter a valid email"); return; }
@@ -788,6 +785,7 @@ const submitWaitlist = async (email) => {
         open={!!waitlistCourse}
         course={waitlistCourse}
         defaultEmail={user?.email || ""}
+        defaultPhone={user?.phone || ""}
         onClose={() => setWaitlistCourse(null)}
         onSubmit={submitWaitlist}
       />
