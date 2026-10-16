@@ -6,6 +6,7 @@ import api, { formatApiError } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import ImageUpload from "../components/ImageUpload";
 import LessonEditor from "../components/LessonEditor";
+import LeadsPanel from "../components/LeadsPanel";
 
 const TABS = [
   { id: "stats", label: "Overview", icon: BarChart3 },
@@ -20,6 +21,7 @@ const TABS = [
   { id: "coupons", label: "Coupons", icon: Ticket },
   { id: "newsletter", label: "Newsletter", icon: Mail },
   { id: "contacts", label: "Contacts", icon: MessageSquare },
+  { id: "leads", label: "Leads", icon: Users },
   { id: "assessment", label: "Assessment PDF", icon: Brain },
   { id: "site", label: "Site Settings", icon: Image },
 ];
