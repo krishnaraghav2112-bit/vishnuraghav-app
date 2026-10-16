@@ -45,6 +45,7 @@ export default function LegalPage({ title, lastUpdated, children }) {
           <Link to="/privacy-policy" className="hover:text-brand-gold">Privacy Policy</Link>
           <Link to="/terms" className="hover:text-brand-gold">Terms &amp; Conditions</Link>
           <Link to="/refund-policy" className="hover:text-brand-gold">Refund &amp; Cancellation Policy</Link>
+          <Link to="/shipping-policy" className="hover:text-brand-gold">Shipping & Delivery Policy</Link>
           <Link to="/" className="hover:text-brand-gold ml-auto">← Back to Home</Link>
         </div>
       </article>
