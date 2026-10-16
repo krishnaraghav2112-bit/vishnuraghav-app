@@ -27,12 +27,6 @@ const WEEKS = [
   { n: "Week 3", t: "Live Calm", d: "Build daily habits for a calm mind so overthinking doesn't pull you back in.", l: 7 },
 ];
 
-const REVIEWS = [
-  ["Jo Mai Kah Na Saka felt like Vishnu wrote every word just for me. I cried reading it.", "Riya Patel", "Reader · Mumbai"],
-  ["Dagmagate Pair is the most honest Hindi book I've ever read. He writes what we all think but never dare to say.", "Aditya Kumar", "Student · Lucknow"],
-  ["His YouTube content on mind control helped me through the hardest phase of my life. Truly life-changing.", "Meera Verma", "MBA Student · Pune"],
-];
-
 const FAQS = [
   ["When and how do I get access?", "The course unlocks instantly after payment. Log in with the same email and password to watch it from your Dashboard anytime. You'll also receive the course link by email."],
   ["How do I get the 5 books and my 1-to-1 session?", "After enrolling, open the course from your Dashboard. Enter your delivery address there and the 5 printed books are shipped to your home. You can book your 1-to-1 personal session from the same page."],
@@ -258,28 +252,17 @@ export default function OverthinkingLanding({ onOpenPay }) {
       </section>
 
       {/* Testimonials */}
-      <section className="max-w-5xl mx-auto px-5 py-16">
-        {studentReviews.length > 0 ? (
-          <>
-            <SectionTitle eyebrow="Student reviews">What students say about the course</SectionTitle>
-            <div className="grid md:grid-cols-3 gap-4">
-              {studentReviews.slice(0, 6).map((r, i) => (
-                <ReviewCard key={r.id} testId={`lp-student-review-${i}`} rating={r.rating} text={r.text} name={r.name}
-                  sub={r.city ? `${r.city} · Verified student` : "Verified student"} />
-              ))}
-            </div>
-          </>
-        ) : (
-          <>
-            <SectionTitle eyebrow="Testimonials">What readers and viewers say</SectionTitle>
-            <div className="grid md:grid-cols-3 gap-4">
-              {REVIEWS.map(([text, name, loc], i) => (
-                <ReviewCard key={name} testId={`lp-review-${i}`} rating={5} text={text} name={name} sub={loc} />
-              ))}
-            </div>
-          </>
-        )}
-      </section>
+       {studentReviews.length > 0 && (
+        <section className="max-w-5xl mx-auto px-5 py-16">
+          <SectionTitle eyebrow="Student reviews">What students say about the course</SectionTitle>
+          <div className="grid md:grid-cols-3 gap-4">
+            {studentReviews.slice(0, 6).map((r, i) => (
+              <ReviewCard key={r.id} testId={`lp-student-review-${i}`} rating={r.rating} text={r.text} name={r.name}
+                sub={r.city ? `${r.city} · Verified student` : "Verified student"} />
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Price block */}
       <section className="max-w-3xl mx-auto px-5 pb-16">
