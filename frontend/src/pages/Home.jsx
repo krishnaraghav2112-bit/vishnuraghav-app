@@ -420,7 +420,7 @@ const joinWaitlist = (course) => {
                 Vishnu Raghav is an author, motivator, and life coach who works on inner beauty, principles, and spiritual thoughts. He believes understanding the roots of our emotions makes everything easier.
               </p>
               <div className="flex gap-3 flex-wrap">
-                {[["4", "Books"], ["4.9★", "Avg Rating"], ["Hindi", "Literature"], ["Pan India", "Readership"]].map(([n, l]) => (
+                {[["4", "Books"], ["Hindi", "Literature"], ["Pan India", "Readership"]].map(([n, l]) => (
                   <div key={l} className="glass border border-white/[0.08] rounded-xl px-4 py-2.5 text-center min-w-[88px]">
                     <strong className="block text-xl font-black text-gold-gradient">{n}</strong>
                     <span className="text-[10px] text-muted-foreground uppercase tracking-wider">{l}</span>
